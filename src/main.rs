@@ -1,9 +1,10 @@
+pub mod application;
 pub mod presentation;
+use application::line_webhook;
 use axum::{
     routing::{get, post},
     Router,
 };
-use presentation::linebot_handler::exec;
 use std::env;
 use std::net::SocketAddr;
 
@@ -16,7 +17,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/linebot-webhook", post(exec));
+        .route("/linebot-webhook", post(line_webhook::handler));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
