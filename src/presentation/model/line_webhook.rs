@@ -7,14 +7,14 @@ pub struct LineWebhookRequest {
 }
 
 impl LineWebhookRequest {
-    pub(in crate::application) fn get_events(&self) -> Vec<LineWebhookEvent> {
+    pub(in crate::presentation) fn get_events(&self) -> Vec<LineWebhookEvent> {
         self.events.clone()
     }
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub(in crate::application) struct LineWebhookEvent {
-    pub(in crate::application) r#type: LineWebhookEventType, // 限られた値に制限したい
+pub(in crate::presentation) struct LineWebhookEvent {
+    pub(in crate::presentation) r#type: LineWebhookEventType, // 限られた値に制限したい
     message: Option<LineWebhookMessage>,
     postback: Option<LineWebhookPostback>,
     timestamp: u64,
@@ -26,7 +26,7 @@ pub(in crate::application) struct LineWebhookEvent {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub(in crate::application) enum LineWebhookEventType {
+pub(in crate::presentation) enum LineWebhookEventType {
     Message,
     Follow,
     Unfollow,

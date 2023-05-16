@@ -1,4 +1,4 @@
-use crate::application::domain::models::line_webhook::{LineWebhookEventType, LineWebhookRequest};
+use crate::presentation::model::line_webhook::{LineWebhookEventType, LineWebhookRequest};
 use axum::{http::StatusCode, response::IntoResponse, Json};
 
 pub async fn handler(Json(payload): Json<LineWebhookRequest>) -> impl IntoResponse {
