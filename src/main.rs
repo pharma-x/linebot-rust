@@ -15,9 +15,11 @@ async fn main() {
     env::set_var("Rust_LOG", log_level);
     tracing_subscriber::fmt::init();
 
+    let line_webhook_router = Router::new().route("/", post(line_webhook::handler));
+
     let app = Router::new()
         .route("/", get(root))
-        .route("/linebot-webhook", post(line_webhook::handler));
+        .nest("/linebot-webhook", line_webhook_router);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
