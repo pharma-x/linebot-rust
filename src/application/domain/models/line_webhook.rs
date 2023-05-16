@@ -14,7 +14,7 @@ impl LineWebhookRequest {
 
 #[derive(Deserialize, Debug, Clone)]
 pub(in crate::application) struct LineWebhookEvent {
-    r#type: LineWebhookEventType, // 限られた値に制限したい
+    pub(in crate::application) r#type: LineWebhookEventType, // 限られた値に制限したい
     message: Option<LineWebhookMessage>,
     postback: Option<LineWebhookPostback>,
     timestamp: u64,
@@ -26,12 +26,11 @@ pub(in crate::application) struct LineWebhookEvent {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-enum LineWebhookEventType {
+pub(in crate::application) enum LineWebhookEventType {
     Message,
     Follow,
     Unfollow,
     Postback,
-    VideoPlayComplete, // 不要か
 }
 
 #[derive(Deserialize, Debug, Clone)]
