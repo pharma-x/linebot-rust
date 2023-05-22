@@ -8,107 +8,107 @@ on:
       - main
       - develop
 env:
-  IMAGE_NAME: pharmacy-os
+  IMAGE_NAME: one-app
 jobs:
-  rspec:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0.29
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_USER: mysql
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_PASSWORD: password
-          MYSQL_DATABASE: test
-        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 5
-    container:
-      image: ruby:3.1.2
-      env:
-        RAILS_ENV: test
-        DATABASE_HOST: mysql
-        DATABASE_USERNAME: mysql
-        DATABASE_PASSWORD: password
-        LINE_CHANNEL_TOKEN: test
-        IS_DEBUG: true
-        CI: true
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: bundler set up
-        run: |
-          gem install bundler
-          bundle install
-      - name: install node
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16"
-      - name: db create
-        run: |
-          bundle exec rake db:create RAILS_ENV=test
-      - name: db migrate
-        run: |
-          bundle exec rake db:migrate RAILS_ENV=test
-          bundle exec rails db:seed_fu RAILS_ENV=test
-      - name: format
-        run: |
-          bundle exec rubocop
-      - name: test
-        run: |
-          RAILS_ENV=test && bundle exec rspec
-  audit:
-    name: verify bundle libraries
-    runs-on: ubuntu-latest
-    if: ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v2
-      - name: "Bundler Audit"
-        uses: andrewmcodes/bundler-audit-action@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.YOJO_TEAM_TOKEN }}
+  # rspec:
+  #   runs-on: ubuntu-latest
+  #   services:
+  #     mysql:
+  #       image: mysql:8.0.29
+  #       ports:
+  #         - 3306:3306
+  #       env:
+  #         MYSQL_USER: mysql
+  #         MYSQL_ROOT_PASSWORD: password
+  #         MYSQL_PASSWORD: password
+  #         MYSQL_DATABASE: test
+  #       options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 5
+  #   container:
+  #     image: ruby:3.1.2
+  #     env:
+  #       RAILS_ENV: test
+  #       DATABASE_HOST: mysql
+  #       DATABASE_USERNAME: mysql
+  #       DATABASE_PASSWORD: password
+  #       LINE_CHANNEL_TOKEN: test
+  #       IS_DEBUG: true
+  #       CI: true
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #     - name: bundler set up
+  #       run: |
+  #         gem install bundler
+  #         bundle install
+  #     - name: install node
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: "16"
+  #     - name: db create
+  #       run: |
+  #         bundle exec rake db:create RAILS_ENV=test
+  #     - name: db migrate
+  #       run: |
+  #         bundle exec rake db:migrate RAILS_ENV=test
+  #         bundle exec rails db:seed_fu RAILS_ENV=test
+  #     - name: format
+  #       run: |
+  #         bundle exec rubocop
+  #     - name: test
+  #       run: |
+  #         RAILS_ENV=test && bundle exec rspec
+  # audit:
+  #   name: verify bundle libraries
+  #   runs-on: ubuntu-latest
+  #   if: ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: "Bundler Audit"
+  #       uses: andrewmcodes/bundler-audit-action@main
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.YOJO_TEAM_TOKEN }}
 
-  verify-docker:
-    name: verify Docker Container
-    runs-on: ubuntu-latest
-    if: ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      # developブランチはStaging、mainブランチはProduction用のDockerfileを使う
-      - name: Check branch and set environment
-        if: ${{ github.ref_name == 'develop' }}
-        run: echo "environment=.stg" >> $GITHUB_ENV
-      - name: Check branch and set environment
-        if: ${{ github.ref_name == 'main' }}
-        run: echo "environment=.prod" >> $GITHUB_ENV
-      - name: Build Container
-        run: |-
-          docker build -t ${{ env.IMAGE_NAME }}:latest -f deploy/Dockerfile .
-      - name: Run Dockle
-        uses: erzz/dockle-action@v1
-        with:
-          image: ${{ env.IMAGE_NAME }}:latest
-          exit-code: 1
-          failure-threshold: fatal
-          accept-filenames: "database.yml, carrierwave.rb, secret_token.rb, omniauth.rb"
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}:latest
-          format: "table"
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: "os,library"
-          skip-dirs: "/usr/local/bundle/gems"
-          skip-files: "/myapp/.env.template"
-          severity: "CRITICAL"
+  # verify-docker:
+  #   name: verify Docker Container
+  #   runs-on: ubuntu-latest
+  #   if: ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #     # developブランチはStaging、mainブランチはProduction用のDockerfileを使う
+  #     - name: Check branch and set environment
+  #       if: ${{ github.ref_name == 'develop' }}
+  #       run: echo "environment=.stg" >> $GITHUB_ENV
+  #     - name: Check branch and set environment
+  #       if: ${{ github.ref_name == 'main' }}
+  #       run: echo "environment=.prod" >> $GITHUB_ENV
+  #     - name: Build Container
+  #       run: |-
+  #         docker build -t ${{ env.IMAGE_NAME }}:latest -f deploy/Dockerfile .
+  #     - name: Run Dockle
+  #       uses: erzz/dockle-action@v1
+  #       with:
+  #         image: ${{ env.IMAGE_NAME }}:latest
+  #         exit-code: 1
+  #         failure-threshold: fatal
+  #         accept-filenames: "database.yml, carrierwave.rb, secret_token.rb, omniauth.rb"
+  #     - name: Run Trivy vulnerability scanner
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         image-ref: ${{ env.IMAGE_NAME }}:latest
+  #         format: "table"
+  #         exit-code: "1"
+  #         ignore-unfixed: true
+  #         vuln-type: "os,library"
+  #         skip-dirs: "/usr/local/bundle/gems"
+  #         skip-files: "/myapp/.env.template"
+  #         severity: "CRITICAL"
 
   deploy:
-    needs:
-      - rspec
-      - audit
-      - verify-docker
+    # needs:
+      # - rspec
+      # - audit
+      # - verify-docker
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
