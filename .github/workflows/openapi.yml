@@ -1,0 +1,40 @@
+name: copy swagger.yaml from one-openapi
+on:
+  repository_dispatch:
+    types: [openapi-updated]
+jobs:
+  copy-target:
+    name: copy swagger.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: clone one-openapi
+        uses: actions/checkout@v2
+        with:
+          repository: pharma-x/one-openapi
+          path: one-openapi
+          token: ${{ secrets.YOJO_TEAM_TOKEN }}
+      - name: copy swagger.yaml
+        run: cp one-openapi/swagger.yaml swagger/swagger.yaml
+      - name: clean one-openapi
+        run: rm -rf one-openapi
+      - name: create PR
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.YOJO_TEAM_TOKEN }}
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          commit-message: "gen: copy swagger."
+          branch: copy_target
+          branch-suffix: timestamp
+          delete-branch: true
+          title: "[auto-gen] updated swagger.yaml"
+          body: >
+            ## [自動生成されたPR] swagger.yamlの変更
+
+            ### 概要
+            このPRは [one-openapi](https://github.com/pharma-x/pharmacy-dx-openapi) の更新によって自動生成されました。
+
+            ### Merge前に確認すること
+
+            - [ ] CIがパスしている
