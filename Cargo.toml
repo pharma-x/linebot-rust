@@ -18,3 +18,6 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 anyhow = "1.0.71"
 thiserror = "1.0.40"
 validator = { version = "0.16.0", features = ["derive"] }
+derive-new = "0.5.9"
+ulid = "1.0.0"
+async-trait = "0.1.68"

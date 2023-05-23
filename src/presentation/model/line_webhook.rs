@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use crate::application::model::line_auth::CreateLineAuth;
 
 #[derive(Deserialize)]
 pub struct LineWebhookRequest {
@@ -72,4 +73,12 @@ struct LineWebhookPostbackDatetimeParams {
 struct LineWebhookPostbackRichMenuParams {
     new_rich_menu_alias_id: String,
     status: String,
+}
+
+impl From<LineWebhookEvent> for CreateLineAuth {
+    fn from(s: LineWebhookEvent) -> Self {
+        CreateLineAuth {
+            line_id: s.source.user_id
+        }
+    }
 }

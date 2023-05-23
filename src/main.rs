@@ -1,10 +1,12 @@
+pub mod adapter;
 pub mod application;
+pub mod domain;
 pub mod presentation;
-use presentation::routes::line_webhook;
 use axum::{
     routing::{get, post},
     Router,
 };
+use presentation::routes::line_webhook;
 use std::env;
 use std::net::SocketAddr;
 
@@ -21,6 +23,7 @@ async fn main() {
         .route("/", get(root))
         .nest("/linebot-webhook", line_webhook_router);
 
+    // localhost:3000
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
     tracing::debug!("listening on {}", addr);
