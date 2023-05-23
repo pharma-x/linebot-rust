@@ -1,1 +1,2 @@
-mod usecase;
+pub mod usecase;
+pub mod model;
