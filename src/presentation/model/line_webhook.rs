@@ -1,5 +1,5 @@
+use crate::application::model::line_user_auth::CreateLineUserAuth;
 use serde::Deserialize;
-use crate::application::model::line_auth::CreateLineAuth;
 
 #[derive(Deserialize)]
 pub struct LineWebhookRequest {
@@ -75,10 +75,10 @@ struct LineWebhookPostbackRichMenuParams {
     status: String,
 }
 
-impl From<LineWebhookEvent> for CreateLineAuth {
+impl From<LineWebhookEvent> for CreateLineUserAuth {
     fn from(s: LineWebhookEvent) -> Self {
-        CreateLineAuth {
-            line_id: s.source.user_id
+        CreateLineUserAuth {
+            user_id: s.source.user_id,
         }
     }
 }

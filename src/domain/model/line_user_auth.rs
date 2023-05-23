@@ -33,8 +33,8 @@ impl AuthToken for LineAuthToken {
 
 #[derive(new)]
 pub struct LineUserAuthData {
-    pub user_id: LineAuthUserId,
-    pub token: LineAuthToken,
+    user_id: LineAuthUserId,
+    token: LineAuthToken,
 }
 
 impl UserAuthData for LineUserAuthData {
