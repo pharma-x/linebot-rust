@@ -7,6 +7,5 @@ use crate::domain::model::user_auth::UserAuthData;
 pub trait UserAuthRepository {
     type AuthData: UserAuthData;
 
-    async fn get_user_profile(&self, source: Self::AuthData)
-        -> anyhow::Result<Option<UserProfile>>;
+    async fn get_user_profile(&self, source: Self::AuthData) -> anyhow::Result<UserProfile>;
 }

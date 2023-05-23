@@ -21,3 +21,4 @@ validator = { version = "0.16.0", features = ["derive"] }
 derive-new = "0.5.9"
 ulid = "1.0.0"
 async-trait = "0.1.68"
+reqwest = "0.11.18"

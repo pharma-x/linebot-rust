@@ -5,7 +5,7 @@ use super::user_auth::UserAuthData;
 
 #[derive(new)]
 pub struct LineAuthUserId {
-    pub value: String,
+    value: String,
 }
 
 impl AuthUserId for LineAuthUserId {
@@ -14,9 +14,15 @@ impl AuthUserId for LineAuthUserId {
     }
 }
 
+impl From<String> for LineAuthUserId {
+    fn from(s: String) -> Self {
+        LineAuthUserId { value: s }
+    }
+}
+
 #[derive(new)]
 pub struct LineAuthToken {
-    pub value: String,
+    value: String,
 }
 
 impl AuthToken for LineAuthToken {
@@ -48,5 +54,5 @@ pub struct LineUserProfile {
     // todo: 文字数にバリデーションつける
     pub user_id: LineAuthUserId,
     pub display_name: String,
-    pub profile_image_url: String,
+    pub picture_url: String,
 }
