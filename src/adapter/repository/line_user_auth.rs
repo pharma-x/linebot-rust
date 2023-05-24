@@ -1,16 +1,19 @@
 use crate::adapter::model::line_user_auth::ResponseLineAuth;
-use crate::adapter::repository::user_auth::UserAuthRepository;
-use crate::domain::model::line_user_auth::LineUserAuthData;
+use crate::adapter::repository::HttpClientRepositoryImpl;
+use crate::domain::model::line_user::LineUser;
 use crate::domain::model::user::UserProfile;
-use crate::domain::model::user_auth::{AuthToken, AuthUserId, UserAuthData};
+use crate::domain::model::user_auth::UserAuthData;
 use crate::domain::repository::line_user_auth::LineUserAuthRepository;
 use anyhow::Ok;
 use async_trait::async_trait;
 use reqwest::header;
 
 #[async_trait]
-impl LineUserAuthRepository for UserAuthRepository<LineUserAuthData> {
-    async fn get_user_profile(&self, source: LineUserAuthData) -> anyhow::Result<UserProfile> {
+impl LineUserAuthRepository for HttpClientRepositoryImpl<UserAuthData<LineUser>> {
+    async fn get_user_profile(
+        &self,
+        source: UserAuthData<LineUser>,
+    ) -> anyhow::Result<UserProfile> {
         let body = &self
             .client
             .get(format!(
@@ -31,7 +34,6 @@ impl LineUserAuthRepository for UserAuthRepository<LineUserAuthData> {
             body
         ));
 
-        // LineUserProfileをUserProfileに変換する
         Ok(UserProfile::Line(res_line_auth.try_into()?))
     }
 }

@@ -13,7 +13,7 @@ pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
 
 impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
     pub async fn create_user(&self, source: CreateLineUserAuth) -> anyhow::Result<()> {
-        let user_profile = &self
+        let user_profile = self
             .repositories
             .line_user_auth_repository()
             .get_user_profile(source.try_into()?)

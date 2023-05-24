@@ -1,8 +1,6 @@
-use crate::domain::{
-    model::line_user_auth::LineUserAuthData, repository::line_user_auth::LineUserAuthRepository,
-};
-
-use super::repository::user_auth::UserAuthRepository;
+use super::repository::HttpClientRepositoryImpl;
+use crate::domain::model::{line_user::LineUser, user_auth::UserAuthData};
+use crate::domain::repository::line_user_auth::LineUserAuthRepository;
 use reqwest::Client;
 
 pub trait RepositoriesModuleExt {
@@ -11,11 +9,11 @@ pub trait RepositoriesModuleExt {
 }
 
 pub struct RepositoriesModule {
-    line_user_auth_repository: UserAuthRepository<LineUserAuthData>,
+    line_user_auth_repository: HttpClientRepositoryImpl<UserAuthData<LineUser>>,
 }
 
 impl RepositoriesModuleExt for RepositoriesModule {
-    type LineUserAuthRepo = UserAuthRepository<LineUserAuthData>;
+    type LineUserAuthRepo = HttpClientRepositoryImpl<UserAuthData<LineUser>>;
 
     fn line_user_auth_repository(&self) -> &Self::LineUserAuthRepo {
         &self.line_user_auth_repository
@@ -25,7 +23,8 @@ impl RepositoriesModuleExt for RepositoriesModule {
 impl RepositoriesModule {
     pub fn new() -> Self {
         let client = Client::new();
-        let line_user_auth_repository = UserAuthRepository::<LineUserAuthData>::new(client);
+        let line_user_auth_repository =
+            HttpClientRepositoryImpl::<UserAuthData<LineUser>>::new(client);
 
         Self {
             line_user_auth_repository,

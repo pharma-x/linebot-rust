@@ -25,7 +25,7 @@ impl Modules {
     pub async fn new() -> Modules {
         let repositories_module: Arc<_> = Arc::new(RepositoriesModule::new());
 
-        let linebot_webhook_usecase = LinebotWebhookUseCase::new(repositories_module.clone());
+        let linebot_webhook_usecase: LinebotWebhookUseCase<RepositoriesModule> = LinebotWebhookUseCase::new(repositories_module.clone());
 
         Self {
             linebot_webhook_usecase,

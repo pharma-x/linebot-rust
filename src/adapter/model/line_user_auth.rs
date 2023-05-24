@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::domain::model::line_user_auth::LineUserProfile;
+use crate::domain::model::{line_user::LineUserProfile, user_auth::AuthUserId};
 
 #[derive(Deserialize)]
 pub struct ResponseLineAuth {
@@ -16,7 +16,7 @@ impl TryFrom<ResponseLineAuth> for LineUserProfile {
     type Error = anyhow::Error;
     fn try_from(s: ResponseLineAuth) -> anyhow::Result<Self> {
         Ok(LineUserProfile {
-            user_id: s.user_id.into(),
+            auth_id: AuthUserId::new(s.user_id),
             display_name: s.display_name,
             picture_url: s.picture_url.unwrap_or("".to_string()),
         })

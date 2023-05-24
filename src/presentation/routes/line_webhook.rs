@@ -40,5 +40,5 @@ pub async fn line_webhook_handler(
         }
     }
 
-    result
+    Ok(StatusCode::OK)
 }
