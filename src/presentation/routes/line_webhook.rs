@@ -1,32 +1,44 @@
-use crate::adapter::repository::line_user_auth::LineUserAuthRepository;
-use crate::application::usecase::linebot_webhook_usecase::LinebotWebhookUseCase;
+use crate::presentation::context::validate::ValidatedRequest;
 use crate::presentation::model::line_webhook::{LineWebhookEventType, LineWebhookRequest};
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use crate::presentation::module::{Modules, ModulesExt};
+use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
 use std::sync::Arc;
+use tracing::error;
 
-pub async fn handler(Json(payload): Json<LineWebhookRequest>) -> impl IntoResponse {
+#[tracing::instrument(skip(modules))]
+pub async fn line_webhook_handler(
+    ValidatedRequest(payload): ValidatedRequest<LineWebhookRequest>,
+    Extension(modules): Extension<Arc<Modules>>,
+) -> Result<impl IntoResponse, StatusCode> {
     let events: Vec<crate::presentation::model::line_webhook::LineWebhookEvent> =
         payload.get_events();
+    let mut result = Ok(StatusCode::OK);
 
     for event in events {
         let event_type = &event.r#type;
         match event_type {
             LineWebhookEventType::Follow => {
-                let linebot_webhook_usecase =
-                    LinebotWebhookUseCase::new(Arc::new(LineUserAuthRepository::new()));
-                linebot_webhook_usecase.create_user(event.into()).await;
+                result = modules
+                    .linebot_webhook_usecase()
+                    .create_user(event.into())
+                    .await
+                    .map(|_| StatusCode::OK)
+                    .map_err(|err| {
+                        error!("Unexpected error: {:?}", err);
+                        StatusCode::INTERNAL_SERVER_ERROR
+                    });
             }
             LineWebhookEventType::Unfollow => {
-                println!("event_type: {:?}", event_type);
+                println!("Unfollow event: {:?}", event);
             }
             LineWebhookEventType::Message => {
-                println!("event_type: {:?}", event_type);
+                println!("Message event: {:?}", event);
             }
             LineWebhookEventType::Postback => {
-                println!("event_type: {:?}", event_type);
+                println!("Postback event: {:?}", event);
             }
         }
     }
 
-    StatusCode::OK.into_response()
+    result
 }

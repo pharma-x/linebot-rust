@@ -1,7 +1,8 @@
 use crate::application::model::line_user_auth::CreateLineUserAuth;
 use serde::Deserialize;
+use validator::Validate;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct LineWebhookRequest {
     destination: String,
     events: Vec<LineWebhookEvent>,
@@ -13,7 +14,7 @@ impl LineWebhookRequest {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Validate)]
 pub(in crate::presentation) struct LineWebhookEvent {
     pub(in crate::presentation) r#type: LineWebhookEventType, // 限られた値に制限したい
     message: Option<LineWebhookMessage>,

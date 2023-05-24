@@ -6,18 +6,18 @@ use crate::application::usecase::linebot_webhook_usecase::LinebotWebhookUseCase;
 pub trait ModulesExt {
     type RepositoriesModule: RepositoriesModuleExt;
 
-    fn linebot_webhook_use_case(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule>;
+    fn linebot_webhook_usecase(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule>;
 }
 
 pub struct Modules {
-    linebot_webhook_use_case: LinebotWebhookUseCase<RepositoriesModule>,
+    linebot_webhook_usecase: LinebotWebhookUseCase<RepositoriesModule>,
 }
 
 impl ModulesExt for Modules {
     type RepositoriesModule = RepositoriesModule;
 
-    fn linebot_webhook_use_case(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule> {
-        &self.linebot_webhook_use_case
+    fn linebot_webhook_usecase(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule> {
+        &self.linebot_webhook_usecase
     }
 }
 
@@ -25,10 +25,10 @@ impl Modules {
     pub async fn new() -> Modules {
         let repositories_module: Arc<_> = Arc::new(RepositoriesModule::new());
 
-        let linebot_webhook_use_case = LinebotWebhookUseCase::new(repositories_module.clone());
+        let linebot_webhook_usecase = LinebotWebhookUseCase::new(repositories_module.clone());
 
         Self {
-            linebot_webhook_use_case,
+            linebot_webhook_usecase,
         }
     }
 }

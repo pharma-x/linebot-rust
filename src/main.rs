@@ -3,25 +3,32 @@ pub mod application;
 pub mod domain;
 pub mod presentation;
 use axum::{
+    extract::Extension,
     routing::{get, post},
     Router,
 };
-use presentation::routes::line_webhook;
+use dotenv::dotenv;
+use presentation::module::Modules;
+use presentation::routes::line_webhook::line_webhook_handler;
 use std::env;
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
 #[tokio::main]
 async fn main() {
     //logging
-    let log_level = env::var("Rust_LOG").unwrap_or("info".to_string());
-    env::set_var("Rust_LOG", log_level);
-    tracing_subscriber::fmt::init();
+    let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
+    env::set_var("RUST_LOG", log_level);
 
-    let line_webhook_router = Router::new().route("/", post(line_webhook::handler));
+    init_app();
 
+    // DI
+    let modules = Modules::new().await;
+
+    let line_webhook_router = Router::new().route("/", post(line_webhook_handler));
     let app = Router::new()
         .route("/", get(root))
-        .nest("/linebot-webhook", line_webhook_router);
+        .nest("/linebot-webhook", line_webhook_router)
+        .layer(Extension(Arc::new(modules)));
 
     // localhost:3000
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -36,4 +43,9 @@ async fn main() {
 
 async fn root() -> &'static str {
     "Hello World!"
+}
+
+pub fn init_app() {
+    dotenv().ok();
+    tracing_subscriber::fmt::init();
 }
