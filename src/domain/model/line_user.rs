@@ -4,8 +4,8 @@ use derive_new::new;
 
 #[derive(new)]
 pub struct LineUser {
-    pub id: String,
-    pub user_profile: LineUserProfile,
+    id: String,
+    user_profile: LineUserProfile,
 }
 
 #[derive(new)]
@@ -17,8 +17,8 @@ pub struct LineUserProfile {
 }
 
 impl User for LineUser {
-    fn user_id(&self) -> String {
-        self.id
+    fn user_id(&self) -> &String {
+        self.id.value()
     }
 
     fn user_profile(&self) -> UserProfile {

@@ -1,6 +1,8 @@
 use crate::adapter::module::RepositoriesModuleExt;
 use crate::application::model::line_user_auth::CreateLineUserAuth;
-use crate::domain::repository::line_user_auth::LineUserAuthRepository;
+use crate::domain::repository::{
+    line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
+};
 
 use anyhow::Ok;
 use derive_new::new;
@@ -17,6 +19,12 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .repositories
             .line_user_auth_repository()
             .get_user_profile(source.try_into()?)
+            .await?;
+
+        let line_user = self
+            .repositories
+            .line_user_repository()
+            .create_user(user_profile)
             .await?;
 
         Ok(())

@@ -1,7 +1,6 @@
 use crate::adapter::model::line_user_auth::ResponseLineAuth;
 use crate::adapter::repository::HttpClientRepositoryImpl;
-use crate::domain::model::line_user::LineUser;
-use crate::domain::model::user::UserProfile;
+use crate::domain::model::line_user::{LineUser, LineUserProfile};
 use crate::domain::model::user_auth::UserAuthData;
 use crate::domain::repository::line_user_auth::LineUserAuthRepository;
 use anyhow::Ok;
@@ -13,7 +12,7 @@ impl LineUserAuthRepository for HttpClientRepositoryImpl<UserAuthData<LineUser>>
     async fn get_user_profile(
         &self,
         source: UserAuthData<LineUser>,
-    ) -> anyhow::Result<UserProfile> {
+    ) -> anyhow::Result<LineUserProfile> {
         let body = &self
             .client
             .get(format!(
@@ -34,6 +33,6 @@ impl LineUserAuthRepository for HttpClientRepositoryImpl<UserAuthData<LineUser>>
             body
         ));
 
-        Ok(UserProfile::Line(res_line_auth.try_into()?))
+        Ok(res_line_auth.try_into()?)
     }
 }

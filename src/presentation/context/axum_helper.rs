@@ -22,5 +22,5 @@ where
         data.validate()
             .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid JSON body"));
         Ok(Self(data))
-    }w
+    }
 }

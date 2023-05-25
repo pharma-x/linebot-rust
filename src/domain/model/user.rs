@@ -11,7 +11,7 @@ use crate::domain::model::line_user::LineUserProfile;
 // }
 
 pub trait User {
-    fn user_id(&self) -> String;
+    fn user_id(&self) -> &String;
     fn user_profile(&self) -> UserProfile;
 }
 
