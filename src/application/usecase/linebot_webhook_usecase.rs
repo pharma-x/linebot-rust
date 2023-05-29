@@ -1,8 +1,9 @@
 use crate::adapter::module::RepositoriesModuleExt;
-use crate::application::model::line_user_auth::CreateLineUserAuth;
-use crate::application::model::user_event::CreateUserEvent;
+use crate::application::factory::event::EventFactory;
+use crate::application::model::event::CreateUserEvent;
 use crate::domain::repository::{
-    line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
+    event::EventRepository, line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
+    talk_room::TalkRoomRepository,
 };
 
 use anyhow::Ok;
@@ -16,19 +17,20 @@ pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
 
 impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
     pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
-        // todo すでにUserが作られていたら、userやtalk roomを作らない処理を書く
         let user_profile = self
             .repositories
             .line_user_auth_repository()
             .get_user_profile(source.create_line_user_auth.try_into()?)
             .await?;
 
+        // todo すでにUserが存在したら、createではなく、find_userを呼んでuserを返す
         let line_user = self
             .repositories
             .line_user_repository()
             .create_user(user_profile)
             .await?;
 
+        // todo すでにtalk_roomが存在したら、createではなく、find_talk_roomを呼んでtalk_roomを返す
         let talk_room = self
             .repositories
             .talk_room_repository()
@@ -36,10 +38,11 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .await?;
 
         // todo factoryの実装
+        let event = EventFactory::new().create_user_event(talk_room, source.create_user_event);
         let message = self
             .repositories
-            .message_repository()
-            .create_messages(source.create_user_event.try_into()?)
+            .event_repository()
+            .create_event(event)
             .await?;
 
         Ok(())

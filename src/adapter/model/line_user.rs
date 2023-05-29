@@ -1,5 +1,9 @@
-use crate::domain::model::{line_user::{LineUserProfile, LineUser}, user_auth::AuthUserId, primary_user_id::PrimaryUserId};
-use chrono::{Local, NaiveDateTime, TimeZone};
+use crate::domain::model::{
+    line_user::{LineUser, LineUserProfile},
+    primary_user_id::PrimaryUserId,
+    user_auth::AuthUserId,
+};
+use chrono::{DateTime, Local};
 use sqlx::FromRow;
 
 #[derive(FromRow, Debug)]
@@ -8,8 +12,8 @@ pub struct LineUserTable {
     pub line_id: String,
     pub display_name: String,
     pub picture_url: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: DateTime<Local>,
+    pub updated_at: DateTime<Local>,
 }
 
 impl TryFrom<LineUserTable> for LineUser {
@@ -21,7 +25,7 @@ impl TryFrom<LineUserTable> for LineUser {
                 AuthUserId::new(l.line_id),
                 l.display_name,
                 l.picture_url,
-            )}
-        )
+            ),
+        })
     }
 }

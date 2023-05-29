@@ -15,7 +15,7 @@ insert into primary_users
 values (default)
 returning *"#,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&*pool)
         .await
         .expect("Unable to insert a primary user");
 
@@ -29,7 +29,7 @@ returning *"#,
         .bind(source.auth_id.value())
         .bind(source.display_name)
         .bind(source.picture_url)
-        .fetch_one(&self.Db)
+        .fetch_one(&*pool)
         .await
         .expect("Unable to insert a primary user");
 

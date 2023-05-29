@@ -2,10 +2,11 @@ use super::persistance::{firestore::Firestore, mysql::Db};
 use super::repository::{
     DatabaseRepositoryImpl, FirestoreRepositoryImpl, HttpClientRepositoryImpl,
 };
+use crate::domain::model::event::Event;
 use crate::domain::model::talk_room::TalkRoom;
 use crate::domain::model::{line_user::LineUser, user_auth::UserAuthData};
 use crate::domain::repository::{
-    line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
+    event::EventRepository, line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
     talk_room::TalkRoomRepository,
 };
 use reqwest::Client;
@@ -14,21 +15,25 @@ pub trait RepositoriesModuleExt {
     type LineUserAuthRepo: LineUserAuthRepository;
     type LineUserRepo: LineUserRepository;
     type TalkRoomRepo: TalkRoomRepository;
+    type EventRepo: EventRepository;
     fn line_user_auth_repository(&self) -> &Self::LineUserAuthRepo;
     fn line_user_repository(&self) -> &Self::LineUserRepo;
     fn talk_room_repository(&self) -> &Self::TalkRoomRepo;
+    fn event_repository(&self) -> &Self::EventRepo;
 }
 
 pub struct RepositoriesModule {
     line_user_auth_repository: HttpClientRepositoryImpl<UserAuthData<LineUser>>,
     line_user_repository: DatabaseRepositoryImpl<LineUser>,
     talk_room_repository: FirestoreRepositoryImpl<TalkRoom>,
+    event_repository: FirestoreRepositoryImpl<Event>,
 }
 
 impl RepositoriesModuleExt for RepositoriesModule {
     type LineUserAuthRepo = HttpClientRepositoryImpl<UserAuthData<LineUser>>;
     type LineUserRepo = DatabaseRepositoryImpl<LineUser>;
     type TalkRoomRepo = FirestoreRepositoryImpl<TalkRoom>;
+    type EventRepo = FirestoreRepositoryImpl<Event>;
 
     fn line_user_auth_repository(&self) -> &Self::LineUserAuthRepo {
         &self.line_user_auth_repository
@@ -38,6 +43,9 @@ impl RepositoriesModuleExt for RepositoriesModule {
     }
     fn talk_room_repository(&self) -> &Self::TalkRoomRepo {
         &self.talk_room_repository
+    }
+    fn event_repository(&self) -> &Self::EventRepo {
+        &self.event_repository
     }
 }
 
@@ -50,11 +58,13 @@ impl RepositoriesModule {
         let line_user_auth_repository = HttpClientRepositoryImpl::new(client);
         let line_user_repository = DatabaseRepositoryImpl::new(db.clone());
         let talk_room_repository = FirestoreRepositoryImpl::new(firestore.clone());
+        let event_repository = FirestoreRepositoryImpl::new(firestore.clone());
 
         Self {
             line_user_auth_repository,
             line_user_repository,
             talk_room_repository,
+            event_repository,
         }
     }
 }

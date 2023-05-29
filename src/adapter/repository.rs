@@ -1,8 +1,9 @@
-use super::persistance::{mysql::Db, firestore::Firestore};
+use super::persistance::{firestore::Firestore, mysql::Db};
 use derive_new::new;
 use reqwest::Client;
 use std::marker::PhantomData;
 
+pub mod event;
 pub mod line_user;
 pub mod line_user_auth;
 pub mod talk_room;

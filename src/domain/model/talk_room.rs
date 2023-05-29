@@ -4,7 +4,7 @@ use derive_new::new;
 
 #[derive(new)]
 pub struct TalkRoom {
-    id: String,
+    pub id: String,
     primary_user_id: PrimaryUserId,
     display_name: String,
     rsvp: bool,

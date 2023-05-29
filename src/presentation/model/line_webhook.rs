@@ -1,4 +1,15 @@
-use crate::{application::model::{line_user_auth::CreateLineUserAuth, user_event::{CreateFollowEvent, DeliveryContext, EventType, CreateUnfollowEvent, CreateEvent, CreatePostbackEvent, Postback, PostbackParams,PostbackDatetimeParams, PostbackRichMenuParams, CreateVideoPlayCompleteEvent, VideoPlayComplete, CreateMessageEvent, Message, TextMessage, ImageMessage, ContentProvider, ImageSet, Emoji, VideoMessage, AudioMessage, FileMessage, LocationMessage, StickerMessage, CreateUserEvent}}, adapter::model::talk_room::MessageContent};
+use crate::application::model::{
+    event::{
+        CreateAudioMessage, CreateContentProvider, CreateDeliveryContext, CreateEmoji, CreateEvent,
+        CreateEventType, CreateFileMessage, CreateFollowEvent, CreateImageMessage, CreateImageSet,
+        CreateLocationMessage, CreateMessage, CreateMessageEvent, CreatePostback,
+        CreatePostbackDatetimeParams, CreatePostbackEvent, CreatePostbackParams,
+        CreatePostbackRichMenuParams, CreateStickerMessage, CreateStickerResourceType,
+        CreateTextMessage, CreateUnfollowEvent, CreateUserEvent, CreateVideoMessage,
+        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent,
+    },
+    line_user_auth::CreateLineUserAuth,
+};
 use serde::Deserialize;
 use strum_macros::EnumString;
 use validator::Validate;
@@ -176,7 +187,7 @@ enum LineWebhookStickerResourceType {
     #[strum(serialize = "STATIC")]
     Static,
     #[strum(serialize = "ANIMATION")]
-    Animated,
+    Animation,
     #[strum(serialize = "SOUND")]
     Sound,
     #[strum(serialize = "ANIMATION_SOUND")]
@@ -228,184 +239,197 @@ impl From<LineWebhookEvent> for CreateUserEvent {
         };
 
         let create_event = match s.r#type {
-            LineWebhookEventType::Follow => CreateEvent::Follow(
-                CreateFollowEvent {
+            LineWebhookEventType::Follow => CreateEvent::Follow(CreateFollowEvent {
+                reply_token: s.reply_token,
+                delivery_context: CreateDeliveryContext {
+                    is_redelivery: s.delivery_context.is_redelivery,
+                },
+                event_type: CreateEventType::Follow,
+                mode: s.mode,
+                webhook_event_id: s.webhook_event_id,
+                timestamp: s.timestamp,
+            }),
+            LineWebhookEventType::Unfollow => CreateEvent::Unfollow(CreateUnfollowEvent {
+                reply_token: s.reply_token,
+                delivery_context: CreateDeliveryContext {
+                    is_redelivery: s.delivery_context.is_redelivery,
+                },
+                event_type: CreateEventType::Unfollow,
+                mode: s.mode,
+                webhook_event_id: s.webhook_event_id,
+                timestamp: s.timestamp,
+            }),
+            LineWebhookEventType::Postback => CreateEvent::Postback(CreatePostbackEvent {
+                reply_token: s.reply_token,
+                delivery_context: CreateDeliveryContext {
+                    is_redelivery: s.delivery_context.is_redelivery,
+                },
+                event_type: CreateEventType::Postback,
+                postback: CreatePostback {
+                    data: s.postback.unwrap().data,
+                    params: match s.postback.unwrap().params {
+                        LineWebhookPostbackParams::Datetime(p) => {
+                            CreatePostbackParams::Datetime(CreatePostbackDatetimeParams {
+                                datetime: p.datetime,
+                            })
+                        }
+                        LineWebhookPostbackParams::RichMenu(p) => {
+                            CreatePostbackParams::RichMenu(CreatePostbackRichMenuParams {
+                                new_rich_menu_alias_id: p.new_rich_menu_alias_id,
+                                status: p.status,
+                            })
+                        }
+                    },
+                },
+                mode: s.mode,
+                webhook_event_id: s.webhook_event_id,
+                timestamp: s.timestamp,
+            }),
+            LineWebhookEventType::VideoPlayComplete => CreateEvent::VideoPlayComplete({
+                CreateVideoPlayCompleteEvent {
                     reply_token: s.reply_token,
-                    delivery_context: DeliveryContext {
+                    delivery_context: CreateDeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    event_type: EventType::Follow,
+                    event_type: CreateEventType::VideoPlayComplete,
+                    video_play_complete: CreateVideoPlayComplete {
+                        tracking_id: s.video_play_complete.unwrap().tracking_id,
+                    },
                     mode: s.mode,
+                    webhook_event_id: s.webhook_event_id,
                     timestamp: s.timestamp,
                 }
-            ),
-            LineWebhookEventType::Unfollow => CreateEvent::Unfollow(
-                CreateUnfollowEvent {
+            }),
+            LineWebhookEventType::Message => CreateEvent::Message({
+                CreateMessageEvent {
                     reply_token: s.reply_token,
-                    delivery_context: DeliveryContext {
+                    delivery_context: CreateDeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    event_type: EventType::Unfollow,
+                    event_type: CreateEventType::Message,
+                    message: match s.message.unwrap() {
+                        LineWebhookMessage::Text(m) => CreateMessage::Text(CreateTextMessage {
+                            id: m.id,
+                            text: m.text,
+                            emojis: m
+                                .emojis
+                                .iter()
+                                .map(|e| CreateEmoji {
+                                    index: e.index,
+                                    length: e.length,
+                                    product_id: e.product_id,
+                                    emoji_id: e.emoji_id,
+                                })
+                                .collect(),
+                        }),
+                        LineWebhookMessage::Image(m) => CreateMessage::Image(CreateImageMessage {
+                            id: m.id,
+                            content_provider: match m.content_provider {
+                                LineWebhookContentProvider::Line => CreateContentProvider::Line,
+                                LineWebhookContentProvider::External {
+                                    original_content_url,
+                                    preview_image_url,
+                                } => CreateContentProvider::External {
+                                    original_content_url,
+                                    preview_image_url,
+                                },
+                            },
+                            image_set: CreateImageSet {
+                                id: m.image_set.id,
+                                index: m.image_set.index,
+                                length: m.image_set.length,
+                            },
+                        }),
+                        LineWebhookMessage::Video(m) => CreateMessage::Video(CreateVideoMessage {
+                            id: m.id,
+                            duration: m.duration,
+                            content_provider: match m.content_provider {
+                                LineWebhookContentProvider::Line => CreateContentProvider::Line,
+                                LineWebhookContentProvider::External {
+                                    original_content_url,
+                                    preview_image_url,
+                                } => CreateContentProvider::External {
+                                    original_content_url,
+                                    preview_image_url,
+                                },
+                            },
+                        }),
+                        LineWebhookMessage::Audio(m) => CreateMessage::Audio(CreateAudioMessage {
+                            id: m.id,
+                            duration: m.duration,
+                            content_provider: match m.content_provider {
+                                LineWebhookContentProvider::Line => CreateContentProvider::Line,
+                                LineWebhookContentProvider::External {
+                                    original_content_url,
+                                    preview_image_url,
+                                } => CreateContentProvider::External {
+                                    original_content_url,
+                                    preview_image_url,
+                                },
+                            },
+                        }),
+                        LineWebhookMessage::File(m) => CreateMessage::File(CreateFileMessage {
+                            id: m.id,
+                            file_name: m.file_name,
+                            file_size: m.file_size,
+                        }),
+                        LineWebhookMessage::Location(m) => {
+                            CreateMessage::Location(CreateLocationMessage {
+                                id: m.id,
+                                title: m.title,
+                                address: m.address,
+                                latitude: m.latitude,
+                                longitude: m.longitude,
+                            })
+                        }
+                        LineWebhookMessage::Sticker(m) => {
+                            CreateMessage::Sticker(CreateStickerMessage {
+                                id: m.id,
+                                package_id: m.package_id,
+                                sticker_id: m.sticker_id,
+                                sticker_resource_type: match m.sticker_resource_type {
+                                    LineWebhookStickerResourceType::Static => {
+                                        CreateStickerResourceType::Static
+                                    }
+                                    LineWebhookStickerResourceType::Animation => {
+                                        CreateStickerResourceType::Animation
+                                    }
+                                    LineWebhookStickerResourceType::Sound => {
+                                        CreateStickerResourceType::Sound
+                                    }
+                                    LineWebhookStickerResourceType::AnimationSound => {
+                                        CreateStickerResourceType::AnimationSound
+                                    }
+                                    LineWebhookStickerResourceType::Popup => {
+                                        CreateStickerResourceType::Popup
+                                    }
+                                    LineWebhookStickerResourceType::PupupSound => {
+                                        CreateStickerResourceType::PupupSound
+                                    }
+                                    LineWebhookStickerResourceType::Custom => {
+                                        CreateStickerResourceType::Custom
+                                    }
+                                    LineWebhookStickerResourceType::Message => {
+                                        CreateStickerResourceType::Message
+                                    }
+                                },
+                                keywords: m.keywords,
+                                text: m.text,
+                            })
+                        }
+                    },
                     mode: s.mode,
+                    webhook_event_id: s.webhook_event_id,
                     timestamp: s.timestamp,
                 }
-            ),
-            LineWebhookEventType::Postback => CreateEvent::Postback(
-                CreatePostbackEvent {
-                    reply_token: s.reply_token,
-                    delivery_context: DeliveryContext {
-                        is_redelivery: s.delivery_context.is_redelivery,
-                    },
-                    event_type: EventType::Postback,
-                    postback: Postback {
-                        data: s.postback.unwrap().data,
-                        params: match s.postback.unwrap().params {
-                            LineWebhookPostbackParams::Datetime(p) => PostbackParams::Datetime(
-                                PostbackDatetimeParams {
-                                    datetime: p.datetime,
-                                }
-                            ),
-                            LineWebhookPostbackParams::RichMenu(p) => PostbackParams::RichMenu(
-                                PostbackRichMenuParams {
-                                    new_rich_menu_alias_id: p.new_rich_menu_alias_id,
-                                    status: p.status,
-                                }
-                            ),
-                        },
-                    },
-                    mode: s.mode,
-                    timestamp: s.timestamp,
-                }
-            ),
-            LineWebhookEventType::VideoPlayComplete => CreateEvent::VideoPlayComplete(
-                {
-                    CreateVideoPlayCompleteEvent {
-                        reply_token: s.reply_token,
-                        delivery_context: DeliveryContext {
-                            is_redelivery: s.delivery_context.is_redelivery,
-                        },
-                        event_type: EventType::VideoPlayComplete,
-                        video_play_complete: VideoPlayComplete {
-                            tracking_id: s.video_play_complete.unwrap().tracking_id,
-                        },
-                        mode: s.mode,
-                        timestamp: s.timestamp,
-                    }
-                }
-            ),
-            LineWebhookEventType::Message => CreateEvent::Message(
-                {
-                    CreateMessageEvent {
-                        reply_token: s.reply_token,
-                        delivery_context: DeliveryContext {
-                            is_redelivery: s.delivery_context.is_redelivery,
-                        },
-                        event_type: EventType::Message,
-                        message: match s.message.unwrap() {
-                            LineWebhookMessage::Text(m) => Message::Text(
-                                TextMessage {
-                                    id: m.id,
-                                    text: m.text,
-                                    emojis: m.emojis.iter().map(|e| Emoji {
-                                        index: e.index,
-                                        length: e.length,
-                                        product_id: e.product_id,
-                                        emoji_id: e.emoji_id,
-                                    }).collect(),
-                                }
-                            ),
-                            LineWebhookMessage::Image(m) => Message::Image(
-                                ImageMessage {
-                                    id: m.id,
-                                    content_provider: match m.content_provider {
-                                        LineWebhookContentProvider::Line => ContentProvider::Line,
-                                        LineWebhookContentProvider::External { original_content_url, preview_image_url } => ContentProvider::External {
-                                            original_content_url: original_content_url,
-                                            preview_image_url: preview_image_url,
-                                        },
-                                    },
-                                    image_set: ImageSet {
-                                        id: m.image_set.id,
-                                        index: m.image_set.index,
-                                        length: m.image_set.length,
-                                    },
-                                },
-                            ),
-                            LineWebhookMessage::Video(m) => Message::Video(
-                                VideoMessage {
-                                    id: m.id,
-                                    duration: m.duration,
-                                    content_provider: match m.content_provider {
-                                        LineWebhookContentProvider::Line => ContentProvider::Line,
-                                        LineWebhookContentProvider::External { original_content_url, preview_image_url } => ContentProvider::External {
-                                            original_content_url: original_content_url,
-                                            preview_image_url: preview_image_url,
-                                        },
-                                    },
-                                },
-                            ),
-                            LineWebhookMessage::Audio(m) => Message::Audio(
-                                AudioMessage {
-                                    id: m.id,
-                                    duration: m.duration,
-                                    content_provider: match m.content_provider {
-                                        LineWebhookContentProvider::Line => ContentProvider::Line,
-                                        LineWebhookContentProvider::External { original_content_url, preview_image_url } => ContentProvider::External {
-                                            original_content_url: original_content_url,
-                                            preview_image_url: preview_image_url,
-                                        },
-                                    },
-                                },
-                            ),
-                            LineWebhookMessage::File(m) => Message::File(
-                                FileMessage {
-                                    id: m.id,
-                                    file_name: m.file_name,
-                                    file_size: m.file_size,
-                                },
-                            ),
-                            LineWebhookMessage::Location(m) => Message::Location(
-                                LocationMessage {
-                                    id: m.id,
-                                    title: m.title,
-                                    address: m.address,
-                                    latitude: m.latitude,
-                                    longitude: m.longitude,
-                                },
-                            ),
-                            LineWebhookMessage::Sticker(m) => Message::Sticker(
-                                StickerMessage {
-                                    id: m.id,
-                                    package_id: m.package_id,
-                                    sticker_id: m.sticker_id,
-                                    sticker_resource_type: match m.sticker_resource_type {
-                                        LineWebhookStickerResourceType::Static => crate::application::model::user_event::StickerResourceType::Static,
-                                        LineWebhookStickerResourceType::Animated => crate::application::model::user_event::StickerResourceType::Animated,
-                                        LineWebhookStickerResourceType::Sound => crate::application::model::user_event::StickerResourceType::Sound,
-                                        LineWebhookStickerResourceType::AnimationSound => crate::application::model::user_event::StickerResourceType::AnimationSound,
-                                        LineWebhookStickerResourceType::Popup => crate::application::model::user_event::StickerResourceType::Popup,
-                                        LineWebhookStickerResourceType::PupupSound => crate::application::model::user_event::StickerResourceType::PupupSound,
-                                        LineWebhookStickerResourceType::Custom => crate::application::model::user_event::StickerResourceType::Custom,
-                                        LineWebhookStickerResourceType::Message => crate::application::model::user_event::StickerResourceType::Message,
-                                    },
-                                    keywords: m.keywords,
-                                    text: m.text,
-                                },
-                            )
-
-                        },
-                        mode: s.mode,
-                        timestamp: s.timestamp,
-                    }
-                }
-            ),
+            }),
         };
 
         CreateUserEvent {
             create_line_user_auth: CreateLineUserAuth {
                 user_id: s.source.user_id,
             },
-            create_user_event: create_event
+            create_user_event: create_event,
         }
     }
 }
