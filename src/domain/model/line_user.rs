@@ -1,10 +1,11 @@
 use crate::domain::model::user::{User, UserProfile};
 use crate::domain::model::user_auth::AuthUserId;
 use derive_new::new;
+use super::primary_user_id::PrimaryUserId;
 
 #[derive(new)]
 pub struct LineUser {
-    id: String,
+    id: PrimaryUserId,
     user_profile: LineUserProfile,
 }
 

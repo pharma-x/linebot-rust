@@ -2,6 +2,7 @@ pub mod adapter;
 pub mod application;
 pub mod domain;
 pub mod presentation;
+use crate::adapter::persistance::{firestore::Firestore, mysql::Db};
 use axum::{
     extract::Extension,
     routing::{get, post},
@@ -10,6 +11,7 @@ use axum::{
 use dotenv::dotenv;
 use presentation::module::Modules;
 use presentation::routes::line_webhook::line_webhook_handler;
+use reqwest::Client;
 use std::env;
 use std::{net::SocketAddr, sync::Arc};
 

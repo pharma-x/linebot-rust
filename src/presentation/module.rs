@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use crate::adapter::module::{RepositoriesModule, RepositoriesModuleExt};
+use crate::adapter::persistance::{firestore::Firestore, mysql::Db};
 use crate::application::usecase::linebot_webhook_usecase::LinebotWebhookUseCase;
+use reqwest::Client;
 
 pub trait ModulesExt {
     type RepositoriesModule: RepositoriesModuleExt;
@@ -22,10 +24,14 @@ impl ModulesExt for Modules {
 }
 
 impl Modules {
-    pub async fn new() -> Modules {
-        let repositories_module: Arc<_> = Arc::new(RepositoriesModule::new());
+    pub async fn new() -> Self {
+        let client = Client::new();
+        let db = Db::new().await;
+        let firestore = Firestore::new().await;
+        let repositories_module: Arc<_> = Arc::new(RepositoriesModule::new(client, db, firestore));
 
-        let linebot_webhook_usecase: LinebotWebhookUseCase<RepositoriesModule> = LinebotWebhookUseCase::new(repositories_module.clone());
+        let linebot_webhook_usecase: LinebotWebhookUseCase<RepositoriesModule> =
+            LinebotWebhookUseCase::new(repositories_module.clone());
 
         Self {
             linebot_webhook_usecase,

@@ -37,6 +37,12 @@ pub async fn line_webhook_handler(
             LineWebhookEventType::Postback => {
                 println!("Postback event: {:?}", event);
             }
+            LineWebhookEventType::VideoPlayComplete => {
+                println!("Other event: {:?}", event);
+            }
+            _ => {
+                println!("Other event: {:?}", event);
+            }
         }
     }
 

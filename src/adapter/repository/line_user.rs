@@ -1,4 +1,4 @@
-;use crate::adapter::model::{line_user::LineUserTable, primary_user::PrimaryUserTable};
+use crate::adapter::model::{line_user::LineUserTable, primary_user::PrimaryUserTable};
 use crate::adapter::repository::DatabaseRepositoryImpl;
 use crate::domain::model::line_user::{LineUser, LineUserProfile};
 use crate::domain::repository::line_user::LineUserRepository;

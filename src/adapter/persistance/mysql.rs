@@ -7,7 +7,7 @@ use sqlx::{mysql::MySqlPoolOptions, MySql, Pool};
 pub struct Db(pub(crate) Arc<Pool<MySql>>);
 
 impl Db {
-    pub async fn new() -> Db {
+    pub async fn new() -> Self {
         let pool = MySqlPoolOptions::new()
             .max_connections(8)
             .connect(
@@ -17,6 +17,6 @@ impl Db {
             .unwrap_or_else(|_| {
                 panic!("Cannot connect to the database. Please check your configuration.")
             });
-        Db(Arc::new(pool))
+        Self(Arc::new(pool))
     }
 }
