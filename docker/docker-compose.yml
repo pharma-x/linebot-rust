@@ -1,0 +1,45 @@
+version: "3"
+services:
+  db:
+    platform: linux/amd64 # M1チップ対応
+    build:
+      context: ..
+      dockerfile: docker/db/Dockerfile
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: root
+    container_name: one-db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ../tmp/db:/var/lib/mysql
+    cap_add:
+      - SYS_NICE
+  redis:
+    image: redis:7.0.11-alpine
+    container_name: one-redis
+    command: redis-server --appendonly yes
+    environment:
+      TZ: Asia/Tokyo
+    volumes:
+      - ../tmp/redis:/data
+  web:
+    build:
+      context: ..
+      dockerfile: docker/app/Dockerfile
+    platform: linux/amd64 # M1チップ対応
+    image: one-app
+    container_name: one-app
+    volumes:
+      - ..:/myapp
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+networks:
+  default:
+    name: one_default
+  pharmax-shared-network:
+    external: true
