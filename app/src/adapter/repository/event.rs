@@ -6,6 +6,7 @@ use async_trait::async_trait;
 #[async_trait]
 impl EventRepository for FirestoreRepositoryImpl<Event> {
     async fn create_event(&self, source: Event) -> anyhow::Result<()> {
+        // todo talkRoomのupdate処理も記述する
         todo!()
     }
 }

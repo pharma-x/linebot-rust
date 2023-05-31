@@ -13,7 +13,6 @@ pub struct FollowEvent {
     talk_room_id: String,
     reply_token: String,
     delivery_context: DeliveryContext,
-    event_type: EventType,
     mode: String,
     webhook_event_id: String,
     timestamp: i64,
@@ -24,7 +23,6 @@ pub struct UnfollowEvent {
     talk_room_id: String,
     reply_token: String,
     delivery_context: DeliveryContext,
-    event_type: EventType,
     mode: String,
     webhook_event_id: String,
     timestamp: i64,
@@ -35,7 +33,6 @@ pub struct PostbackEvent {
     talk_room_id: String,
     reply_token: String,
     delivery_context: DeliveryContext,
-    event_type: EventType,
     postback: Postback,
     mode: String,
     webhook_event_id: String,
@@ -47,7 +44,6 @@ pub struct VideoPlayCompleteEvent {
     talk_room_id: String,
     reply_token: String,
     delivery_context: DeliveryContext,
-    event_type: EventType,
     video_play_complete: VideoPlayComplete,
     mode: String,
     webhook_event_id: String,
@@ -58,7 +54,6 @@ pub struct MessageEvent {
     talk_room_id: String,
     reply_token: String,
     delivery_context: DeliveryContext,
-    event_type: EventType,
     message: Message,
     mode: String,
     webhook_event_id: String,
@@ -107,7 +102,7 @@ pub struct VideoPlayComplete {
     pub tracking_id: String,
 }
 
-#[derive(new)]
+#[derive(Clone)]
 pub enum Message {
     Text(TextMessage),
     Image(ImageMessage),
@@ -118,14 +113,14 @@ pub enum Message {
     Sticker(StickerMessage),
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct TextMessage {
     pub id: String,
     pub text: String,
     pub emojis: Vec<Emoji>,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct Emoji {
     pub index: i32,
     pub length: i32,
@@ -133,14 +128,14 @@ pub struct Emoji {
     pub emoji_id: String,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct ImageMessage {
     pub id: String,
     pub content_provider: ContentProvider,
     pub image_set: ImageSet,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum ContentProvider {
     Line,
     External {
@@ -149,54 +144,54 @@ pub enum ContentProvider {
     },
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct ImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct VideoMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: ContentProvider,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct AudioMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: ContentProvider,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct FileMessage {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct LocationMessage {
-    id: String,
-    title: String,
-    address: String,
-    latitude: f64,
-    longitude: f64,
+    pub id: String,
+    pub title: String,
+    pub address: String,
+    pub latitude: f64,
+    pub longitude: f64,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct StickerMessage {
-    id: String,
-    package_id: String,
-    sticker_id: String,
-    sticker_resource_type: StickerResourceType,
-    keywords: Option<Vec<String>>,
-    text: Option<String>,
+    pub id: String,
+    pub package_id: String,
+    pub sticker_id: String,
+    pub sticker_resource_type: StickerResourceType,
+    pub keywords: Option<Vec<String>>,
+    pub text: Option<String>,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum StickerResourceType {
     Static,
     Animation,

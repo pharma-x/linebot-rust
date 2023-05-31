@@ -7,8 +7,8 @@ use crate::{
     },
     domain::model::{
         event::{
-            AudioMessage, ContentProvider, DeliveryContext, Emoji, Event, EventType, FileMessage,
-            FollowEvent, ImageMessage, ImageSet, LocationMessage, Message, MessageEvent, Postback,
+            AudioMessage, ContentProvider, DeliveryContext, Emoji, Event, FileMessage, FollowEvent,
+            ImageMessage, ImageSet, LocationMessage, Message, MessageEvent, Postback,
             PostbackDatetimeParams, PostbackEvent, PostbackParams, PostbackRichMenuParams,
             StickerMessage, StickerResourceType, TextMessage, UnfollowEvent, VideoMessage,
             VideoPlayComplete, VideoPlayCompleteEvent,
@@ -31,7 +31,6 @@ impl EventFactory {
                 delivery_context: DeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                event_type: EventType::Follow,
                 mode: s.mode,
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
@@ -42,7 +41,6 @@ impl EventFactory {
                 delivery_context: DeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                event_type: EventType::Unfollow,
                 mode: s.mode,
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
@@ -53,7 +51,6 @@ impl EventFactory {
                 delivery_context: DeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                event_type: EventType::Postback,
                 postback: Postback {
                     data: s.postback.data,
                     params: match s.postback.params {
@@ -81,7 +78,6 @@ impl EventFactory {
                     delivery_context: DeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    event_type: EventType::VideoPlayComplete,
                     video_play_complete: VideoPlayComplete {
                         tracking_id: s.video_play_complete.tracking_id,
                     },
@@ -97,7 +93,6 @@ impl EventFactory {
                     delivery_context: DeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    event_type: EventType::Message,
                     message: match s.message {
                         CreateMessage::Text(m) => Message::Text(TextMessage {
                             id: m.id,
@@ -108,8 +103,8 @@ impl EventFactory {
                                 .map(|e| Emoji {
                                     index: e.index,
                                     length: e.length,
-                                    product_id: e.product_id,
-                                    emoji_id: e.emoji_id,
+                                    product_id: e.product_id.clone(),
+                                    emoji_id: e.emoji_id.clone(),
                                 })
                                 .collect(),
                         }),

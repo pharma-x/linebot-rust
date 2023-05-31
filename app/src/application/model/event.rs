@@ -19,7 +19,6 @@ pub enum CreateEvent {
 pub struct CreateFollowEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
-    pub event_type: CreateEventType,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
@@ -29,7 +28,6 @@ pub struct CreateFollowEvent {
 pub struct CreateUnfollowEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
-    pub event_type: CreateEventType,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
@@ -39,7 +37,6 @@ pub struct CreateUnfollowEvent {
 pub struct CreatePostbackEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
-    pub event_type: CreateEventType,
     pub postback: CreatePostback,
     pub mode: String,
     pub webhook_event_id: String,
@@ -50,7 +47,6 @@ pub struct CreatePostbackEvent {
 pub struct CreateVideoPlayCompleteEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
-    pub event_type: CreateEventType,
     pub video_play_complete: CreateVideoPlayComplete,
     pub mode: String,
     pub webhook_event_id: String,
@@ -60,7 +56,6 @@ pub struct CreateVideoPlayCompleteEvent {
 pub struct CreateMessageEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
-    pub event_type: CreateEventType,
     pub message: CreateMessage,
     pub mode: String,
     pub webhook_event_id: String,
@@ -127,7 +122,7 @@ pub struct CreateTextMessage {
     pub emojis: Vec<CreateEmoji>,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateEmoji {
     pub index: i32,
     pub length: i32,

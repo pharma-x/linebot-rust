@@ -1,7 +1,7 @@
 use crate::application::model::{
     event::{
         CreateAudioMessage, CreateContentProvider, CreateDeliveryContext, CreateEmoji, CreateEvent,
-        CreateEventType, CreateFileMessage, CreateFollowEvent, CreateImageMessage, CreateImageSet,
+        CreateFileMessage, CreateFollowEvent, CreateImageMessage, CreateImageSet,
         CreateLocationMessage, CreateMessage, CreateMessageEvent, CreatePostback,
         CreatePostbackDatetimeParams, CreatePostbackEvent, CreatePostbackParams,
         CreatePostbackRichMenuParams, CreateStickerMessage, CreateStickerResourceType,
@@ -234,17 +234,12 @@ struct LineWebhookVideoPlayComplete {
 
 impl From<LineWebhookEvent> for CreateUserEvent {
     fn from(s: LineWebhookEvent) -> Self {
-        let create_line_user_auth = CreateLineUserAuth {
-            user_id: s.source.user_id,
-        };
-
         let create_event = match s.r#type {
             LineWebhookEventType::Follow => CreateEvent::Follow(CreateFollowEvent {
                 reply_token: s.reply_token,
                 delivery_context: CreateDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                event_type: CreateEventType::Follow,
                 mode: s.mode,
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
@@ -254,7 +249,6 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                 delivery_context: CreateDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                event_type: CreateEventType::Unfollow,
                 mode: s.mode,
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
@@ -264,10 +258,9 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                 delivery_context: CreateDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                event_type: CreateEventType::Postback,
                 postback: CreatePostback {
-                    data: s.postback.unwrap().data,
-                    params: match s.postback.unwrap().params {
+                    data: s.postback.clone().unwrap().data,
+                    params: match s.postback.clone().unwrap().params {
                         LineWebhookPostbackParams::Datetime(p) => {
                             CreatePostbackParams::Datetime(CreatePostbackDatetimeParams {
                                 datetime: p.datetime,
@@ -291,7 +284,6 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                     delivery_context: CreateDeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    event_type: CreateEventType::VideoPlayComplete,
                     video_play_complete: CreateVideoPlayComplete {
                         tracking_id: s.video_play_complete.unwrap().tracking_id,
                     },
@@ -306,7 +298,6 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                     delivery_context: CreateDeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    event_type: CreateEventType::Message,
                     message: match s.message.unwrap() {
                         LineWebhookMessage::Text(m) => CreateMessage::Text(CreateTextMessage {
                             id: m.id,
@@ -317,8 +308,8 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                                 .map(|e| CreateEmoji {
                                     index: e.index,
                                     length: e.length,
-                                    product_id: e.product_id,
-                                    emoji_id: e.emoji_id,
+                                    product_id: e.product_id.clone(),
+                                    emoji_id: e.emoji_id.clone(),
                                 })
                                 .collect(),
                         }),

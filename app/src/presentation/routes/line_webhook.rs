@@ -40,11 +40,8 @@ pub async fn line_webhook_handler(
             LineWebhookEventType::VideoPlayComplete => {
                 println!("Other event: {:?}", event);
             }
-            _ => {
-                println!("Other event: {:?}", event);
-            }
         }
     }
 
-    Ok(StatusCode::OK)
+    result
 }

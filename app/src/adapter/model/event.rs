@@ -1,8 +1,10 @@
 use chrono::{DateTime, Local};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
-#[derive(Serialize)]
+use crate::domain::model::event::{Message, TextMessage, Emoji, ImageMessage, ContentProvider, ImageSet, VideoMessage, AudioMessage, FileMessage, StickerResourceType, LocationMessage, StickerMessage};
+
+#[derive(Serialize, Deserialize)]
 pub struct EventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
@@ -22,7 +24,7 @@ pub struct EventTable {
     sending_method: SendingMethod,
     sender: Option<Sender>,
     #[serde(rename(serialize = "eventType"))]
-    event_type: Option<EventTypeTable>,
+    event_type: EventTypeTable,
     messages: Option<Vec<MessageTable>>,
     postback: Option<PostbackTable>,
     video_play_complete: Option<VideoPlayCompleteTable>,
@@ -32,12 +34,12 @@ pub struct EventTable {
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct DeliveryContextTable {
     is_redelivery: bool,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 pub enum CommunicationTypeTable {
     #[strum(serialize = "send")]
     Send,
@@ -45,7 +47,7 @@ pub enum CommunicationTypeTable {
     Receive,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 pub enum SendingTypeTable {
     #[strum(serialize = "manual")]
     Manual,
@@ -53,7 +55,7 @@ pub enum SendingTypeTable {
     Bot,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 pub enum SendingMethod {
     #[strum(serialize = "replay")]
     Reply,
@@ -61,7 +63,7 @@ pub enum SendingMethod {
     Push,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Sender {
     id: i64,
     name: String,
@@ -70,13 +72,13 @@ pub struct Sender {
     sender_role: SenderRoleTable,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 enum SenderRoleTable {
     #[strum(serialize = "sender")]
     Sender,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 pub enum EventTypeTable {
     #[strum(serialize = "message")]
     Message,
@@ -90,37 +92,37 @@ pub enum EventTypeTable {
     VideoPlayComplete,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct PostbackTable {
     pub data: String,
     pub params: PostbackParamsTable,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub enum PostbackParamsTable {
     Datetime(PostbackDatetimeParamsTable),
     RichMenu(PostbackRichMenuParamsTable),
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct PostbackDatetimeParamsTable {
     pub datetime: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct PostbackRichMenuParamsTable {
     #[serde(rename(serialize = "newRichMenuAliasId"))]
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct VideoPlayCompleteTable {
     #[serde(rename(serialize = "trackingId"))]
     pub tracking_id: String,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 #[serde(tag = "messageType")] // JSONにmessageTypeというフィールドでタグ名を含む
 pub enum MessageTable {
     #[strum(serialize = "text")]
@@ -139,14 +141,14 @@ pub enum MessageTable {
     Sticker(StickerMessageTable),
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TextMessageTable {
     pub id: String,
     pub text: String,
     pub emojis: Vec<EmojiTable>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct EmojiTable {
     pub index: i32,
     pub length: i32,
@@ -156,7 +158,7 @@ pub struct EmojiTable {
     pub emoji_id: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ImageMessageTable {
     pub id: String,
     #[serde(rename(serialize = "contentProvider"))]
@@ -165,7 +167,7 @@ pub struct ImageMessageTable {
     pub image_set: ImageSetTable,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 #[serde(tag = "type")]
 pub enum ContentProviderTable {
     #[strum(serialize = "line")]
@@ -179,14 +181,14 @@ pub enum ContentProviderTable {
     },
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ImageSetTable {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct VideoMessageTable {
     pub id: String,
     pub duration: i32,
@@ -194,7 +196,7 @@ pub struct VideoMessageTable {
     pub content_provider: ContentProviderTable,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AudioMessageTable {
     pub id: String,
     pub duration: i32,
@@ -202,7 +204,7 @@ pub struct AudioMessageTable {
     pub content_provider: ContentProviderTable,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct FileMessageTable {
     pub id: String,
     #[serde(rename(serialize = "fileName"))]
@@ -211,7 +213,7 @@ pub struct FileMessageTable {
     pub file_size: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct LocationMessageTable {
     id: String,
     title: String,
@@ -220,7 +222,7 @@ pub struct LocationMessageTable {
     longitude: f64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct StickerMessageTable {
     id: String,
     #[serde(rename(serialize = "packageId"))]
@@ -233,7 +235,7 @@ pub struct StickerMessageTable {
     text: Option<String>,
 }
 
-#[derive(Serialize, Display)]
+#[derive(Serialize, Deserialize, Display)]
 pub enum StickerResourceTypeTable {
     #[strum(serialize = "STATIC")]
     Static,
@@ -251,4 +253,142 @@ pub enum StickerResourceTypeTable {
     Custom,
     #[strum(serialize = "MESSAGE")]
     Message,
+}
+
+
+impl From<Message> for MessageTable {
+    fn from(m: Message) -> Self {
+        match m {
+            Message::Text(t) => MessageTable::Text(t.into()),
+            Message::Image(i) => MessageTable::Image(i.into()),
+            Message::Video(v) => MessageTable::Video(v.into()),
+            Message::Audio(a) => MessageTable::Audio(a.into()),
+            Message::File(f) => MessageTable::File(f.into()),
+            Message::Location(l) => MessageTable::Location(l.into()),
+            Message::Sticker(s) => MessageTable::Sticker(s.into()),
+        }
+    }
+}
+
+impl From<TextMessage> for TextMessageTable {
+    fn from(t: TextMessage) -> Self {
+        TextMessageTable {
+            id: t.id,
+            text: t.text,
+            emojis: t.emojis.into_iter().map(|e| e.into()).collect(),
+        }
+    }
+}
+
+impl From<Emoji> for EmojiTable {
+    fn from(e: Emoji) -> Self {
+        EmojiTable {
+            index: e.index,
+            length: e.length,
+            product_id: e.product_id,
+            emoji_id: e.emoji_id,
+        }
+    }
+}
+
+impl From<ImageMessage> for ImageMessageTable {
+    fn from(i: ImageMessage) -> Self {
+        ImageMessageTable {
+            id: i.id,
+            content_provider: i.content_provider.into(),
+            image_set: i.image_set.into(),
+        }
+    }
+}
+
+impl From<ContentProvider> for ContentProviderTable {
+    fn from(value: ContentProvider) -> Self {
+        match value {
+            ContentProvider::Line => ContentProviderTable::Line,
+            ContentProvider::External { original_content_url, preview_image_url } => ContentProviderTable::External {
+                original_content_url,
+                preview_image_url,
+            },
+        }
+    }
+}
+
+impl From<ImageSet> for ImageSetTable {
+    fn from(i: ImageSet) -> Self {
+        ImageSetTable {
+            id: i.id,
+            index: i.index,
+            length: i.length,
+        }
+    }
+}
+
+impl From<VideoMessage> for VideoMessageTable {
+    fn from(v: VideoMessage) -> Self {
+        VideoMessageTable {
+            id: v.id,
+            duration: v.duration,
+            content_provider: v.content_provider.into(),
+        }
+    }
+}
+
+impl From<AudioMessage> for AudioMessageTable {
+    fn from(a: AudioMessage) -> Self {
+        AudioMessageTable {
+            id: a.id,
+            duration: a.duration,
+            content_provider: a.content_provider.into(),
+        }
+    }
+}
+
+impl From<FileMessage> for FileMessageTable {
+    fn from(f: FileMessage) -> Self {
+        FileMessageTable {
+            id: f.id,
+            file_name: f.file_name,
+            file_size: f.file_size,
+        }
+    }
+}
+
+impl From<LocationMessage> for LocationMessageTable {
+    fn from(l: LocationMessage) -> Self {
+        LocationMessageTable {
+            id: l.id,
+            title: l.title,
+            address: l.address,
+            latitude: l.latitude,
+            longitude: l.longitude,
+        }
+    }
+}
+
+impl From<StickerMessage> for StickerMessageTable {
+    fn from(s: StickerMessage) -> Self {
+        StickerMessageTable {
+            id: s.id,
+            package_id: s.package_id,
+            sticker_id: s.sticker_id,
+            sticker_resource_type: s.sticker_resource_type.into(),
+            keywords: s.keywords,
+            text: s.text,
+        }
+    }
+}
+
+impl From<StickerResourceType> for StickerResourceTypeTable {
+    fn from(s: StickerResourceType) -> Self {
+        match s {
+            StickerResourceType::Static => StickerResourceTypeTable::Static,
+            StickerResourceType::Animation => StickerResourceTypeTable::Animation,
+            StickerResourceType::Sound => StickerResourceTypeTable::Sound,
+            StickerResourceType::AnimationSound => StickerResourceTypeTable::AnimationSound,
+            StickerResourceType::Popup => StickerResourceTypeTable::Popup,
+            StickerResourceType::PupupSound => StickerResourceTypeTable::PupupSound,
+            StickerResourceType::Custom => StickerResourceTypeTable::Custom,
+            StickerResourceType::Message => StickerResourceTypeTable::Message,
+        }
+    }
 }

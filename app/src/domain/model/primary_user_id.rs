@@ -1,6 +1,6 @@
 use derive_new::new;
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct PrimaryUserId {
     id: String,
 }
