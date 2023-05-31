@@ -1,6 +1,6 @@
 use crate::domain::model::{
     line_user::LineUser,
-    user_auth::{AuthUserId, UserAuthData, AuthToken},
+    user_auth::{AuthToken, AuthUserId, UserAuthData},
 };
 use derive_new::new;
 

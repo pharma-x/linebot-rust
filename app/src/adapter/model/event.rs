@@ -2,7 +2,10 @@ use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
-use crate::domain::model::event::{Message, TextMessage, Emoji, ImageMessage, ContentProvider, ImageSet, VideoMessage, AudioMessage, FileMessage, StickerResourceType, LocationMessage, StickerMessage};
+use crate::domain::model::event::{
+    AudioMessage, ContentProvider, Emoji, FileMessage, ImageMessage, ImageSet, LocationMessage,
+    Message, StickerMessage, StickerResourceType, TextMessage, VideoMessage,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct EventTable {
@@ -255,7 +258,6 @@ pub enum StickerResourceTypeTable {
     Message,
 }
 
-
 impl From<Message> for MessageTable {
     fn from(m: Message) -> Self {
         match m {
@@ -305,7 +307,10 @@ impl From<ContentProvider> for ContentProviderTable {
     fn from(value: ContentProvider) -> Self {
         match value {
             ContentProvider::Line => ContentProviderTable::Line,
-            ContentProvider::External { original_content_url, preview_image_url } => ContentProviderTable::External {
+            ContentProvider::External {
+                original_content_url,
+                preview_image_url,
+            } => ContentProviderTable::External {
                 original_content_url,
                 preview_image_url,
             },
