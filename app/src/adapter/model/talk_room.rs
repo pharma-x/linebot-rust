@@ -17,7 +17,7 @@ pub struct TalkRoomTable {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TalkRoomCardTable {
     #[serde(rename(serialize = "documentId"))]
     pub document_id: String,
@@ -42,7 +42,7 @@ pub struct TalkRoomCardTable {
     pub updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 #[serde(tag = "eventType")]
 pub enum LatestMessageTable {
     Follow,

@@ -6,11 +6,8 @@ use crate::{
     },
 };
 
-use super::FirestoreRepositoryImpl;
+use super::{FirestoreRepositoryImpl, TALK_ROOM_COLLECTION_NAME, TALK_ROOM_CARD_COLLECTION_NAME};
 use async_trait::async_trait;
-
-const TALK_ROOM_COLLECTION_NAME: &'static str = "talkRooms";
-const TALK_ROOM_CARD_COLLECTION_NAME: &'static str = "talkRoomCards";
 
 #[async_trait]
 impl TalkRoomRepository for FirestoreRepositoryImpl<TalkRoom> {

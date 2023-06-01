@@ -10,54 +10,59 @@ pub enum Event {
 
 #[derive(new)]
 pub struct FollowEvent {
-    talk_room_id: String,
-    reply_token: String,
-    delivery_context: DeliveryContext,
-    mode: String,
-    webhook_event_id: String,
-    timestamp: i64,
+    pub id: String,
+    pub talk_room_id: String,
+    pub reply_token: String,
+    pub delivery_context: DeliveryContext,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub timestamp: i64,
 }
 
 #[derive(new)]
 pub struct UnfollowEvent {
-    talk_room_id: String,
-    reply_token: String,
-    delivery_context: DeliveryContext,
-    mode: String,
-    webhook_event_id: String,
-    timestamp: i64,
+    pub id: String,
+    pub talk_room_id: String,
+    pub reply_token: String,
+    pub delivery_context: DeliveryContext,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub timestamp: i64,
 }
 
 #[derive(new)]
 pub struct PostbackEvent {
-    talk_room_id: String,
-    reply_token: String,
-    delivery_context: DeliveryContext,
-    postback: Postback,
-    mode: String,
-    webhook_event_id: String,
-    timestamp: i64,
+    pub id: String,
+    pub talk_room_id: String,
+    pub reply_token: String,
+    pub delivery_context: DeliveryContext,
+    pub postback: Postback,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub timestamp: i64,
 }
 
 #[derive(new)]
 pub struct VideoPlayCompleteEvent {
-    talk_room_id: String,
-    reply_token: String,
-    delivery_context: DeliveryContext,
-    video_play_complete: VideoPlayComplete,
-    mode: String,
-    webhook_event_id: String,
-    timestamp: i64,
+    pub id: String,
+    pub talk_room_id: String,
+    pub reply_token: String,
+    pub delivery_context: DeliveryContext,
+    pub video_play_complete: VideoPlayComplete,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub timestamp: i64,
 }
 
 pub struct MessageEvent {
-    talk_room_id: String,
-    reply_token: String,
-    delivery_context: DeliveryContext,
-    message: Message,
-    mode: String,
-    webhook_event_id: String,
-    timestamp: i64,
+    pub id: String,
+    pub talk_room_id: String,
+    pub reply_token: String,
+    pub delivery_context: DeliveryContext,
+    pub message: Message,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub timestamp: i64,
 }
 
 #[derive(new)]

@@ -14,6 +14,7 @@ use crate::{
             VideoPlayComplete, VideoPlayCompleteEvent,
         },
         talk_room::TalkRoom,
+        Id,
     },
 };
 
@@ -21,11 +22,13 @@ use crate::{
 pub struct EventFactory {}
 
 impl EventFactory {
-    pub fn create_user_event(&self, talk_room: TalkRoom, s: CreateEvent) -> Event {
+    pub fn create_event(&self, talk_room: TalkRoom, s: CreateEvent) -> Event {
         let talk_room_id = talk_room.id;
+        let id = Id::<Event>::gen().value.to_string();
 
         let user_event = match s {
             CreateEvent::Follow(s) => Event::Follow(FollowEvent {
+                id,
                 talk_room_id,
                 reply_token: s.reply_token,
                 delivery_context: DeliveryContext {
@@ -36,6 +39,7 @@ impl EventFactory {
                 timestamp: s.timestamp,
             }),
             CreateEvent::Unfollow(s) => Event::Unfollow(UnfollowEvent {
+                id,
                 talk_room_id,
                 reply_token: s.reply_token,
                 delivery_context: DeliveryContext {
@@ -46,6 +50,7 @@ impl EventFactory {
                 timestamp: s.timestamp,
             }),
             CreateEvent::Postback(s) => Event::Postback(PostbackEvent {
+                id,
                 talk_room_id,
                 reply_token: s.reply_token,
                 delivery_context: DeliveryContext {
@@ -73,6 +78,7 @@ impl EventFactory {
             }),
             CreateEvent::VideoPlayComplete(s) => Event::VideoPlayComplete({
                 VideoPlayCompleteEvent {
+                    id,
                     talk_room_id,
                     reply_token: s.reply_token,
                     delivery_context: DeliveryContext {
@@ -88,6 +94,7 @@ impl EventFactory {
             }),
             CreateEvent::Message(s) => Event::Message({
                 MessageEvent {
+                    id,
                     talk_room_id,
                     reply_token: s.reply_token,
                     delivery_context: DeliveryContext {

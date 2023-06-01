@@ -37,12 +37,11 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .create_talk_room(line_user)
             .await?;
 
-        // todo factoryの実装
-        let event = EventFactory::new().create_user_event(talk_room, source.create_user_event);
-        let message = self
+        let event = EventFactory::new().create_event(talk_room.clone(), source.create_user_event);
+        self
             .repositories
             .event_repository()
-            .create_event(event)
+            .create_event(event, talk_room.clone())
             .await?;
 
         Ok(())
