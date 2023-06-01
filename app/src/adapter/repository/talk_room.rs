@@ -6,7 +6,7 @@ use crate::{
     },
 };
 
-use super::{FirestoreRepositoryImpl, TALK_ROOM_COLLECTION_NAME, TALK_ROOM_CARD_COLLECTION_NAME};
+use super::{FirestoreRepositoryImpl, TALK_ROOM_CARD_COLLECTION_NAME, TALK_ROOM_COLLECTION_NAME};
 use async_trait::async_trait;
 
 #[async_trait]

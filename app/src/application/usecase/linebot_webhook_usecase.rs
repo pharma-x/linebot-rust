@@ -38,8 +38,7 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .await?;
 
         let event = EventFactory::new().create_event(talk_room.clone(), source.create_user_event);
-        self
-            .repositories
+        self.repositories
             .event_repository()
             .create_event(event, talk_room.clone())
             .await?;

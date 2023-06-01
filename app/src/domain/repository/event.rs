@@ -1,4 +1,4 @@
-use crate::{domain::model::{event::Event, talk_room::TalkRoom}, adapter::model::talk_room};
+use crate::domain::model::{event::Event, talk_room::TalkRoom};
 use async_trait::async_trait;
 
 #[async_trait]
