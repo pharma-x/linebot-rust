@@ -71,6 +71,7 @@ dependencies = [
  "derive-new",
  "dotenv",
  "firestore",
+ "futures",
  "http-body",
  "hyper",
  "reqwest",

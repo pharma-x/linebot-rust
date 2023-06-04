@@ -3,39 +3,31 @@ use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
 use crate::domain::model::event::{
-    AudioMessage, ContentProvider, Emoji, Event, FileMessage, FollowEvent, ImageMessage, ImageSet,
-    LocationMessage, Message, MessageEvent, PostbackDatetimeParams, PostbackEvent, PostbackParams,
-    PostbackRichMenuParams, StickerMessage, StickerResourceType, TextMessage, UnfollowEvent,
-    VideoMessage, VideoPlayCompleteEvent,
+    NewAudioMessage, NewContentProvider, NewEmoji, NewEvent, NewFileMessage, NewFollowEvent,
+    NewImageMessage, NewImageSet, NewLocationMessage, NewMessage, NewMessageEvent,
+    NewPostbackDatetimeParams, NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams,
+    NewStickerMessage, NewStickerResourceType, NewTextMessage, NewUnfollowEvent, NewVideoMessage,
+    NewVideoPlayCompleteEvent,
 };
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 #[serde(tag = "type")]
 pub enum EventTable {
     Follow(FllowEventTable),
     Unfollow(UnfollowEventTable),
-    Message(MessageEventTable),
     Postback(PostbackEventTable),
     VideoPlayComplete(VideoPlayCompleteEventTable),
+    Message(MessageEventTable),
 }
 
 impl EventTable {
-    pub fn document_id(&self) -> String {
+    pub fn document_id(&self) -> &String {
         return match self {
-            EventTable::Follow(e) => e.document_id,
-            EventTable::Unfollow(e) => e.document_id,
-            EventTable::Message(e) => e.document_id,
-            EventTable::Postback(e) => e.document_id,
-            EventTable::VideoPlayComplete(e) => e.document_id,
-        };
-    }
-    pub fn talk_room_id(&self) -> String {
-        return match self {
-            EventTable::Follow(e) => e.talk_room_id,
-            EventTable::Unfollow(e) => e.talk_room_id,
-            EventTable::Message(e) => e.talk_room_id,
-            EventTable::Postback(e) => e.talk_room_id,
-            EventTable::VideoPlayComplete(e) => e.talk_room_id,
+            EventTable::Follow(e) => &e.document_id,
+            EventTable::Unfollow(e) => &e.document_id,
+            EventTable::Message(e) => &e.document_id,
+            EventTable::Postback(e) => &e.document_id,
+            EventTable::VideoPlayComplete(e) => &e.document_id,
         };
     }
     pub fn created_at(&self) -> DateTime<Local> {
@@ -49,12 +41,10 @@ impl EventTable {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct FllowEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "talkRoomId"))]
-    talk_room_id: String,
     #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
     #[serde(rename(serialize = "webhookEventId"))]
@@ -73,12 +63,10 @@ pub struct FllowEventTable {
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UnfollowEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "talkRoomId"))]
-    talk_room_id: String,
     #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
     #[serde(rename(serialize = "webhookEventId"))]
@@ -97,12 +85,10 @@ pub struct UnfollowEventTable {
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MessageEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "talkRoomId"))]
-    talk_room_id: String,
     #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
     #[serde(rename(serialize = "webhookEventId"))]
@@ -115,19 +101,17 @@ pub struct MessageEventTable {
     sending_type: SendingTypeTable,
     #[serde(rename(serialize = "sendingMethod"))]
     sending_method: SendingMethod,
-    messages: Vec<MessageTable>,
+    pub messages: Vec<MessageTable>,
     #[serde(rename(serialize = "createdAt"))]
     created_at: DateTime<Local>,
     #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PostbackEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "talkRoomId"))]
-    talk_room_id: String,
     #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
     #[serde(rename(serialize = "webhookEventId"))]
@@ -147,12 +131,10 @@ pub struct PostbackEventTable {
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct VideoPlayCompleteEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "talkRoomId"))]
-    talk_room_id: String,
     #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
     #[serde(rename(serialize = "webhookEventId"))]
@@ -172,12 +154,12 @@ pub struct VideoPlayCompleteEventTable {
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DeliveryContextTable {
     is_redelivery: bool,
 }
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 pub enum CommunicationTypeTable {
     #[strum(serialize = "send")]
     Send,
@@ -185,7 +167,7 @@ pub enum CommunicationTypeTable {
     Receive,
 }
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 pub enum SendingTypeTable {
     #[strum(serialize = "manual")]
     Manual,
@@ -193,7 +175,7 @@ pub enum SendingTypeTable {
     Bot,
 }
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 pub enum SendingMethod {
     #[strum(serialize = "replay")]
     Reply,
@@ -201,7 +183,7 @@ pub enum SendingMethod {
     Push,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Sender {
     id: i64,
     name: String,
@@ -210,13 +192,13 @@ pub struct Sender {
     sender_role: SenderRoleTable,
 }
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 enum SenderRoleTable {
     #[strum(serialize = "sender")]
     Sender,
 }
 
-#[derive(Serialize, Deserialize, Display)]
+#[derive(Serialize, Deserialize, Display, Clone)]
 pub enum EventTypeTable {
     #[strum(serialize = "message")]
     Message,
@@ -230,31 +212,31 @@ pub enum EventTypeTable {
     VideoPlayComplete,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PostbackTable {
     pub data: String,
     pub params: PostbackParamsTable,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum PostbackParamsTable {
     Datetime(PostbackDatetimeParamsTable),
     RichMenu(PostbackRichMenuParamsTable),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PostbackDatetimeParamsTable {
     pub datetime: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PostbackRichMenuParamsTable {
     #[serde(rename(serialize = "newRichMenuAliasId"))]
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct VideoPlayCompleteTable {
     #[serde(rename(serialize = "trackingId"))]
     pub tracking_id: String,
@@ -353,24 +335,24 @@ pub struct FileMessageTable {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct LocationMessageTable {
-    id: String,
-    title: String,
-    address: String,
-    latitude: f64,
-    longitude: f64,
+    pub id: String,
+    pub title: String,
+    pub address: String,
+    pub latitude: f64,
+    pub longitude: f64,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct StickerMessageTable {
-    id: String,
+    pub id: String,
     #[serde(rename(serialize = "packageId"))]
-    package_id: String,
+    pub package_id: String,
     #[serde(rename(serialize = "stickerId"))]
-    sticker_id: String,
+    pub sticker_id: String,
     #[serde(rename(serialize = "stickerResourceType"))]
-    sticker_resource_type: StickerResourceTypeTable,
-    keywords: Option<Vec<String>>,
-    text: Option<String>,
+    pub sticker_resource_type: StickerResourceTypeTable,
+    pub keywords: Option<Vec<String>>,
+    pub text: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Display, Clone)]
@@ -393,23 +375,23 @@ pub enum StickerResourceTypeTable {
     Message,
 }
 
-impl From<Event> for EventTable {
-    fn from(e: Event) -> Self {
+//
+impl From<NewEvent> for EventTable {
+    fn from(e: NewEvent) -> Self {
         match e {
-            Event::Follow(f) => EventTable::Follow(f.into()),
-            Event::Unfollow(u) => EventTable::Unfollow(u.into()),
-            Event::Message(m) => EventTable::Message(m.into()),
-            Event::Postback(p) => EventTable::Postback(p.into()),
-            Event::VideoPlayComplete(v) => EventTable::VideoPlayComplete(v.into()),
+            NewEvent::Follow(f) => EventTable::Follow(f.into()),
+            NewEvent::Unfollow(u) => EventTable::Unfollow(u.into()),
+            NewEvent::Message(m) => EventTable::Message(m.into()),
+            NewEvent::Postback(p) => EventTable::Postback(p.into()),
+            NewEvent::VideoPlayComplete(v) => EventTable::VideoPlayComplete(v.into()),
         }
     }
 }
 
-impl From<FollowEvent> for FllowEventTable {
-    fn from(e: FollowEvent) -> Self {
+impl From<NewFollowEvent> for FllowEventTable {
+    fn from(e: NewFollowEvent) -> Self {
         FllowEventTable {
-            document_id: e.id,
-            talk_room_id: e.talk_room_id,
+            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: DeliveryContextTable {
@@ -424,11 +406,10 @@ impl From<FollowEvent> for FllowEventTable {
     }
 }
 
-impl From<UnfollowEvent> for UnfollowEventTable {
-    fn from(e: UnfollowEvent) -> Self {
+impl From<NewUnfollowEvent> for UnfollowEventTable {
+    fn from(e: NewUnfollowEvent) -> Self {
         UnfollowEventTable {
-            document_id: e.id,
-            talk_room_id: e.talk_room_id,
+            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: DeliveryContextTable {
@@ -443,11 +424,10 @@ impl From<UnfollowEvent> for UnfollowEventTable {
     }
 }
 
-impl From<MessageEvent> for MessageEventTable {
-    fn from(e: MessageEvent) -> Self {
+impl From<NewMessageEvent> for MessageEventTable {
+    fn from(e: NewMessageEvent) -> Self {
         MessageEventTable {
-            document_id: e.id,
-            talk_room_id: e.talk_room_id,
+            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: DeliveryContextTable {
@@ -463,11 +443,10 @@ impl From<MessageEvent> for MessageEventTable {
     }
 }
 
-impl From<PostbackEvent> for PostbackEventTable {
-    fn from(e: PostbackEvent) -> Self {
+impl From<NewPostbackEvent> for PostbackEventTable {
+    fn from(e: NewPostbackEvent) -> Self {
         PostbackEventTable {
-            document_id: e.id,
-            talk_room_id: e.talk_room_id,
+            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: DeliveryContextTable {
@@ -479,8 +458,8 @@ impl From<PostbackEvent> for PostbackEventTable {
             postback: PostbackTable {
                 data: e.postback.data,
                 params: match e.postback.params {
-                    PostbackParams::Datetime(p) => PostbackParamsTable::Datetime(p.into()),
-                    PostbackParams::RichMenu(p) => PostbackParamsTable::RichMenu(p.into()),
+                    NewPostbackParams::Datetime(p) => PostbackParamsTable::Datetime(p.into()),
+                    NewPostbackParams::RichMenu(p) => PostbackParamsTable::RichMenu(p.into()),
                 },
             },
             created_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
@@ -489,11 +468,27 @@ impl From<PostbackEvent> for PostbackEventTable {
     }
 }
 
-impl From<VideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
-    fn from(e: VideoPlayCompleteEvent) -> Self {
+impl From<NewPostbackDatetimeParams> for PostbackDatetimeParamsTable {
+    fn from(p: NewPostbackDatetimeParams) -> Self {
+        PostbackDatetimeParamsTable {
+            datetime: p.datetime,
+        }
+    }
+}
+
+impl From<NewPostbackRichMenuParams> for PostbackRichMenuParamsTable {
+    fn from(p: NewPostbackRichMenuParams) -> Self {
+        PostbackRichMenuParamsTable {
+            new_rich_menu_alias_id: p.new_rich_menu_alias_id,
+            status: p.status,
+        }
+    }
+}
+
+impl From<NewVideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
+    fn from(e: NewVideoPlayCompleteEvent) -> Self {
         VideoPlayCompleteEventTable {
-            document_id: e.id,
-            talk_room_id: e.talk_room_id,
+            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: DeliveryContextTable {
@@ -511,22 +506,23 @@ impl From<VideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
     }
 }
 
-impl From<Message> for MessageTable {
-    fn from(m: Message) -> Self {
+// from NewMessage to MessageTable
+impl From<NewMessage> for MessageTable {
+    fn from(m: NewMessage) -> Self {
         match m {
-            Message::Text(t) => MessageTable::Text(t.into()),
-            Message::Image(i) => MessageTable::Image(i.into()),
-            Message::Video(v) => MessageTable::Video(v.into()),
-            Message::Audio(a) => MessageTable::Audio(a.into()),
-            Message::File(f) => MessageTable::File(f.into()),
-            Message::Location(l) => MessageTable::Location(l.into()),
-            Message::Sticker(s) => MessageTable::Sticker(s.into()),
+            NewMessage::Text(t) => MessageTable::Text(t.into()),
+            NewMessage::Image(i) => MessageTable::Image(i.into()),
+            NewMessage::Video(v) => MessageTable::Video(v.into()),
+            NewMessage::Audio(a) => MessageTable::Audio(a.into()),
+            NewMessage::File(f) => MessageTable::File(f.into()),
+            NewMessage::Location(l) => MessageTable::Location(l.into()),
+            NewMessage::Sticker(s) => MessageTable::Sticker(s.into()),
         }
     }
 }
 
-impl From<TextMessage> for TextMessageTable {
-    fn from(t: TextMessage) -> Self {
+impl From<NewTextMessage> for TextMessageTable {
+    fn from(t: NewTextMessage) -> Self {
         TextMessageTable {
             id: t.id,
             text: t.text,
@@ -535,8 +531,8 @@ impl From<TextMessage> for TextMessageTable {
     }
 }
 
-impl From<Emoji> for EmojiTable {
-    fn from(e: Emoji) -> Self {
+impl From<NewEmoji> for EmojiTable {
+    fn from(e: NewEmoji) -> Self {
         EmojiTable {
             index: e.index,
             length: e.length,
@@ -546,8 +542,8 @@ impl From<Emoji> for EmojiTable {
     }
 }
 
-impl From<ImageMessage> for ImageMessageTable {
-    fn from(i: ImageMessage) -> Self {
+impl From<NewImageMessage> for ImageMessageTable {
+    fn from(i: NewImageMessage) -> Self {
         ImageMessageTable {
             id: i.id,
             content_provider: i.content_provider.into(),
@@ -556,11 +552,11 @@ impl From<ImageMessage> for ImageMessageTable {
     }
 }
 
-impl From<ContentProvider> for ContentProviderTable {
-    fn from(value: ContentProvider) -> Self {
+impl From<NewContentProvider> for ContentProviderTable {
+    fn from(value: NewContentProvider) -> Self {
         match value {
-            ContentProvider::Line => ContentProviderTable::Line,
-            ContentProvider::External {
+            NewContentProvider::Line => ContentProviderTable::Line,
+            NewContentProvider::External {
                 original_content_url,
                 preview_image_url,
             } => ContentProviderTable::External {
@@ -571,25 +567,8 @@ impl From<ContentProvider> for ContentProviderTable {
     }
 }
 
-impl From<PostbackDatetimeParams> for PostbackDatetimeParamsTable {
-    fn from(p: PostbackDatetimeParams) -> Self {
-        PostbackDatetimeParamsTable {
-            datetime: p.datetime,
-        }
-    }
-}
-
-impl From<PostbackRichMenuParams> for PostbackRichMenuParamsTable {
-    fn from(p: PostbackRichMenuParams) -> Self {
-        PostbackRichMenuParamsTable {
-            new_rich_menu_alias_id: p.new_rich_menu_alias_id,
-            status: p.status,
-        }
-    }
-}
-
-impl From<ImageSet> for ImageSetTable {
-    fn from(i: ImageSet) -> Self {
+impl From<NewImageSet> for ImageSetTable {
+    fn from(i: NewImageSet) -> Self {
         ImageSetTable {
             id: i.id,
             index: i.index,
@@ -598,8 +577,8 @@ impl From<ImageSet> for ImageSetTable {
     }
 }
 
-impl From<VideoMessage> for VideoMessageTable {
-    fn from(v: VideoMessage) -> Self {
+impl From<NewVideoMessage> for VideoMessageTable {
+    fn from(v: NewVideoMessage) -> Self {
         VideoMessageTable {
             id: v.id,
             duration: v.duration,
@@ -608,8 +587,8 @@ impl From<VideoMessage> for VideoMessageTable {
     }
 }
 
-impl From<AudioMessage> for AudioMessageTable {
-    fn from(a: AudioMessage) -> Self {
+impl From<NewAudioMessage> for AudioMessageTable {
+    fn from(a: NewAudioMessage) -> Self {
         AudioMessageTable {
             id: a.id,
             duration: a.duration,
@@ -618,8 +597,8 @@ impl From<AudioMessage> for AudioMessageTable {
     }
 }
 
-impl From<FileMessage> for FileMessageTable {
-    fn from(f: FileMessage) -> Self {
+impl From<NewFileMessage> for FileMessageTable {
+    fn from(f: NewFileMessage) -> Self {
         FileMessageTable {
             id: f.id,
             file_name: f.file_name,
@@ -628,8 +607,8 @@ impl From<FileMessage> for FileMessageTable {
     }
 }
 
-impl From<LocationMessage> for LocationMessageTable {
-    fn from(l: LocationMessage) -> Self {
+impl From<NewLocationMessage> for LocationMessageTable {
+    fn from(l: NewLocationMessage) -> Self {
         LocationMessageTable {
             id: l.id,
             title: l.title,
@@ -640,8 +619,8 @@ impl From<LocationMessage> for LocationMessageTable {
     }
 }
 
-impl From<StickerMessage> for StickerMessageTable {
-    fn from(s: StickerMessage) -> Self {
+impl From<NewStickerMessage> for StickerMessageTable {
+    fn from(s: NewStickerMessage) -> Self {
         StickerMessageTable {
             id: s.id,
             package_id: s.package_id,
@@ -653,17 +632,17 @@ impl From<StickerMessage> for StickerMessageTable {
     }
 }
 
-impl From<StickerResourceType> for StickerResourceTypeTable {
-    fn from(s: StickerResourceType) -> Self {
+impl From<NewStickerResourceType> for StickerResourceTypeTable {
+    fn from(s: NewStickerResourceType) -> Self {
         match s {
-            StickerResourceType::Static => StickerResourceTypeTable::Static,
-            StickerResourceType::Animation => StickerResourceTypeTable::Animation,
-            StickerResourceType::Sound => StickerResourceTypeTable::Sound,
-            StickerResourceType::AnimationSound => StickerResourceTypeTable::AnimationSound,
-            StickerResourceType::Popup => StickerResourceTypeTable::Popup,
-            StickerResourceType::PupupSound => StickerResourceTypeTable::PupupSound,
-            StickerResourceType::Custom => StickerResourceTypeTable::Custom,
-            StickerResourceType::Message => StickerResourceTypeTable::Message,
+            NewStickerResourceType::Static => StickerResourceTypeTable::Static,
+            NewStickerResourceType::Animation => StickerResourceTypeTable::Animation,
+            NewStickerResourceType::Sound => StickerResourceTypeTable::Sound,
+            NewStickerResourceType::AnimationSound => StickerResourceTypeTable::AnimationSound,
+            NewStickerResourceType::Popup => StickerResourceTypeTable::Popup,
+            NewStickerResourceType::PupupSound => StickerResourceTypeTable::PupupSound,
+            NewStickerResourceType::Custom => StickerResourceTypeTable::Custom,
+            NewStickerResourceType::Message => StickerResourceTypeTable::Message,
         }
     }
 }

@@ -16,7 +16,7 @@ impl TryFrom<ResponseLineAuth> for LineUserProfile {
     type Error = anyhow::Error;
     fn try_from(s: ResponseLineAuth) -> anyhow::Result<Self> {
         Ok(LineUserProfile {
-            auth_id: AuthUserId::new(s.user_id),
+            auth_id: AuthUserId::Line(s.user_id),
             display_name: s.display_name,
             picture_url: s.picture_url.unwrap_or("".to_string()),
         })

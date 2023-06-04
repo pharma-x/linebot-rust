@@ -1,6 +1,7 @@
 use crate::domain::model::{
-    line_user::{LineUser, LineUserProfile},
+    line_user::LineUserProfile,
     primary_user_id::PrimaryUserId,
+    user::{User, UserProfile},
     user_auth::AuthUserId,
 };
 use chrono::{DateTime, Local};
@@ -16,16 +17,16 @@ pub struct LineUserTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl TryFrom<LineUserTable> for LineUser {
+impl TryFrom<LineUserTable> for User {
     type Error = anyhow::Error;
     fn try_from(l: LineUserTable) -> Result<Self, Self::Error> {
-        Ok(LineUser {
+        Ok(User {
             id: PrimaryUserId::new(l.primary_user_id),
-            user_profile: LineUserProfile::new(
-                AuthUserId::new(l.line_id),
-                l.display_name,
-                l.picture_url,
-            ),
+            user_profile: UserProfile::Line(LineUserProfile {
+                auth_id: AuthUserId::Line(l.line_id),
+                display_name: l.display_name,
+                picture_url: l.picture_url,
+            }),
         })
     }
 }

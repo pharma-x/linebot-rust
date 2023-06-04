@@ -1,71 +1,75 @@
-use derive_new::new;
-
 use crate::{
     application::model::event::{
         CreateContentProvider, CreateEvent, CreateMessage, CreatePostbackParams,
         CreateStickerResourceType,
     },
-    domain::model::{
-        event::{
-            AudioMessage, ContentProvider, DeliveryContext, Emoji, Event, FileMessage, FollowEvent,
-            ImageMessage, ImageSet, LocationMessage, Message, MessageEvent, Postback,
-            PostbackDatetimeParams, PostbackEvent, PostbackParams, PostbackRichMenuParams,
-            StickerMessage, StickerResourceType, TextMessage, UnfollowEvent, VideoMessage,
-            VideoPlayComplete, VideoPlayCompleteEvent,
+    domain::{
+        factory::event::EventFactory,
+        model::{
+            event::{
+                Event, NewAudioMessage, NewContentProvider, NewDeliveryContext, NewEmoji, NewEvent,
+                NewFileMessage, NewFollowEvent, NewImageMessage, NewImageSet, NewLocationMessage,
+                NewMessage, NewMessageEvent, NewPostback, NewPostbackDatetimeParams,
+                NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams, NewStickerMessage,
+                NewStickerResourceType, NewTextMessage, NewUnfollowEvent, NewVideoMessage,
+                NewVideoPlayComplete, NewVideoPlayCompleteEvent,
+            },
+            primary_user_id::PrimaryUserId,
+            Id,
         },
-        talk_room::TalkRoom,
-        Id,
     },
 };
 
-#[derive(new)]
-pub struct EventFactory {}
+use super::FactoryImpl;
 
-impl EventFactory {
-    pub fn create_event(&self, talk_room: TalkRoom, s: CreateEvent) -> Event {
-        let talk_room_id = talk_room.id;
-        let id = Id::<Event>::gen().value.to_string();
+impl EventFactory for FactoryImpl<Event> {
+    fn create_new_event(
+        &self,
+        primary_user_id: PrimaryUserId,
+        create_event: CreateEvent,
+    ) -> NewEvent {
+        let id = Id::<Event>::gen();
 
-        let user_event = match s {
-            CreateEvent::Follow(s) => Event::Follow(FollowEvent {
+        let user_event = match create_event {
+            CreateEvent::Follow(s) => NewEvent::Follow(NewFollowEvent {
                 id,
-                talk_room_id,
+                primary_user_id,
                 reply_token: s.reply_token,
-                delivery_context: DeliveryContext {
+                delivery_context: NewDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
                 mode: s.mode,
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
             }),
-            CreateEvent::Unfollow(s) => Event::Unfollow(UnfollowEvent {
+            CreateEvent::Unfollow(s) => NewEvent::Unfollow(NewUnfollowEvent {
                 id,
-                talk_room_id,
+                primary_user_id,
                 reply_token: s.reply_token,
-                delivery_context: DeliveryContext {
+                delivery_context: NewDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
                 mode: s.mode,
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
             }),
-            CreateEvent::Postback(s) => Event::Postback(PostbackEvent {
+            CreateEvent::Postback(s) => NewEvent::Postback(NewPostbackEvent {
                 id,
-                talk_room_id,
+                primary_user_id,
                 reply_token: s.reply_token,
-                delivery_context: DeliveryContext {
+                delivery_context: NewDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
                 },
-                postback: Postback {
+                postback: NewPostback {
                     data: s.postback.data,
                     params: match s.postback.params {
                         CreatePostbackParams::Datetime(p) => {
-                            PostbackParams::Datetime(PostbackDatetimeParams {
+                            NewPostbackParams::Datetime(NewPostbackDatetimeParams {
                                 datetime: p.datetime,
                             })
                         }
                         CreatePostbackParams::RichMenu(p) => {
-                            PostbackParams::RichMenu(PostbackRichMenuParams {
+                            NewPostbackParams::RichMenu(NewPostbackRichMenuParams {
                                 new_rich_menu_alias_id: p.new_rich_menu_alias_id,
                                 status: p.status,
                             })
@@ -76,15 +80,15 @@ impl EventFactory {
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
             }),
-            CreateEvent::VideoPlayComplete(s) => Event::VideoPlayComplete({
-                VideoPlayCompleteEvent {
+            CreateEvent::VideoPlayComplete(s) => NewEvent::VideoPlayComplete({
+                NewVideoPlayCompleteEvent {
                     id,
-                    talk_room_id,
+                    primary_user_id,
                     reply_token: s.reply_token,
-                    delivery_context: DeliveryContext {
+                    delivery_context: NewDeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
-                    video_play_complete: VideoPlayComplete {
+                    video_play_complete: NewVideoPlayComplete {
                         tracking_id: s.video_play_complete.tracking_id,
                     },
                     mode: s.mode,
@@ -92,22 +96,22 @@ impl EventFactory {
                     timestamp: s.timestamp,
                 }
             }),
-            CreateEvent::Message(s) => Event::Message({
-                MessageEvent {
+            CreateEvent::Message(s) => NewEvent::Message({
+                NewMessageEvent {
                     id,
-                    talk_room_id,
+                    primary_user_id,
                     reply_token: s.reply_token,
-                    delivery_context: DeliveryContext {
+                    delivery_context: NewDeliveryContext {
                         is_redelivery: s.delivery_context.is_redelivery,
                     },
                     message: match s.message {
-                        CreateMessage::Text(m) => Message::Text(TextMessage {
+                        CreateMessage::Text(m) => NewMessage::Text(NewTextMessage {
                             id: m.id,
                             text: m.text,
                             emojis: m
                                 .emojis
                                 .iter()
-                                .map(|e| Emoji {
+                                .map(|e| NewEmoji {
                                     index: e.index,
                                     length: e.length,
                                     product_id: e.product_id.clone(),
@@ -115,83 +119,85 @@ impl EventFactory {
                                 })
                                 .collect(),
                         }),
-                        CreateMessage::Image(m) => Message::Image(ImageMessage {
+                        CreateMessage::Image(m) => NewMessage::Image(NewImageMessage {
                             id: m.id,
                             content_provider: match m.content_provider {
-                                CreateContentProvider::Line => ContentProvider::Line,
+                                CreateContentProvider::Line => NewContentProvider::Line,
                                 CreateContentProvider::External {
                                     original_content_url,
                                     preview_image_url,
-                                } => ContentProvider::External {
+                                } => NewContentProvider::External {
                                     original_content_url,
                                     preview_image_url,
                                 },
                             },
-                            image_set: ImageSet {
+                            image_set: NewImageSet {
                                 id: m.image_set.id,
                                 index: m.image_set.index,
                                 length: m.image_set.length,
                             },
                         }),
-                        CreateMessage::Video(m) => Message::Video(VideoMessage {
+                        CreateMessage::Video(m) => NewMessage::Video(NewVideoMessage {
                             id: m.id,
                             duration: m.duration,
                             content_provider: match m.content_provider {
-                                CreateContentProvider::Line => ContentProvider::Line,
+                                CreateContentProvider::Line => NewContentProvider::Line,
                                 CreateContentProvider::External {
                                     original_content_url,
                                     preview_image_url,
-                                } => ContentProvider::External {
+                                } => NewContentProvider::External {
                                     original_content_url,
                                     preview_image_url,
                                 },
                             },
                         }),
-                        CreateMessage::Audio(m) => Message::Audio(AudioMessage {
+                        CreateMessage::Audio(m) => NewMessage::Audio(NewAudioMessage {
                             id: m.id,
                             duration: m.duration,
                             content_provider: match m.content_provider {
-                                CreateContentProvider::Line => ContentProvider::Line,
+                                CreateContentProvider::Line => NewContentProvider::Line,
                                 CreateContentProvider::External {
                                     original_content_url,
                                     preview_image_url,
-                                } => ContentProvider::External {
+                                } => NewContentProvider::External {
                                     original_content_url,
                                     preview_image_url,
                                 },
                             },
                         }),
-                        CreateMessage::File(m) => Message::File(FileMessage {
+                        CreateMessage::File(m) => NewMessage::File(NewFileMessage {
                             id: m.id,
                             file_name: m.file_name,
                             file_size: m.file_size,
                         }),
-                        CreateMessage::Location(m) => Message::Location(LocationMessage {
+                        CreateMessage::Location(m) => NewMessage::Location(NewLocationMessage {
                             id: m.id,
                             title: m.title,
                             address: m.address,
                             latitude: m.latitude,
                             longitude: m.longitude,
                         }),
-                        CreateMessage::Sticker(m) => Message::Sticker(StickerMessage {
+                        CreateMessage::Sticker(m) => NewMessage::Sticker(NewStickerMessage {
                             id: m.id,
                             package_id: m.package_id,
                             sticker_id: m.sticker_id,
                             sticker_resource_type: match m.sticker_resource_type {
-                                CreateStickerResourceType::Static => StickerResourceType::Static,
+                                CreateStickerResourceType::Static => NewStickerResourceType::Static,
                                 CreateStickerResourceType::Animation => {
-                                    StickerResourceType::Animation
+                                    NewStickerResourceType::Animation
                                 }
-                                CreateStickerResourceType::Sound => StickerResourceType::Sound,
+                                CreateStickerResourceType::Sound => NewStickerResourceType::Sound,
                                 CreateStickerResourceType::AnimationSound => {
-                                    StickerResourceType::AnimationSound
+                                    NewStickerResourceType::AnimationSound
                                 }
-                                CreateStickerResourceType::Popup => StickerResourceType::Popup,
+                                CreateStickerResourceType::Popup => NewStickerResourceType::Popup,
                                 CreateStickerResourceType::PupupSound => {
-                                    StickerResourceType::PupupSound
+                                    NewStickerResourceType::PupupSound
                                 }
-                                CreateStickerResourceType::Custom => StickerResourceType::Custom,
-                                CreateStickerResourceType::Message => StickerResourceType::Message,
+                                CreateStickerResourceType::Custom => NewStickerResourceType::Custom,
+                                CreateStickerResourceType::Message => {
+                                    NewStickerResourceType::Message
+                                }
                             },
                             keywords: m.keywords,
                             text: m.text,
@@ -203,7 +209,6 @@ impl EventFactory {
                 }
             }),
         };
-
         user_event
     }
 }

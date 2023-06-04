@@ -420,7 +420,7 @@ impl From<LineWebhookEvent> for CreateUserEvent {
             create_line_user_auth: CreateLineUserAuth {
                 user_id: s.source.user_id,
             },
-            create_user_event: create_event,
+            create_event,
         }
     }
 }

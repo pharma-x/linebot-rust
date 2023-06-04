@@ -4,9 +4,8 @@ use reqwest::Client;
 use std::marker::PhantomData;
 
 pub mod event;
-pub mod line_user;
-pub mod line_user_auth;
 pub mod talk_room;
+pub mod user;
 pub mod user_auth;
 
 const TALK_ROOM_COLLECTION_NAME: &'static str = "talkRooms";

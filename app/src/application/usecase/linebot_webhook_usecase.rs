@@ -1,9 +1,9 @@
-use crate::adapter::module::RepositoriesModuleExt;
-use crate::application::factory::event::EventFactory;
+use crate::adapter::module::{FactoriesModuleExt, RepositoriesModuleExt};
 use crate::application::model::event::CreateUserEvent;
+use crate::domain::factory::{event::EventFactory, talk_room::TalkRoomFactory};
 use crate::domain::repository::{
-    event::EventRepository, line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
-    talk_room::TalkRoomRepository,
+    event::EventRepository, talk_room::TalkRoomRepository, user::UserRepository,
+    user_auth::UserAuthRepository,
 };
 
 use anyhow::Ok;
@@ -11,22 +11,23 @@ use derive_new::new;
 use std::sync::Arc;
 
 #[derive(new)]
-pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
+pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt, F: FactoriesModuleExt> {
     repositories: Arc<R>,
+    factories: Arc<F>,
 }
 
-impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
+impl<R: RepositoriesModuleExt, F: FactoriesModuleExt> LinebotWebhookUseCase<R, F> {
     pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
         let user_profile = self
             .repositories
-            .line_user_auth_repository()
-            .get_user_profile(source.create_line_user_auth.try_into()?)
+            .user_auth_repository()
+            .get_user_profile(source.clone().create_line_user_auth.try_into()?)
             .await?;
 
         // todo すでにUserが存在したら、createではなく、find_userを呼んでuserを返す
-        let line_user = self
+        let user = self
             .repositories
-            .line_user_repository()
+            .user_repository()
             .create_user(user_profile)
             .await?;
 
@@ -34,13 +35,21 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
         let talk_room = self
             .repositories
             .talk_room_repository()
-            .create_talk_room(line_user)
+            .create_talk_room(user.clone().into())
             .await?;
 
-        let event = EventFactory::new().create_event(talk_room.clone(), source.create_user_event);
+        // todo create_eventではなく、create_user_eventを渡して、repositoryの中でuser＆talk_roomを取得する処理を記述する
+        let new_event = self
+            .factories
+            .event_factory()
+            .create_new_event(talk_room.clone().primary_user_id, source.create_event);
+        let update_talk_room = self
+            .factories
+            .talk_room_factory()
+            .create_update_talk_room_event(talk_room, new_event.clone());
         self.repositories
             .event_repository()
-            .create_event(event, talk_room.clone())
+            .create_event(update_talk_room, new_event)
             .await?;
 
         Ok(())

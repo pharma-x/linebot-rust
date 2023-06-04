@@ -1,11 +1,15 @@
-use super::primary_user_id::PrimaryUserId;
 use crate::domain::model::line_user::LineUserProfile;
+use derive_new::new;
 
-pub trait User {
-    fn user_id(&self) -> PrimaryUserId;
-    fn user_profile(&self) -> UserProfile;
+use super::primary_user_id::PrimaryUserId;
+
+#[derive(new, Clone)]
+pub struct User {
+    pub id: PrimaryUserId,
+    pub user_profile: UserProfile,
 }
 
+#[derive(new, Clone)]
 pub enum UserProfile {
     Line(LineUserProfile),
 }

@@ -1,45 +1,48 @@
+use super::factory::FactoryImpl;
 use super::persistance::{firestore::Firestore, mysql::Db};
 use super::repository::{
     DatabaseRepositoryImpl, FirestoreRepositoryImpl, HttpClientRepositoryImpl,
 };
-use crate::domain::model::event::Event;
-use crate::domain::model::talk_room::TalkRoom;
-use crate::domain::model::{line_user::LineUser, user_auth::UserAuthData};
+use crate::domain::factory::event::EventFactory;
+use crate::domain::factory::talk_room::TalkRoomFactory;
+use crate::domain::model::{
+    event::Event, talk_room::TalkRoom, user::User, user_auth::UserAuthData,
+};
 use crate::domain::repository::{
-    event::EventRepository, line_user::LineUserRepository, line_user_auth::LineUserAuthRepository,
-    talk_room::TalkRoomRepository,
+    event::EventRepository, talk_room::TalkRoomRepository, user::UserRepository,
+    user_auth::UserAuthRepository,
 };
 use reqwest::Client;
 
 pub trait RepositoriesModuleExt {
-    type LineUserAuthRepo: LineUserAuthRepository;
-    type LineUserRepo: LineUserRepository;
+    type UserAuthRepo: UserAuthRepository;
+    type UserRepo: UserRepository;
     type TalkRoomRepo: TalkRoomRepository;
     type EventRepo: EventRepository;
-    fn line_user_auth_repository(&self) -> &Self::LineUserAuthRepo;
-    fn line_user_repository(&self) -> &Self::LineUserRepo;
+    fn user_auth_repository(&self) -> &Self::UserAuthRepo;
+    fn user_repository(&self) -> &Self::UserRepo;
     fn talk_room_repository(&self) -> &Self::TalkRoomRepo;
     fn event_repository(&self) -> &Self::EventRepo;
 }
 
 pub struct RepositoriesModule {
-    line_user_auth_repository: HttpClientRepositoryImpl<UserAuthData<LineUser>>,
-    line_user_repository: DatabaseRepositoryImpl<LineUser>,
+    user_auth_repository: HttpClientRepositoryImpl<UserAuthData>,
+    user_repository: DatabaseRepositoryImpl<User>,
     talk_room_repository: FirestoreRepositoryImpl<TalkRoom>,
     event_repository: FirestoreRepositoryImpl<Event>,
 }
 
 impl RepositoriesModuleExt for RepositoriesModule {
-    type LineUserAuthRepo = HttpClientRepositoryImpl<UserAuthData<LineUser>>;
-    type LineUserRepo = DatabaseRepositoryImpl<LineUser>;
+    type UserAuthRepo = HttpClientRepositoryImpl<UserAuthData>;
+    type UserRepo = DatabaseRepositoryImpl<User>;
     type TalkRoomRepo = FirestoreRepositoryImpl<TalkRoom>;
     type EventRepo = FirestoreRepositoryImpl<Event>;
 
-    fn line_user_auth_repository(&self) -> &Self::LineUserAuthRepo {
-        &self.line_user_auth_repository
+    fn user_auth_repository(&self) -> &Self::UserAuthRepo {
+        &self.user_auth_repository
     }
-    fn line_user_repository(&self) -> &Self::LineUserRepo {
-        &self.line_user_repository
+    fn user_repository(&self) -> &Self::UserRepo {
+        &self.user_repository
     }
     fn talk_room_repository(&self) -> &Self::TalkRoomRepo {
         &self.talk_room_repository
@@ -51,20 +54,51 @@ impl RepositoriesModuleExt for RepositoriesModule {
 
 impl RepositoriesModule {
     pub fn new(client: Client, db: Db, firestore: Firestore) -> Self {
-        // let client = Client::new();
-        // let db = Db::new();
-        // let firestore = Firestore::new();
-
-        let line_user_auth_repository = HttpClientRepositoryImpl::new(client);
-        let line_user_repository = DatabaseRepositoryImpl::new(db.clone());
+        let user_auth_repository = HttpClientRepositoryImpl::new(client);
+        let user_repository = DatabaseRepositoryImpl::new(db.clone());
         let talk_room_repository = FirestoreRepositoryImpl::new(firestore.clone());
         let event_repository = FirestoreRepositoryImpl::new(firestore.clone());
 
         Self {
-            line_user_auth_repository,
-            line_user_repository,
+            user_auth_repository,
+            user_repository,
             talk_room_repository,
             event_repository,
+        }
+    }
+}
+
+pub trait FactoriesModuleExt {
+    type EventFactory: EventFactory;
+    type TalkRoomFactory: TalkRoomFactory;
+    fn event_factory(&self) -> &Self::EventFactory;
+    fn talk_room_factory(&self) -> &Self::TalkRoomFactory;
+}
+
+pub struct FactoriesModule {
+    event_factory: FactoryImpl<Event>,
+    talk_room_factory: FactoryImpl<TalkRoom>,
+}
+
+impl FactoriesModuleExt for FactoriesModule {
+    type EventFactory = FactoryImpl<Event>;
+    type TalkRoomFactory = FactoryImpl<TalkRoom>;
+
+    fn event_factory(&self) -> &Self::EventFactory {
+        &self.event_factory
+    }
+    fn talk_room_factory(&self) -> &Self::TalkRoomFactory {
+        &self.talk_room_factory
+    }
+}
+
+impl FactoriesModule {
+    pub fn new() -> Self {
+        let event_factory = FactoryImpl::new();
+        let talk_room_factory = FactoryImpl::new();
+        Self {
+            event_factory,
+            talk_room_factory,
         }
     }
 }

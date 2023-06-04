@@ -1,12 +1,13 @@
+use super::line_user_auth::CreateLineUserAuth;
 use derive_new::new;
 
-use super::line_user_auth::CreateLineUserAuth;
-
+#[derive(new, Clone)]
 pub struct CreateUserEvent {
     pub create_line_user_auth: CreateLineUserAuth,
-    pub create_user_event: CreateEvent,
+    pub create_event: CreateEvent,
 }
 
+#[derive(new, Clone)]
 pub enum CreateEvent {
     Follow(CreateFollowEvent),
     Unfollow(CreateUnfollowEvent),
@@ -15,7 +16,7 @@ pub enum CreateEvent {
     Message(CreateMessageEvent),
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateFollowEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
@@ -24,7 +25,7 @@ pub struct CreateFollowEvent {
     pub timestamp: i64,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateUnfollowEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
@@ -33,7 +34,7 @@ pub struct CreateUnfollowEvent {
     pub timestamp: i64,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreatePostbackEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
@@ -43,7 +44,7 @@ pub struct CreatePostbackEvent {
     pub timestamp: i64,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateVideoPlayCompleteEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
@@ -53,6 +54,7 @@ pub struct CreateVideoPlayCompleteEvent {
     pub timestamp: i64,
 }
 
+#[derive(new, Clone)]
 pub struct CreateMessageEvent {
     pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
@@ -62,7 +64,7 @@ pub struct CreateMessageEvent {
     pub timestamp: i64,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum CreateEventType {
     Message,
     Follow,
@@ -76,35 +78,35 @@ pub struct CreateDeliveryContext {
     pub is_redelivery: bool,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreatePostback {
     pub data: String,
     pub params: CreatePostbackParams,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum CreatePostbackParams {
     Datetime(CreatePostbackDatetimeParams),
     RichMenu(CreatePostbackRichMenuParams),
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreatePostbackDatetimeParams {
     pub datetime: String,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreatePostbackRichMenuParams {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateVideoPlayComplete {
     pub tracking_id: String,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum CreateMessage {
     Text(CreateTextMessage),
     Image(CreateImageMessage),
@@ -115,7 +117,7 @@ pub enum CreateMessage {
     Sticker(CreateStickerMessage),
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateTextMessage {
     pub id: String,
     pub text: String,
@@ -130,14 +132,14 @@ pub struct CreateEmoji {
     pub emoji_id: String,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateImageMessage {
     pub id: String,
     pub content_provider: CreateContentProvider,
     pub image_set: CreateImageSet,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum CreateContentProvider {
     Line,
     External {
@@ -146,35 +148,35 @@ pub enum CreateContentProvider {
     },
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateVideoMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: CreateContentProvider,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateAudioMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: CreateContentProvider,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateFileMessage {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateLocationMessage {
     pub id: String,
     pub title: String,
@@ -183,7 +185,7 @@ pub struct CreateLocationMessage {
     pub longitude: f64,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub struct CreateStickerMessage {
     pub id: String,
     pub package_id: String,
@@ -193,7 +195,7 @@ pub struct CreateStickerMessage {
     pub text: Option<String>,
 }
 
-#[derive(new)]
+#[derive(new, Clone)]
 pub enum CreateStickerResourceType {
     Static,
     Animation,
