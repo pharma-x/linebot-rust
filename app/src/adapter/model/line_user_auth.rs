@@ -1,6 +1,9 @@
 use serde::Deserialize;
 
-use crate::domain::model::{line_user::LineUserProfile, user_auth::{AuthUserId, LineId}};
+use crate::domain::model::{
+    line_user::LineUserProfile,
+    user_auth::{AuthUserId, LineId},
+};
 
 #[derive(Deserialize)]
 pub struct ResponseLineAuth {

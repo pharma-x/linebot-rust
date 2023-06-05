@@ -1,5 +1,5 @@
 use crate::domain::model::user_auth::{
-    AuthToken, AuthUserId, LineId, LineUserAuthData, UserAuthData, LineAuthToken,
+    AuthToken, AuthUserId, LineAuthToken, LineId, LineUserAuthData, UserAuthData,
 };
 use derive_new::new;
 

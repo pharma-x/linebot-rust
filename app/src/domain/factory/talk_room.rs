@@ -1,4 +1,7 @@
-use crate::domain::model::{talk_room::{TalkRoom, UpdateTalkRoom}, event::NewEvent};
+use crate::domain::model::{
+    event::NewEvent,
+    talk_room::{TalkRoom, UpdateTalkRoom},
+};
 
 pub trait TalkRoomFactory {
     fn create_update_talk_room_event(
