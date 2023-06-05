@@ -7,11 +7,10 @@ use tracing::error;
 
 #[tracing::instrument(skip(modules))]
 pub async fn line_webhook_handler(
-    ValidatedRequest(payload): ValidatedRequest<LineWebhookRequest>,
     Extension(modules): Extension<Arc<Modules>>,
+    ValidatedRequest(payload): ValidatedRequest<LineWebhookRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let events: Vec<crate::presentation::model::line_webhook::LineWebhookEvent> =
-        payload.get_events();
+    let events = payload.get_events();
     let mut result = Ok(StatusCode::OK);
 
     for event in events {

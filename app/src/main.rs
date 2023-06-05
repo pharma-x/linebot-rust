@@ -24,21 +24,25 @@ async fn main() {
     // DI
     let modules = Modules::new().await;
 
-    let line_webhook_router = Router::new().route("/", post(line_webhook_handler));
+    let root = Router::new()
+        .route("/", get(root));
+    let line_webhook_router = Router::new()
+        .route("/", post(line_webhook_handler));
+    
     let app = Router::new()
-        .route("/", get(root))
+        .nest("/", root)
         .nest("/linebot-webhook", line_webhook_router)
         .layer(Extension(Arc::new(modules)));
 
     // localhost:3000
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
-    tracing::debug!("listening on {}", addr);
+    tracing::debug!("Server listening on {}", addr);
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
-        .unwrap();
+        .unwrap_or_else(|_| panic!("Server cannot launch!"))
 }
 
 async fn root() -> &'static str {
