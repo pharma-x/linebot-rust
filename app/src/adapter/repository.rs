@@ -2,6 +2,7 @@ use super::persistance::{firestore::Firestore, mysql::Db};
 use derive_new::new;
 use reqwest::Client;
 use std::marker::PhantomData;
+use thiserror::Error;
 
 pub mod event;
 pub mod talk_room;
@@ -28,4 +29,14 @@ pub struct DatabaseRepositoryImpl<T> {
 pub struct FirestoreRepositoryImpl<T> {
     pub pool: Firestore,
     _marker: PhantomData<T>,
+}
+
+#[derive(Debug, Error)]
+pub enum RepositoryError {
+    #[error("Unexpected Error: {0}")]
+    Unexpected(String),
+    #[error("NotAuthFound, auth_id is {0}")]
+    NotAuthFound(String),
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }

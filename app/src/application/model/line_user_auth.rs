@@ -1,9 +1,17 @@
-use crate::domain::model::user_auth::{AuthToken, AuthUserId, LineUserAuthData, UserAuthData};
+use crate::domain::model::user_auth::{
+    AuthToken, AuthUserId, LineId, LineUserAuthData, UserAuthData, LineAuthToken,
+};
 use derive_new::new;
 
 #[derive(new, Clone)]
 pub struct CreateLineUserAuth {
     pub user_id: String,
+}
+
+impl From<CreateLineUserAuth> for AuthUserId {
+    fn from(c: CreateLineUserAuth) -> AuthUserId {
+        AuthUserId::Line(LineId::new(c.user_id))
+    }
 }
 
 impl TryFrom<CreateLineUserAuth> for UserAuthData {
@@ -12,8 +20,8 @@ impl TryFrom<CreateLineUserAuth> for UserAuthData {
         // todo: 環境変数からlineのaccess tokenを取得する
         let auth_token = "token".to_string();
         Ok(UserAuthData::Line(LineUserAuthData {
-            auth_id: AuthUserId::Line(c.user_id),
-            token: AuthToken::Line(auth_token),
+            auth_id: AuthUserId::Line(LineId::new(c.user_id)),
+            auth_token: AuthToken::Line(LineAuthToken::new(auth_token)),
         }))
     }
 }

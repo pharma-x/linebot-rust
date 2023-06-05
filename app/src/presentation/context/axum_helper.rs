@@ -1,26 +1,53 @@
-use axum::{async_trait, extract::FromRequest, http::StatusCode, Json, RequestExt};
-use hyper::Request;
+use async_trait::async_trait;
+use axum::{
+    extract::{rejection::FormRejection, Form, FromRequest},
+    http::{Request, StatusCode},
+    response::{IntoResponse, Response},
+};
+
+use serde::de::DeserializeOwned;
+use thiserror::Error;
 use validator::Validate;
 
-use crate::presentation::context::validate::ValidatedRequest;
+use super::validate::ValidatedRequest;
 
 #[async_trait]
-impl<S, B, J> FromRequest<S, B> for ValidatedRequest<J>
+impl<T, S, B> FromRequest<S, B> for ValidatedRequest<T>
 where
-    B: Send + 'static,
+    T: DeserializeOwned + Validate,
     S: Send + Sync,
-    J: Validate + 'static,
-    Json<J>: FromRequest<(), B>,
+    Form<T>: FromRequest<S, B, Rejection = FormRejection>,
+    B: Send + 'static,
 {
-    type Rejection = (StatusCode, String);
+    type Rejection = ServerError;
 
-    async fn from_request(req: Request<B>, _state: &S) -> Result<Self, Self::Rejection> {
-        let Ok(Json(data)) = req
-            .extract::<Json<J>, _>()
-            .await
-            .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid JSON body"));
-        data.validate()
-            .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid JSON body"));
-        Ok(Self(data))
+    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
+        let Form(value) = Form::<T>::from_request(req, state).await?;
+        value.validate()?;
+        Ok(ValidatedRequest(value))
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum ServerError {
+    #[error(transparent)]
+    ValidationError(#[from] validator::ValidationErrors),
+    #[error(transparent)]
+    JsonRejection(#[from] axum::extract::rejection::JsonRejection),
+    #[error(transparent)]
+    AxumFormRejection(#[from] FormRejection),
+}
+
+impl IntoResponse for ServerError {
+    fn into_response(self) -> Response {
+        match self {
+            ServerError::ValidationError(_) => {
+                let message = format!("Input validation error: [{}]", self).replace('\n', ", ");
+                (StatusCode::BAD_REQUEST, message)
+            },
+            ServerError::JsonRejection(_) => (StatusCode::BAD_REQUEST, self.to_string()),
+            ServerError::AxumFormRejection(_) => (StatusCode::BAD_REQUEST, self.to_string()),
+        }
+        .into_response()
     }
 }

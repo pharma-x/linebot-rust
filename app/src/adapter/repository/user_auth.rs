@@ -32,7 +32,7 @@ impl UserAuthRepository for HttpClientRepositoryImpl<UserAuthData> {
             ))
             .header(
                 header::AUTHORIZATION,
-                format!("Bearer {}", source.token.value()),
+                format!("Bearer {}", source.auth_token()),
             )
             .send()
             .await?
