@@ -24,11 +24,9 @@ async fn main() {
     // DI
     let modules = Modules::new().await;
 
-    let root = Router::new()
-        .route("/", get(root));
-    let line_webhook_router = Router::new()
-        .route("/", post(line_webhook_handler));
-    
+    let root = Router::new().route("/", get(root));
+    let line_webhook_router = Router::new().route("/", post(line_webhook_handler));
+
     let app = Router::new()
         .nest("/", root)
         .nest("/linebot-webhook", line_webhook_router)
