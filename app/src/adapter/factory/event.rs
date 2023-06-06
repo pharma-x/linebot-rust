@@ -29,7 +29,7 @@ impl EventFactory for FactoryImpl<Event> {
         create_event: CreateEvent,
     ) -> NewEvent {
         let id = Id::<Event>::gen();
-
+        let primary_user_id = primary_user_id.clone();
         let user_event = match create_event {
             CreateEvent::Follow(s) => NewEvent::Follow(NewFollowEvent {
                 id,

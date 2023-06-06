@@ -4,7 +4,7 @@ use crate::domain::model::{
 };
 
 pub trait TalkRoomFactory {
-    fn create_update_talk_room_event(
+    fn create_update_talk_room_by_event(
         &self,
         talk_room: TalkRoom,
         new_event: NewEvent,

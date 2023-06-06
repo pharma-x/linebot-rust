@@ -21,7 +21,7 @@ pub async fn line_webhook_handler(
     let mut result = Ok(StatusCode::OK);
 
     for request in requests {
-        let event = request.clone().event;
+        let event = &request.event;
         match event {
             LineWebhookEvent::Follow(_) => {
                 result = modules

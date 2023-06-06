@@ -11,7 +11,7 @@ use crate::domain::{
 use super::FactoryImpl;
 
 impl TalkRoomFactory for FactoryImpl<TalkRoom> {
-    fn create_update_talk_room_event(
+    fn create_update_talk_room_by_event(
         &self,
         talk_room: TalkRoom,
         new_event: NewEvent,

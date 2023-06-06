@@ -19,7 +19,6 @@ pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt, F: FactoriesModuleExt
 impl<R: RepositoriesModuleExt, F: FactoriesModuleExt> LinebotWebhookUseCase<R, F> {
     pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
         let create_line_user_auth = source.clone().create_line_user_auth;
-
         let res = self
             .repositories
             .user_repository()
@@ -54,7 +53,7 @@ impl<R: RepositoriesModuleExt, F: FactoriesModuleExt> LinebotWebhookUseCase<R, F
         let talk_room = self
             .repositories
             .talk_room_repository()
-            .create_talk_room(user.clone().into())
+            .create_talk_room(user.into())
             .await?;
 
         let new_event = self
@@ -64,7 +63,7 @@ impl<R: RepositoriesModuleExt, F: FactoriesModuleExt> LinebotWebhookUseCase<R, F
         let update_talk_room = self
             .factories
             .talk_room_factory()
-            .create_update_talk_room_event(talk_room, new_event.clone());
+            .create_update_talk_room_by_event(talk_room, new_event.clone());
         self.repositories
             .event_repository()
             .create_event(update_talk_room, new_event)
