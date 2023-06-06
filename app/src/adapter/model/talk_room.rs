@@ -18,7 +18,7 @@ use super::event::{
     StickerResourceTypeTable, TextMessageTable, VideoMessageTable,
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TalkRoomTable {
     #[serde(rename(serialize = "documentId"))]
     pub document_id: String,

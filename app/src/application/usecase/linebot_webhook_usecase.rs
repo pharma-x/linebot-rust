@@ -19,12 +19,12 @@ pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt, F: FactoriesModuleExt
 impl<R: RepositoriesModuleExt, F: FactoriesModuleExt> LinebotWebhookUseCase<R, F> {
     pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
         let create_line_user_auth = source.clone().create_line_user_auth;
-        let res = self
+        let res_user = self
             .repositories
             .user_repository()
             .get_user(create_line_user_auth.clone().into())
             .await;
-        let user = match res {
+        let user = match res_user {
             Ok(s) => s,
             Err(anyhow_err) => {
                 if let Some(repository_err) = anyhow_err.downcast_ref::<RepositoryError>() {
@@ -43,18 +43,36 @@ impl<R: RepositoriesModuleExt, F: FactoriesModuleExt> LinebotWebhookUseCase<R, F
                         _ => return Err(anyhow_err),
                     }
                 } else {
-                    // anyhow_errはRepositoryErrorではない場合
+                    // anyhow_errがRepositoryErrorではない場合
                     return Err(anyhow_err);
                 }
             }
         };
 
-        // todo すでにtalk_roomが存在したら、createではなく、find_talk_roomを呼んでtalk_roomを返す
-        let talk_room = self
+        let res_talk_room = self
             .repositories
             .talk_room_repository()
-            .create_talk_room(user.into())
-            .await?;
+            .get_talk_room(user.clone().id)
+            .await;
+        let talk_room = match res_talk_room {
+            Ok(s) => s,
+            Err(anyhow_err) => {
+                if let Some(repository_err) = anyhow_err.downcast_ref::<RepositoryError>() {
+                    match repository_err {
+                        RepositoryError::NotFound(_) => {
+                            self.repositories
+                                .talk_room_repository()
+                                .create_talk_room(user.into())
+                                .await?
+                        }
+                        _ => return Err(anyhow_err),
+                    }
+                } else {
+                    // anyhow_errがRepositoryErrorではない場合
+                    return Err(anyhow_err);
+                }
+            }
+        };
 
         let new_event = self
             .factories
