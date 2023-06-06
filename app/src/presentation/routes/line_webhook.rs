@@ -1,5 +1,7 @@
 use crate::presentation::context::validate::ValidatedRequest;
-use crate::presentation::model::line_webhook::{LineWebhookRequest, LineWebhookRequests, LineWebhookEvent};
+use crate::presentation::model::line_webhook::{
+    LineWebhookEvent, LineWebhookRequest, LineWebhookRequests,
+};
 use crate::presentation::module::{Modules, ModulesExt};
 use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
 use std::sync::Arc;
