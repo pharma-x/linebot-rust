@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tracing::error;
 
 /*
-Jsonを受け取るときは、引数の一番最後に配置する必要がある
+Jsonを受け取るときは、引数の順番に気をつける必要がある
 https://github.com/tokio-rs/axum/discussions/1755
 https://docs.rs/axum/latest/axum/extract/index.html#the-order-of-extractors
 */
