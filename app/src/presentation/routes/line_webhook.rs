@@ -1,5 +1,5 @@
 use crate::presentation::context::validate::ValidatedRequest;
-use crate::presentation::model::line_webhook::{LineWebhookEventType, LineWebhookRequest};
+use crate::presentation::model::line_webhook::{LineWebhookRequest, LineWebhookRequests, LineWebhookEvent};
 use crate::presentation::module::{Modules, ModulesExt};
 use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
 use std::sync::Arc;
@@ -13,18 +13,18 @@ https://docs.rs/axum/latest/axum/extract/index.html#the-order-of-extractors
 #[tracing::instrument(skip(modules))]
 pub async fn line_webhook_handler(
     Extension(modules): Extension<Arc<Modules>>,
-    ValidatedRequest(payload): ValidatedRequest<LineWebhookRequest>,
+    ValidatedRequest(payload): ValidatedRequest<LineWebhookRequests>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let events = payload.get_events();
+    let requests: Vec<LineWebhookRequest> = payload.into();
     let mut result = Ok(StatusCode::OK);
 
-    for event in events {
-        let event_type = &event.r#type;
-        match event_type {
-            LineWebhookEventType::Follow => {
+    for request in requests {
+        let event = request.clone().event;
+        match event {
+            LineWebhookEvent::Follow(_) => {
                 result = modules
                     .linebot_webhook_usecase()
-                    .create_user(event.into())
+                    .create_user(request.into())
                     .await
                     .map(|_| StatusCode::OK)
                     .map_err(|err| {
@@ -32,17 +32,17 @@ pub async fn line_webhook_handler(
                         StatusCode::INTERNAL_SERVER_ERROR
                     });
             }
-            LineWebhookEventType::Unfollow => {
-                println!("Unfollow event: {:?}", event);
+            LineWebhookEvent::Unfollow(e) => {
+                println!("Unfollow event: {:?}", e);
             }
-            LineWebhookEventType::Message => {
-                println!("Message event: {:?}", event);
+            LineWebhookEvent::Message(e) => {
+                println!("Message event: {:?}", e);
             }
-            LineWebhookEventType::Postback => {
-                println!("Postback event: {:?}", event);
+            LineWebhookEvent::Postback(e) => {
+                println!("Postback event: {:?}", e);
             }
-            LineWebhookEventType::VideoPlayComplete => {
-                println!("Other event: {:?}", event);
+            LineWebhookEvent::VideoPlayComplete(e) => {
+                println!("Other event: {:?}", e);
             }
         }
     }

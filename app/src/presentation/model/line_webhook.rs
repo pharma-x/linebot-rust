@@ -11,56 +11,166 @@ use crate::application::model::{
     line_user_auth::CreateLineUserAuth,
 };
 use serde::Deserialize;
+use strum_macros::Display;
 use strum_macros::EnumString;
 use validator::Validate;
 
-#[derive(Deserialize, Debug, Validate)]
-pub struct LineWebhookRequest {
+#[derive(Deserialize, Debug, Validate, Clone)]
+pub struct LineWebhookRequests {
     destination: String,
     events: Vec<LineWebhookEvent>,
 }
 
-impl LineWebhookRequest {
-    pub(in crate::presentation) fn get_events(&self) -> Vec<LineWebhookEvent> {
-        self.events.clone()
-    }
+#[derive(Debug, Validate, Clone)]
+pub(in crate::presentation) struct LineWebhookRequest {
+    pub(in crate::presentation) destination: String,
+    pub(in crate::presentation) event: LineWebhookEvent,
+}
+
+#[derive(Deserialize, Debug, Clone, Display)]
+#[serde(tag = "type")]
+pub(in crate::presentation) enum LineWebhookEvent {
+    #[strum(serialize = "follow")]
+    Follow(LineWebhookFollowEvent),
+    #[strum(serialize = "unfollow")]
+    Unfollow(LineWebhookUnfollowEvent),
+    #[strum(serialize = "postback")]
+    Postback(LineWebhookPostbackEvent),
+    #[strum(serialize = "videoPlayComplete")]
+    VideoPlayComplete(LineWebhookVideoPlayCompleteEvent),
+    #[strum(serialize = "message")]
+    Message(LineWebhookMessageEvent),
 }
 
 #[derive(Deserialize, Debug, Clone, Validate)]
-pub(in crate::presentation) struct LineWebhookEvent {
-    pub(in crate::presentation) r#type: LineWebhookEventType, // 限られた値に制限したい
-    message: Option<LineWebhookMessage>,
-    postback: Option<LineWebhookPostback>,
-    video_play_complete: Option<LineWebhookVideoPlayComplete>,
-    timestamp: i64,
-    source: LineWebhookSource,
+pub(in crate::presentation) struct LineWebhookFollowEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
+    timestamp: i64,
+    source: Option<LineWebhookSource>,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
 }
 
-// 文字列をEnumに変換する必要がある
-#[derive(Deserialize, Debug, Clone, EnumString)]
-pub(in crate::presentation) enum LineWebhookEventType {
-    #[strum(serialize = "message")]
-    Message,
-    #[strum(serialize = "follow")]
-    Follow,
-    #[strum(serialize = "unfollow")]
-    Unfollow,
-    #[strum(serialize = "postback")]
-    Postback,
-    #[strum(serialize = "videoPlayComplete")]
-    VideoPlayComplete,
+#[derive(Deserialize, Debug, Clone, Validate)]
+pub(in crate::presentation) struct LineWebhookUnfollowEvent {
+    #[serde(rename(deserialize = "replyToken"))]
+    reply_token: String,
+    mode: String,
+    timestamp: i64,
+    source: Option<LineWebhookSource>,
+    #[serde(rename(deserialize = "webhookEventId"))]
+    webhook_event_id: String,
+    #[serde(rename(deserialize = "deliveryContext"))]
+    delivery_context: LineDeliveryContext,
+}
+
+#[derive(Deserialize, Debug, Clone, Validate)]
+pub(in crate::presentation) struct LineWebhookPostbackEvent {
+    #[serde(rename(deserialize = "replyToken"))]
+    reply_token: String,
+    mode: String,
+    timestamp: i64,
+    source: Option<LineWebhookSource>,
+    #[serde(rename(deserialize = "webhookEventId"))]
+    webhook_event_id: String,
+    #[serde(rename(deserialize = "deliveryContext"))]
+    delivery_context: LineDeliveryContext,
+    postback: Option<LineWebhookPostback>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
-struct LineWebhookSource {
-    r#type: String,
+struct LineWebhookPostback {
+    data: String,
+    params: LineWebhookPostbackParams,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(untagged)] // JSONにタグ名を含まない
+enum LineWebhookPostbackParams {
+    Datetime(LineWebhookPostbackDatetimeParams),
+    RichMenu(LineWebhookPostbackRichMenuParams),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct LineWebhookPostbackDatetimeParams {
+    datetime: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct LineWebhookPostbackRichMenuParams {
+    #[serde(rename(deserialize = "newRichMenuAliasId"))]
+    new_rich_menu_alias_id: String,
+    status: String,
+}
+
+#[derive(Deserialize, Debug, Clone, Validate)]
+pub(in crate::presentation) struct LineWebhookVideoPlayCompleteEvent {
+    #[serde(rename(deserialize = "replyToken"))]
+    reply_token: String,
+    mode: String,
+    timestamp: i64,
+    source: Option<LineWebhookSource>,
+    #[serde(rename(deserialize = "webhookEventId"))]
+    webhook_event_id: String,
+    #[serde(rename(deserialize = "deliveryContext"))]
+    delivery_context: LineDeliveryContext,
+    #[serde(rename(deserialize = "videoPlayComplete"))]
+    video_play_complete: Option<LineWebhookVideoPlayComplete>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct LineWebhookVideoPlayComplete {
+    tracking_id: String,
+}
+
+#[derive(Deserialize, Debug, Clone, Validate)]
+pub struct LineWebhookMessageEvent {
+    #[serde(rename(deserialize = "replyToken"))]
+    reply_token: String,
+    mode: String,
+    timestamp: i64,
+    source: Option<LineWebhookSource>,
+    #[serde(rename(deserialize = "webhookEventId"))]
+    webhook_event_id: String,
+    #[serde(rename(deserialize = "deliveryContext"))]
+    delivery_context: LineDeliveryContext,
+    message: Option<LineWebhookMessage>,
+}
+
+#[derive(Deserialize, Debug, Clone, Display)]
+#[serde(tag = "type")]
+pub enum LineWebhookSource {
+    #[strum(serialize = "user")]
+    User(LineWebhookUserSource),
+    #[strum(serialize = "group")]
+    Group(LineWebhookGroupSource),
+    #[strum(serialize = "room")]
+    Room(LineWebhookRoomSource),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct LineWebhookUserSource {
+    #[serde(rename(deserialize = "userId"))]
+    user_id: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct LineWebhookGroupSource {
+    #[serde(rename(deserialize = "groupId"))]
+    group_id: String,
+    #[serde(rename(deserialize = "userId"))]
+    user_id: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct LineWebhookRoomSource {
+    #[serde(rename(deserialize = "roomId"))]
+    room_id: String,
+    #[serde(rename(deserialize = "userId"))]
     user_id: String,
 }
 
@@ -94,6 +204,7 @@ struct LineWebhookTextMessage {
     id: String,
     text: String,
     emojis: Vec<LineWebhookEmoji>,
+    mention: Option<LineWebhookMention>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -104,6 +215,32 @@ struct LineWebhookEmoji {
     product_id: String,
     #[serde(rename(deserialize = "emojiId"))]
     emoji_id: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct LineWebhookMention {
+    mentionees: Vec<LineWebhookMentionee>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
+enum LineWebhookMentionee {
+    LineWebhookUserMentionee,
+    LineWebhookAllMentionee,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct LineWebhookUserMentionee {
+    index: i32,
+    length: i32,
+    #[serde(rename(deserialize = "userId"))]
+    user_id: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct LineWebhookAllMentionee {
+    index: i32,
+    length: i32,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -202,40 +339,23 @@ enum LineWebhookStickerResourceType {
     Message,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-struct LineWebhookPostback {
-    data: String,
-    params: LineWebhookPostbackParams,
+impl From<LineWebhookRequests> for Vec<LineWebhookRequest> {
+    fn from(r: LineWebhookRequests) -> Self {
+        r.events
+            .iter()
+            .map(|e| LineWebhookRequest {
+                destination: r.destination.clone(),
+                event: e.clone(),
+            })
+            .collect()
+    }
 }
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(untagged)] // JSONにタグ名を含まない
-enum LineWebhookPostbackParams {
-    Datetime(LineWebhookPostbackDatetimeParams),
-    RichMenu(LineWebhookPostbackRichMenuParams),
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct LineWebhookPostbackDatetimeParams {
-    datetime: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct LineWebhookPostbackRichMenuParams {
-    #[serde(rename(deserialize = "newRichMenuAliasId"))]
-    new_rich_menu_alias_id: String,
-    status: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct LineWebhookVideoPlayComplete {
-    tracking_id: String,
-}
-
-impl From<LineWebhookEvent> for CreateUserEvent {
-    fn from(s: LineWebhookEvent) -> Self {
-        let create_event = match s.r#type {
-            LineWebhookEventType::Follow => CreateEvent::Follow(CreateFollowEvent {
+impl From<LineWebhookRequest> for CreateUserEvent {
+    fn from(r: LineWebhookRequest) -> Self {
+        let event = r.event;
+        let create_event = match event {
+            LineWebhookEvent::Follow(s) => CreateEvent::Follow(CreateFollowEvent {
                 reply_token: s.reply_token,
                 delivery_context: CreateDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
@@ -244,7 +364,7 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
             }),
-            LineWebhookEventType::Unfollow => CreateEvent::Unfollow(CreateUnfollowEvent {
+            LineWebhookEvent::Unfollow(s) => CreateEvent::Unfollow(CreateUnfollowEvent {
                 reply_token: s.reply_token,
                 delivery_context: CreateDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
@@ -253,7 +373,7 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
             }),
-            LineWebhookEventType::Postback => CreateEvent::Postback(CreatePostbackEvent {
+            LineWebhookEvent::Postback(s) => CreateEvent::Postback(CreatePostbackEvent {
                 reply_token: s.reply_token,
                 delivery_context: CreateDeliveryContext {
                     is_redelivery: s.delivery_context.is_redelivery,
@@ -278,7 +398,7 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                 webhook_event_id: s.webhook_event_id,
                 timestamp: s.timestamp,
             }),
-            LineWebhookEventType::VideoPlayComplete => CreateEvent::VideoPlayComplete({
+            LineWebhookEvent::VideoPlayComplete(s) => CreateEvent::VideoPlayComplete({
                 CreateVideoPlayCompleteEvent {
                     reply_token: s.reply_token,
                     delivery_context: CreateDeliveryContext {
@@ -292,7 +412,7 @@ impl From<LineWebhookEvent> for CreateUserEvent {
                     timestamp: s.timestamp,
                 }
             }),
-            LineWebhookEventType::Message => CreateEvent::Message({
+            LineWebhookEvent::Message(s) => CreateEvent::Message({
                 CreateMessageEvent {
                     reply_token: s.reply_token,
                     delivery_context: CreateDeliveryContext {
@@ -418,7 +538,7 @@ impl From<LineWebhookEvent> for CreateUserEvent {
 
         CreateUserEvent {
             create_line_user_auth: CreateLineUserAuth {
-                user_id: s.source.user_id,
+                user_id: r.destination,
             },
             create_event,
         }
