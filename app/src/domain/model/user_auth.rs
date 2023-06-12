@@ -60,9 +60,9 @@ pub struct LineUserAuthData {
 
 impl LineUserAuthData {
     pub fn auth_id(&self) -> &String {
-        &self.auth_id.value()
+        self.auth_id.value()
     }
     pub fn auth_token(&self) -> &String {
-        &self.auth_token.value()
+        self.auth_token.value()
     }
 }

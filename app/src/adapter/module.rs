@@ -55,9 +55,9 @@ impl RepositoriesModuleExt for RepositoriesModule {
 impl RepositoriesModule {
     pub fn new(client: Client, db: Db, firestore: Firestore) -> Self {
         let user_auth_repository = HttpClientRepositoryImpl::new(client);
-        let user_repository = DatabaseRepositoryImpl::new(db.clone());
+        let user_repository = DatabaseRepositoryImpl::new(db);
         let talk_room_repository = FirestoreRepositoryImpl::new(firestore.clone());
-        let event_repository = FirestoreRepositoryImpl::new(firestore.clone());
+        let event_repository = FirestoreRepositoryImpl::new(firestore);
 
         Self {
             user_auth_repository,
