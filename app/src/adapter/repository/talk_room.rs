@@ -39,7 +39,6 @@ impl TalkRoomRepository for FirestoreRepositoryImpl<TalkRoom> {
         let talk_room_vec: Vec<TalkRoomTable> = talk_room_stream.collect().await;
         let talk_room_table = talk_room_vec
             .first()
-            .map(|t| t.clone())
             .ok_or(RepositoryError::NotFound(primary_user_id.clone()))?;
 
         let talk_room_card_table: TalkRoomCardTable = pool
@@ -52,8 +51,8 @@ impl TalkRoomRepository for FirestoreRepositoryImpl<TalkRoom> {
             .ok_or(RepositoryError::NotFound(primary_user_id))?;
 
         let talk_room = TalkRoom {
-            id: talk_room_table.document_id.try_into().unwrap(),
-            primary_user_id: PrimaryUserId::new(talk_room_table.primary_user_id),
+            id: talk_room_table.clone().document_id.try_into().unwrap(),
+            primary_user_id: PrimaryUserId::new(talk_room_table.clone().primary_user_id),
             display_name: talk_room_card_table.display_name,
             rsvp: talk_room_card_table.rsvp,
             pinned: talk_room_card_table.pinned,
