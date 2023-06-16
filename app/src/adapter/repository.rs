@@ -9,9 +9,9 @@ pub mod talk_room;
 pub mod user;
 pub mod user_auth;
 
-const TALK_ROOM_COLLECTION_NAME: &'static str = "talkRooms";
-const TALK_ROOM_CARD_COLLECTION_NAME: &'static str = "talkRoomCards";
-const EVENT_COLLECTION_NAME: &'static str = "messages";
+const TALK_ROOM_COLLECTION_NAME: &str = "talkRooms";
+const TALK_ROOM_CARD_COLLECTION_NAME: &str = "talkRoomCards";
+const EVENT_COLLECTION_NAME: &str = "messages";
 
 #[derive(new)]
 pub struct HttpClientRepositoryImpl<T> {
@@ -30,6 +30,14 @@ pub struct FirestoreRepositoryImpl<T> {
     pub pool: Firestore,
     _marker: PhantomData<T>,
 }
+
+#[derive(new)]
+pub struct DbFirestoreRepositoryImpl<T> {
+    pub db: Db,
+    pub firestore: Firestore,
+    _marker: PhantomData<T>,
+}
+
 
 #[derive(Debug, Error)]
 pub enum RepositoryError {
