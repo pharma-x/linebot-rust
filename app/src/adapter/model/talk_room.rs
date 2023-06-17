@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use strum_macros::Display;
 
 use crate::domain::model::{
@@ -17,6 +18,13 @@ use super::event::{
     ImageSetTable, LocationMessageTable, MessageTable, StickerMessageTable,
     StickerResourceTypeTable, TextMessageTable, VideoMessageTable,
 };
+
+#[derive(FromRow)]
+pub struct TalkRoomDbTable {
+    pub primary_user_id: i64,
+    pub talk_room_id: String,
+    pub created_at: DateTime<Local>,
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TalkRoomTable {
