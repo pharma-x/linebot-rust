@@ -38,7 +38,6 @@ pub struct DbFirestoreRepositoryImpl<T> {
     _marker: PhantomData<T>,
 }
 
-
 #[derive(Debug, Error)]
 pub enum RepositoryError {
     #[error("Unexpected Error: {0}")]
