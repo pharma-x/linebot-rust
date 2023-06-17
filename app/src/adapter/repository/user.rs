@@ -56,7 +56,7 @@ insert into primary_users
 values (default)
 returning *"#,
         )
-        .fetch_one(&*pool)
+        .fetch_one(&mut tx)
         .await
         .expect("Unable to insert a primary user");
 
@@ -70,9 +70,9 @@ returning *"#,
         .bind(source.auth_id.value())
         .bind(source.display_name)
         .bind(source.picture_url)
-        .fetch_one(&*pool)
+        .fetch_one(&mut tx)
         .await
-        .expect("Unable to insert a primary user");
+        .expect("Unable to insert a line user");
 
         tx.commit().await.expect("Unable to commit transaction");
 
