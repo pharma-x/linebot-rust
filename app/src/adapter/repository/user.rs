@@ -49,7 +49,7 @@ where id = $1
 
     async fn create_line_user(&self, source: LineUserProfile) -> anyhow::Result<User> {
         let pool = self.pool.0.clone();
-        let tx = pool.begin().await.expect("Unable to begin transaction");
+        let mut tx = pool.begin().await.expect("Unable to begin transaction");
         let primary_user_row = sqlx::query_as::<_, PrimaryUserTable>(
             r#"
 insert into primary_users

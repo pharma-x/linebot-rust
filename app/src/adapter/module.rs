@@ -1,7 +1,8 @@
 use super::factory::FactoryImpl;
 use super::persistance::{firestore::Firestore, mysql::Db};
 use super::repository::{
-    DatabaseRepositoryImpl, FirestoreRepositoryImpl, HttpClientRepositoryImpl,
+    DatabaseRepositoryImpl, DbFirestoreRepositoryImpl, FirestoreRepositoryImpl,
+    HttpClientRepositoryImpl,
 };
 use crate::domain::factory::event::EventFactory;
 use crate::domain::factory::talk_room::TalkRoomFactory;
@@ -28,14 +29,14 @@ pub trait RepositoriesModuleExt {
 pub struct RepositoriesModule {
     user_auth_repository: HttpClientRepositoryImpl<UserAuthData>,
     user_repository: DatabaseRepositoryImpl<User>,
-    talk_room_repository: FirestoreRepositoryImpl<TalkRoom>,
+    talk_room_repository: DbFirestoreRepositoryImpl<TalkRoom>,
     event_repository: FirestoreRepositoryImpl<Event>,
 }
 
 impl RepositoriesModuleExt for RepositoriesModule {
     type UserAuthRepo = HttpClientRepositoryImpl<UserAuthData>;
     type UserRepo = DatabaseRepositoryImpl<User>;
-    type TalkRoomRepo = FirestoreRepositoryImpl<TalkRoom>;
+    type TalkRoomRepo = DbFirestoreRepositoryImpl<TalkRoom>;
     type EventRepo = FirestoreRepositoryImpl<Event>;
 
     fn user_auth_repository(&self) -> &Self::UserAuthRepo {
@@ -55,8 +56,8 @@ impl RepositoriesModuleExt for RepositoriesModule {
 impl RepositoriesModule {
     pub fn new(client: Client, db: Db, firestore: Firestore) -> Self {
         let user_auth_repository = HttpClientRepositoryImpl::new(client);
-        let user_repository = DatabaseRepositoryImpl::new(db);
-        let talk_room_repository = FirestoreRepositoryImpl::new(firestore.clone());
+        let user_repository = DatabaseRepositoryImpl::new(db.clone());
+        let talk_room_repository = DbFirestoreRepositoryImpl::new(db, firestore.clone());
         let event_repository = FirestoreRepositoryImpl::new(firestore);
 
         Self {
