@@ -1,0 +1,10 @@
+[package]
+name = "application"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+domain = { path = "../app-domain" }
+adapter = { path = "../app-adapter" }
+anyhow = "1.0.71"
+derive-new = "0.5.9"

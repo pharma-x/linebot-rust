@@ -1,5 +1,9 @@
 [workspace]
+resolver = "2"
 members = [
-	"app",
-	"firestore-rs",
+	"app-adapter",
+	"app-application",
+	"app-domain",
+	"app-presentation",
+	"firestore-rs"
 ]
