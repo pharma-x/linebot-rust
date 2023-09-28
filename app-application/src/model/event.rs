@@ -209,7 +209,7 @@ pub enum CreateStickerResourceType {
     Message,
 }
 
-From<(TalkRoom, CreateEvent)> for NewEvent {
+impl From<(TalkRoom, CreateEvent)> for NewEvent {
     fn into(s: (TalkRoom, CreateEvent)) -> Self {
         let id = Id::<Event>::gen();
         let talk_room_id = s.0.id;

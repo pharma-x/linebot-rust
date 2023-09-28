@@ -2,7 +2,6 @@ use adapter::{
     module::RepositoriesModuleExt, repository::RepositoryError,
 };
 use crate::model::event::CreateUserEvent;
-use domain::factory::{event::EventFactory, talk_room::TalkRoomFactory};
 use domain::repository::{
     event::EventRepository, talk_room::TalkRoomRepository, user::UserRepository,
     user_auth::UserAuthRepository,
