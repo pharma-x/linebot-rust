@@ -1,6 +1,7 @@
 /target
 .vscode
 .env
+.DS_Store
 
 # firestore
 /firestore-rs/target/
