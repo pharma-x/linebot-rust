@@ -40,7 +40,7 @@ impl Modules {
         let factories_module: Arc<_> = Arc::new(FactoriesModule::new());
 
         let linebot_webhook_usecase: LinebotWebhookUseCase<RepositoriesModule, FactoriesModule> =
-            LinebotWebhookUseCase::new(repositories_module.clone(), factories_module.clone());
+            LinebotWebhookUseCase::new(repositories_module, factories_module);
 
         Self {
             linebot_webhook_usecase,
