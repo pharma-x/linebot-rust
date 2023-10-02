@@ -1,11 +1,13 @@
-use crate::adapter::model::line_user_auth::ResponseLineAuth;
-use crate::adapter::repository::HttpClientRepositoryImpl;
-use crate::domain::model::line_user::LineUserProfile;
-use crate::domain::model::user::UserProfile;
-use crate::domain::model::user_auth::{LineUserAuthData, UserAuthData};
-use crate::domain::repository::user_auth::UserAuthRepository;
+use crate::model::line_user_auth::ResponseLineAuth;
+use crate::repository::HttpClientRepositoryImpl;
 use anyhow::Ok;
 use async_trait::async_trait;
+use domain::model::{
+    line_user::LineUserProfile,
+    user::UserProfile,
+    user_auth::{LineUserAuthData, UserAuthData},
+};
+use domain::repository::user_auth::UserAuthRepository;
 use reqwest::header;
 
 #[async_trait]

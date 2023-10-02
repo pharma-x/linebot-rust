@@ -1,11 +1,11 @@
 use crate::model::{line_user::LineUserTable, primary_user::PrimaryUserTable};
 use crate::repository::DatabaseRepositoryImpl;
+use anyhow::{anyhow, Ok};
+use async_trait::async_trait;
 use domain::model::line_user::LineUserProfile;
 use domain::model::user::{User, UserProfile};
 use domain::model::user_auth::{AuthUserId, LineId};
 use domain::repository::user::UserRepository;
-use anyhow::{anyhow, Ok};
-use async_trait::async_trait;
 
 use super::RepositoryError;
 
@@ -56,7 +56,7 @@ insert into primary_users
 values (default)
 returning *"#,
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await
         .expect("Unable to insert a primary user");
 
@@ -70,7 +70,7 @@ returning *"#,
         .bind(source.auth_id.value())
         .bind(source.display_name)
         .bind(source.picture_url)
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await
         .expect("Unable to insert a line user");
 

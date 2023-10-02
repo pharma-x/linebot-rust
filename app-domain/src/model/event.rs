@@ -1,6 +1,7 @@
+use chrono::{DateTime, Local};
 use derive_new::new;
 
-use super::{talk_room::TalkRoom, Id};
+use crate::model::Id;
 
 #[derive(new, Clone)]
 pub enum Event {
@@ -11,57 +12,57 @@ pub enum Event {
     Message(MessageEvent),
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct FollowEvent {
-    pub id: String,
+    pub id: Id<Event>,
     pub reply_token: String,
     pub delivery_context: DeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone)]
 pub struct UnfollowEvent {
-    pub id: String,
+    pub id: Id<Event>,
     pub reply_token: String,
     pub delivery_context: DeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone)]
 pub struct PostbackEvent {
-    pub id: String,
+    pub id: Id<Event>,
     pub reply_token: String,
     pub delivery_context: DeliveryContext,
     pub postback: Postback,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone)]
 pub struct VideoPlayCompleteEvent {
-    pub id: String,
+    pub id: Id<Event>,
     pub reply_token: String,
     pub delivery_context: DeliveryContext,
     pub video_play_complete: VideoPlayComplete,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone)]
 pub struct MessageEvent {
-    pub id: String,
+    pub id: Id<Event>,
     pub reply_token: String,
     pub delivery_context: DeliveryContext,
     pub message: Message,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone)]
@@ -136,7 +137,7 @@ pub struct Emoji {
 pub struct ImageMessage {
     pub id: String,
     pub content_provider: ContentProvider,
-    pub image_set: ImageSet,
+    pub image_set: Option<ImageSet>,
 }
 
 #[derive(new, Clone)]
@@ -207,7 +208,7 @@ pub enum StickerResourceType {
     Message,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub enum NewEvent {
     Follow(NewFollowEvent),
     Unfollow(NewUnfollowEvent),
@@ -216,114 +217,88 @@ pub enum NewEvent {
     Message(NewMessageEvent),
 }
 
-impl NewEvent {
-    pub fn talk_room_id(&self) -> &Id<TalkRoom> {
-        match self {
-            NewEvent::Follow(event) => &event.talk_room_id,
-            NewEvent::Unfollow(event) => &event.talk_room_id,
-            NewEvent::Postback(event) => &event.talk_room_id,
-            NewEvent::VideoPlayComplete(event) => &event.talk_room_id,
-            NewEvent::Message(event) => &event.talk_room_id,
-        }
-    }
-}
-
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewFollowEvent {
     pub id: Id<Event>,
-    pub talk_room_id: Id<TalkRoom>,
     pub reply_token: String,
     pub delivery_context: NewDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewUnfollowEvent {
     pub id: Id<Event>,
-    pub talk_room_id: Id<TalkRoom>,
     pub reply_token: String,
     pub delivery_context: NewDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewPostbackEvent {
     pub id: Id<Event>,
-    pub talk_room_id: Id<TalkRoom>,
     pub reply_token: String,
     pub delivery_context: NewDeliveryContext,
     pub postback: NewPostback,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewVideoPlayCompleteEvent {
     pub id: Id<Event>,
-    pub talk_room_id: Id<TalkRoom>,
     pub reply_token: String,
     pub delivery_context: NewDeliveryContext,
     pub video_play_complete: NewVideoPlayComplete,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewMessageEvent {
     pub id: Id<Event>,
-    pub talk_room_id: Id<TalkRoom>,
     pub reply_token: String,
     pub delivery_context: NewDeliveryContext,
     pub message: NewMessage,
     pub mode: String,
     pub webhook_event_id: String,
-    pub timestamp: i64,
+    pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
-pub enum NewEventType {
-    Message,
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-}
-
-#[derive(new, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct NewDeliveryContext {
     pub is_redelivery: bool,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewPostback {
     pub data: String,
     pub params: NewPostbackParams,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub enum NewPostbackParams {
     Datetime(NewPostbackDatetimeParams),
     RichMenu(NewPostbackRichMenuParams),
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewPostbackDatetimeParams {
     pub datetime: String,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewPostbackRichMenuParams {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewVideoPlayComplete {
     pub tracking_id: String,
 }
@@ -339,14 +314,14 @@ pub enum NewMessage {
     Sticker(NewStickerMessage),
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewTextMessage {
     pub id: String,
     pub text: String,
     pub emojis: Vec<NewEmoji>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewEmoji {
     pub index: i32,
     pub length: i32,
@@ -354,14 +329,14 @@ pub struct NewEmoji {
     pub emoji_id: String,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewImageMessage {
     pub id: String,
     pub content_provider: NewContentProvider,
-    pub image_set: NewImageSet,
+    pub image_set: Option<NewImageSet>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub enum NewContentProvider {
     Line,
     External {
@@ -370,35 +345,35 @@ pub enum NewContentProvider {
     },
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewVideoMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: NewContentProvider,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewAudioMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: NewContentProvider,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewFileMessage {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewLocationMessage {
     pub id: String,
     pub title: String,
@@ -407,7 +382,7 @@ pub struct NewLocationMessage {
     pub longitude: f64,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub struct NewStickerMessage {
     pub id: String,
     pub package_id: String,
@@ -417,7 +392,7 @@ pub struct NewStickerMessage {
     pub text: Option<String>,
 }
 
-#[derive(new, Clone)]
+#[derive(Clone)]
 pub enum NewStickerResourceType {
     Static,
     Animation,

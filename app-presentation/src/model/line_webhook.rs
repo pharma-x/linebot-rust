@@ -6,7 +6,7 @@ use application::model::{
         CreatePostbackDatetimeParams, CreatePostbackEvent, CreatePostbackParams,
         CreatePostbackRichMenuParams, CreateStickerMessage, CreateStickerResourceType,
         CreateTextMessage, CreateUnfollowEvent, CreateUserEvent, CreateVideoMessage,
-        CreateVideoPlayCompleteEvent, CreatweVideoPlayComplete,
+        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent,
     },
     line_user_auth::CreateLineUserAuth,
 };
@@ -22,14 +22,14 @@ pub struct LineWebhookRequests {
 }
 
 #[derive(Debug, Validate, Clone)]
-pub(in crate::presentation) struct LineWebhookRequest {
-    pub(in crate::presentation) destination: String,
-    pub(in crate::presentation) event: LineWebhookEvent,
+pub(crate) struct LineWebhookRequest {
+    pub(crate) destination: String,
+    pub(crate) event: LineWebhookEvent,
 }
 
 #[derive(Deserialize, Debug, Clone, Display)]
 #[serde(tag = "type")]
-pub(in crate::presentation) enum LineWebhookEvent {
+pub(crate) enum LineWebhookEvent {
     #[strum(serialize = "follow")]
     Follow(LineWebhookFollowEvent),
     #[strum(serialize = "unfollow")]
@@ -43,7 +43,7 @@ pub(in crate::presentation) enum LineWebhookEvent {
 }
 
 #[derive(Deserialize, Debug, Clone, Validate)]
-pub(in crate::presentation) struct LineWebhookFollowEvent {
+pub(crate) struct LineWebhookFollowEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -56,7 +56,7 @@ pub(in crate::presentation) struct LineWebhookFollowEvent {
 }
 
 #[derive(Deserialize, Debug, Clone, Validate)]
-pub(in crate::presentation) struct LineWebhookUnfollowEvent {
+pub(crate) struct LineWebhookUnfollowEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -69,7 +69,7 @@ pub(in crate::presentation) struct LineWebhookUnfollowEvent {
 }
 
 #[derive(Deserialize, Debug, Clone, Validate)]
-pub(in crate::presentation) struct LineWebhookPostbackEvent {
+pub(crate) struct LineWebhookPostbackEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -108,7 +108,7 @@ struct LineWebhookPostbackRichMenuParams {
 }
 
 #[derive(Deserialize, Debug, Clone, Validate)]
-pub(in crate::presentation) struct LineWebhookVideoPlayCompleteEvent {
+pub(crate) struct LineWebhookVideoPlayCompleteEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -248,7 +248,7 @@ struct LineWebhookImageMessage {
     id: String,
     #[serde(rename(deserialize = "contentProvider"))]
     content_provider: LineWebhookContentProvider,
-    image_set: LineWebhookImageSet,
+    image_set: Option<LineWebhookImageSet>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -445,11 +445,11 @@ impl From<LineWebhookRequest> for CreateUserEvent {
                                     preview_image_url,
                                 },
                             },
-                            image_set: CreateImageSet {
-                                id: m.image_set.id,
-                                index: m.image_set.index,
-                                length: m.image_set.length,
-                            },
+                            image_set: m.image_set.map(|i| CreateImageSet {
+                                id: i.id,
+                                index: i.index,
+                                length: i.length,
+                            }),
                         }),
                         LineWebhookMessage::Video(m) => CreateMessage::Video(CreateVideoMessage {
                             id: m.id,

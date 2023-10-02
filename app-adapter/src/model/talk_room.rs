@@ -3,20 +3,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use strum_macros::Display;
 
-use crate::domain::model::{
-    event::{
-        AudioMessage, ContentProvider, Emoji, FileMessage, ImageMessage, ImageSet, LocationMessage,
-        Message, StickerMessage, StickerResourceType, TextMessage, VideoMessage,
-    },
-    talk_room::{
-        LatestMessage, NewLatestMessage, NewTalkRoom, UpdateLatestMessage, UpdateTalkRoom,
-    },
-};
-
-use super::event::{
-    AudioMessageTable, ContentProviderTable, EmojiTable, FileMessageTable, ImageMessageTable,
-    ImageSetTable, LocationMessageTable, MessageTable, StickerMessageTable,
-    StickerResourceTypeTable, TextMessageTable, VideoMessageTable,
+use domain::model::{
+    event::{NewEvent, NewMessage, NewMessageEvent},
+    talk_room::NewTalkRoom,
 };
 
 #[derive(FromRow)]
@@ -63,13 +52,114 @@ pub struct TalkRoomCardTable {
 }
 
 #[derive(Serialize, Deserialize, Display, Clone)]
-#[serde(tag = "eventType")]
+#[serde(tag = "type")]
 pub enum LatestMessageTable {
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-    Message(MessageTable),
+    Follow(TalkRoomFollowTable),
+    Unfollow(TalkRoomUnfollowTable),
+    Postback(TalkRoomPostbackTable),
+    VideoPlayComplete(TalkRoomVideoPlayCompleteTable),
+    Message(TalkRoomMessageTable),
+}
+
+impl LatestMessageTable {
+    pub fn document_id(&self) -> &String {
+        match self {
+            LatestMessageTable::Follow(e) => &e.document_id,
+            LatestMessageTable::Unfollow(e) => &e.document_id,
+            LatestMessageTable::Postback(e) => &e.document_id,
+            LatestMessageTable::VideoPlayComplete(e) => &e.document_id,
+            LatestMessageTable::Message(e) => e.document_id(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomFollowTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomUnfollowTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomPostbackTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomVideoPlayCompleteTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Display, Clone)]
+#[serde(tag = "messageType")] // JSONにmessageTypeというフィールドでタグ名を含む
+pub enum TalkRoomMessageTable {
+    #[strum(serialize = "text")]
+    Text(TalkRoomTextMessageTable),
+    #[strum(serialize = "image")]
+    Image(TalkRoomImageMessageTable),
+    #[strum(serialize = "video")]
+    Video(TalkRoomVideoMessageTable),
+    #[strum(serialize = "audio")]
+    Audio(TalkRoomAudioMessageTable),
+    #[strum(serialize = "file")]
+    File(TalkRoomFileMessageTable),
+    #[strum(serialize = "location")]
+    Location(TalkRoomLocationMessageTable),
+    #[strum(serialize = "sticker")]
+    Sticker(TalkRoomStickerMessageTable),
+}
+
+impl TalkRoomMessageTable {
+    pub fn document_id(&self) -> &String {
+        match self {
+            TalkRoomMessageTable::Text(e) => &e.document_id,
+            TalkRoomMessageTable::Image(e) => &e.document_id,
+            TalkRoomMessageTable::Video(e) => &e.document_id,
+            TalkRoomMessageTable::Audio(e) => &e.document_id,
+            TalkRoomMessageTable::File(e) => &e.document_id,
+            TalkRoomMessageTable::Location(e) => &e.document_id,
+            TalkRoomMessageTable::Sticker(e) => &e.document_id,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomTextMessageTable {
+    document_id: String,
+    text: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomImageMessageTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomVideoMessageTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomAudioMessageTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomFileMessageTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomLocationMessageTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TalkRoomStickerMessageTable {
+    document_id: String,
 }
 
 impl From<NewTalkRoom> for TalkRoomTable {
@@ -91,11 +181,21 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
             pinned: s.pinned,
             follow: s.follow,
             latest_message: match s.latest_message {
-                NewLatestMessage::Follow => LatestMessageTable::Follow,
-                NewLatestMessage::Unfollow => LatestMessageTable::Unfollow,
-                NewLatestMessage::Postback => LatestMessageTable::Postback,
-                NewLatestMessage::VideoPlayComplete => LatestMessageTable::VideoPlayComplete,
-                NewLatestMessage::Message(m) => LatestMessageTable::Message(m.into()),
+                NewEvent::Follow(e) => LatestMessageTable::Follow(TalkRoomFollowTable {
+                    document_id: e.id.value.to_string(),
+                }),
+                NewEvent::Unfollow(e) => LatestMessageTable::Unfollow(TalkRoomUnfollowTable {
+                    document_id: e.id.value.to_string(),
+                }),
+                NewEvent::Postback(e) => LatestMessageTable::Postback(TalkRoomPostbackTable {
+                    document_id: e.id.value.to_string(),
+                }),
+                NewEvent::VideoPlayComplete(e) => {
+                    LatestMessageTable::VideoPlayComplete(TalkRoomVideoPlayCompleteTable {
+                        document_id: e.id.value.to_string(),
+                    })
+                }
+                NewEvent::Message(e) => LatestMessageTable::Message(e.into()),
             },
             latest_messaged_at: s.latest_messaged_at,
             sort_time: s.sort_time,
@@ -105,197 +205,33 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
     }
 }
 
-impl From<UpdateTalkRoom> for TalkRoomCardTable {
-    fn from(s: UpdateTalkRoom) -> Self {
-        TalkRoomCardTable {
-            document_id: s.id.value.to_string(),
-            display_name: s.display_name,
-            rsvp: s.rsvp,
-            pinned: s.pinned,
-            follow: s.follow,
-            latest_message: match s.latest_message {
-                UpdateLatestMessage::Follow => LatestMessageTable::Follow,
-                UpdateLatestMessage::Unfollow => LatestMessageTable::Unfollow,
-                UpdateLatestMessage::Postback => LatestMessageTable::Postback,
-                UpdateLatestMessage::VideoPlayComplete => LatestMessageTable::VideoPlayComplete,
-                UpdateLatestMessage::Message(m) => LatestMessageTable::Message(m.into()),
-            },
-            latest_messaged_at: s.latest_messaged_at,
-            sort_time: s.sort_time,
-            created_at: s.created_at,
-            updated_at: s.updated_at,
-        }
-    }
-}
-
-impl From<(TalkRoomTable, TalkRoomCardTable)> for TalkRoom {
-    fn from(s: TalkRoomTable) -> Self {
-        let talk_room_table = s.0;
-        let talk_room_card_table = s.1;
-        TalkRoom {
-            id: talk_room_table.clone().document_id.try_into().unwrap(),
-            primary_user_id: PrimaryUserId::new(talk_room_table.clone().primary_user_id),
-            display_name: talk_room_card_table.display_name,
-            rsvp: talk_room_card_table.rsvp,
-            pinned: talk_room_card_table.pinned,
-            follow: talk_room_card_table.follow,
-            latest_message: talk_room_card_table.latest_message.into(),
-            latest_messaged_at: talk_room_card_table.latest_messaged_at,
-            sort_time: talk_room_card_table.sort_time,
-            created_at: talk_room_card_table.created_at,
-            updated_at: talk_room_card_table.updated_at,
-        };
-    }
-}
-
-impl From<LatestMessageTable> for LatestMessage {
-    fn from(s: LatestMessageTable) -> Self {
-        return match s {
-            LatestMessageTable::Follow => LatestMessage::Follow,
-            LatestMessageTable::Unfollow => LatestMessage::Unfollow,
-            LatestMessageTable::Postback => LatestMessage::Postback,
-            LatestMessageTable::VideoPlayComplete => LatestMessage::VideoPlayComplete,
-            LatestMessageTable::Message(m) => LatestMessage::Message(m.into()),
-        };
-    }
-}
-
-impl From<MessageTable> for Message {
-    fn from(s: MessageTable) -> Self {
-        return match s {
-            MessageTable::Text(t) => Message::Text(t.into()),
-            MessageTable::Image(t) => Message::Image(t.into()),
-            MessageTable::Video(t) => Message::Video(t.into()),
-            MessageTable::Audio(t) => Message::Audio(t.into()),
-            MessageTable::File(t) => Message::File(t.into()),
-            MessageTable::Location(t) => Message::Location(t.into()),
-            MessageTable::Sticker(t) => Message::Sticker(t.into()),
-        };
-    }
-}
-
-impl From<TextMessageTable> for TextMessage {
-    fn from(s: TextMessageTable) -> Self {
-        TextMessage {
-            id: s.id,
-            text: s.text,
-            emojis: s.emojis.into_iter().map(|e| e.into()).collect(),
-        }
-    }
-}
-
-impl From<EmojiTable> for Emoji {
-    fn from(s: EmojiTable) -> Self {
-        Emoji {
-            index: s.index,
-            length: s.length,
-            product_id: s.product_id,
-            emoji_id: s.emoji_id,
-        }
-    }
-}
-
-impl From<ImageMessageTable> for ImageMessage {
-    fn from(s: ImageMessageTable) -> Self {
-        ImageMessage {
-            id: s.id,
-            content_provider: s.content_provider.into(),
-            image_set: s.image_set.into(),
-        }
-    }
-}
-
-impl From<ContentProviderTable> for ContentProvider {
-    fn from(s: ContentProviderTable) -> Self {
-        match s {
-            ContentProviderTable::Line => ContentProvider::Line,
-            ContentProviderTable::External {
-                original_content_url,
-                preview_image_url,
-            } => ContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            },
-        }
-    }
-}
-
-impl From<ImageSetTable> for ImageSet {
-    fn from(s: ImageSetTable) -> Self {
-        ImageSet {
-            id: s.id,
-            index: s.index,
-            length: s.length,
-        }
-    }
-}
-
-impl From<VideoMessageTable> for VideoMessage {
-    fn from(s: VideoMessageTable) -> Self {
-        VideoMessage {
-            id: s.id,
-            duration: s.duration,
-            content_provider: s.content_provider.into(),
-        }
-    }
-}
-
-impl From<AudioMessageTable> for AudioMessage {
-    fn from(s: AudioMessageTable) -> Self {
-        AudioMessage {
-            id: s.id,
-            duration: s.duration,
-            content_provider: s.content_provider.into(),
-        }
-    }
-}
-
-impl From<FileMessageTable> for FileMessage {
-    fn from(s: FileMessageTable) -> Self {
-        FileMessage {
-            id: s.id,
-            file_name: s.file_name,
-            file_size: s.file_size,
-        }
-    }
-}
-
-impl From<LocationMessageTable> for LocationMessage {
-    fn from(s: LocationMessageTable) -> Self {
-        LocationMessage {
-            id: s.id,
-            title: s.title,
-            address: s.address,
-            latitude: s.latitude,
-            longitude: s.longitude,
-        }
-    }
-}
-
-impl From<StickerMessageTable> for StickerMessage {
-    fn from(s: StickerMessageTable) -> Self {
-        StickerMessage {
-            id: s.id,
-            package_id: s.package_id,
-            sticker_id: s.sticker_id,
-            sticker_resource_type: s.sticker_resource_type.into(),
-            keywords: s.keywords,
-            text: s.text,
-        }
-    }
-}
-
-impl From<StickerResourceTypeTable> for StickerResourceType {
-    fn from(s: StickerResourceTypeTable) -> Self {
-        match s {
-            StickerResourceTypeTable::Static => StickerResourceType::Static,
-            StickerResourceTypeTable::Animation => StickerResourceType::Animation,
-            StickerResourceTypeTable::Sound => StickerResourceType::Sound,
-            StickerResourceTypeTable::AnimationSound => StickerResourceType::AnimationSound,
-            StickerResourceTypeTable::Popup => StickerResourceType::Popup,
-            StickerResourceTypeTable::PupupSound => StickerResourceType::PupupSound,
-            StickerResourceTypeTable::Custom => StickerResourceType::Custom,
-            StickerResourceTypeTable::Message => StickerResourceType::Message,
+impl From<NewMessageEvent> for TalkRoomMessageTable {
+    fn from(s: NewMessageEvent) -> Self {
+        let document_id = s.id.value.to_string();
+        let message = s.message;
+        match message {
+            NewMessage::Text(m) => TalkRoomMessageTable::Text(TalkRoomTextMessageTable {
+                document_id,
+                text: m.text,
+            }),
+            NewMessage::Image(_) => {
+                TalkRoomMessageTable::Image(TalkRoomImageMessageTable { document_id })
+            }
+            NewMessage::Video(_) => {
+                TalkRoomMessageTable::Video(TalkRoomVideoMessageTable { document_id })
+            }
+            NewMessage::Audio(_) => {
+                TalkRoomMessageTable::Audio(TalkRoomAudioMessageTable { document_id })
+            }
+            NewMessage::File(_) => {
+                TalkRoomMessageTable::File(TalkRoomFileMessageTable { document_id })
+            }
+            NewMessage::Location(_) => {
+                TalkRoomMessageTable::Location(TalkRoomLocationMessageTable { document_id })
+            }
+            NewMessage::Sticker(_) => {
+                TalkRoomMessageTable::Sticker(TalkRoomStickerMessageTable { document_id })
+            }
         }
     }
 }

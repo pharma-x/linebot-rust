@@ -4,7 +4,6 @@ use reqwest::Client;
 use std::marker::PhantomData;
 use thiserror::Error;
 
-pub mod event;
 pub mod talk_room;
 pub mod user;
 pub mod user_auth;

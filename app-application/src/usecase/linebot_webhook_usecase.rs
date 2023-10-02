@@ -1,21 +1,24 @@
-use adapter::{
-    module::RepositoriesModuleExt, repository::RepositoryError,
-};
 use crate::model::event::CreateUserEvent;
-use domain::repository::{
-    event::EventRepository, talk_room::TalkRoomRepository, user::UserRepository,
-    user_auth::UserAuthRepository,
-};
+use adapter::{module::RepositoriesModuleExt, repository::RepositoryError};
 use derive_new::new;
+use domain::{
+    model::event::NewEvent,
+    repository::{
+        talk_room::TalkRoomRepository, user::UserRepository, user_auth::UserAuthRepository,
+    },
+};
 use std::sync::Arc;
 
 #[derive(new)]
-pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt, F: FactoriesModuleExt> {
+pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
     repositories: Arc<R>,
 }
 
 impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
     pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
+        /*
+         * userを取得、なければ作成する
+         */
         let create_line_user_auth = source.clone().create_line_user_auth;
         let res_user = self
             .repositories
@@ -47,6 +50,10 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             }
         };
 
+        /*
+         * talk_roomを取得、なければ作成する
+         */
+        let new_event = NewEvent::from(source.create_event);
         let res_talk_room = self
             .repositories
             .talk_room_repository()
@@ -60,7 +67,7 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
                         RepositoryError::NotFound(_) => {
                             self.repositories
                                 .talk_room_repository()
-                                .create_talk_room(user.into())
+                                .create_talk_room((user, new_event.clone()).into())
                                 .await?
                         }
                         _ => return Err(anyhow_err),
@@ -72,15 +79,10 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             }
         };
 
-        let new_event = (talk_room, source.create_event).into();
-        let event = self.repositories
-            .event_repository()
-            .create_event(new_event)
-            .await?;
-        let update_talk_room = (talk_room, event).into();
+        let create_event_talk_room = (talk_room, new_event).into();
         self.repositories
-            .talk_repository()
-            .update_talk_room(update_talk_room)
+            .talk_room_repository()
+            .create_event(create_event_talk_room)
             .await?;
 
         Ok(())

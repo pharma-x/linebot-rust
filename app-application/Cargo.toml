@@ -8,3 +8,4 @@ domain = { path = "../app-domain" }
 adapter = { path = "../app-adapter" }
 anyhow = "1.0.71"
 derive-new = "0.5.9"
+chrono = "0.4.31"

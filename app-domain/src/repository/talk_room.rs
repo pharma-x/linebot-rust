@@ -8,5 +8,5 @@ use async_trait::async_trait;
 pub trait TalkRoomRepository {
     async fn get_talk_room(&self, source: PrimaryUserId) -> anyhow::Result<TalkRoom>;
     async fn create_talk_room(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom>;
-    async fn update_talk_room(&self, source: TalkRoom) -> anyhow::Result<()>;
+    async fn create_event(&self, source: NewTalkRoom) -> anyhow::Result<()>;
 }

@@ -1,19 +1,26 @@
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
-use domain::model::event::{
-    NewAudioMessage, NewContentProvider, NewEmoji, NewEvent, NewFileMessage, NewFollowEvent,
-    NewImageMessage, NewImageSet, NewLocationMessage, NewMessage, NewMessageEvent,
-    NewPostbackDatetimeParams, NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams,
-    NewStickerMessage, NewStickerResourceType, NewTextMessage, NewUnfollowEvent, NewVideoMessage,
-    NewVideoPlayCompleteEvent,
+use domain::model::{
+    event::{
+        AudioMessage, ContentProvider, DeliveryContext, Emoji, Event, FileMessage, FollowEvent,
+        ImageMessage, ImageSet, LocationMessage, Message, MessageEvent, NewAudioMessage,
+        NewContentProvider, NewDeliveryContext, NewEmoji, NewEvent, NewFileMessage, NewFollowEvent,
+        NewImageMessage, NewImageSet, NewLocationMessage, NewMessage, NewMessageEvent,
+        NewPostbackDatetimeParams, NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams,
+        NewStickerMessage, NewStickerResourceType, NewTextMessage, NewUnfollowEvent,
+        NewVideoMessage, NewVideoPlayCompleteEvent, Postback, PostbackDatetimeParams,
+        PostbackEvent, PostbackParams, PostbackRichMenuParams, StickerMessage, StickerResourceType,
+        TextMessage, UnfollowEvent, VideoMessage, VideoPlayComplete, VideoPlayCompleteEvent,
+    },
+    Id,
 };
 
 #[derive(Serialize, Deserialize, Display, Clone)]
 #[serde(tag = "type")]
 pub enum EventTable {
-    Follow(FllowEventTable),
+    Follow(FollowEventTable),
     Unfollow(UnfollowEventTable),
     Postback(PostbackEventTable),
     VideoPlayComplete(VideoPlayCompleteEventTable),
@@ -41,8 +48,20 @@ impl EventTable {
     }
 }
 
+impl From<EventTable> for Event {
+    fn from(s: EventTable) -> Self {
+        match s {
+            EventTable::Follow(f) => Event::Follow(f.into()),
+            EventTable::Unfollow(u) => Event::Unfollow(u.into()),
+            EventTable::Message(m) => Event::Message(m.into()),
+            EventTable::Postback(p) => Event::Postback(p.into()),
+            EventTable::VideoPlayComplete(v) => Event::VideoPlayComplete(v.into()),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
-pub struct FllowEventTable {
+pub struct FollowEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
     #[serde(rename(serialize = "replyToken"))]
@@ -51,6 +70,7 @@ pub struct FllowEventTable {
     webhook_event_id: String,
     #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
+    mode: String,
     #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
     #[serde(rename(serialize = "sendingType"))]
@@ -61,6 +81,19 @@ pub struct FllowEventTable {
     created_at: DateTime<Local>,
     #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
+}
+
+impl From<FollowEventTable> for FollowEvent {
+    fn from(e: FollowEventTable) -> Self {
+        FollowEvent {
+            id: Id::try_from(e.document_id).unwrap(),
+            reply_token: e.reply_token,
+            delivery_context: DeliveryContext::from(e.delivery_context),
+            mode: e.mode,
+            webhook_event_id: e.webhook_event_id,
+            created_at: e.created_at,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -73,6 +106,7 @@ pub struct UnfollowEventTable {
     webhook_event_id: String,
     #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
+    mode: String,
     #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
     #[serde(rename(serialize = "sendingType"))]
@@ -83,6 +117,19 @@ pub struct UnfollowEventTable {
     created_at: DateTime<Local>,
     #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
+}
+
+impl From<UnfollowEventTable> for UnfollowEvent {
+    fn from(e: UnfollowEventTable) -> Self {
+        UnfollowEvent {
+            id: Id::try_from(e.document_id).unwrap(),
+            reply_token: e.reply_token,
+            delivery_context: DeliveryContext::from(e.delivery_context),
+            mode: e.mode,
+            webhook_event_id: e.webhook_event_id,
+            created_at: e.created_at,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -95,17 +142,157 @@ pub struct MessageEventTable {
     webhook_event_id: String,
     #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
+    mode: String,
     #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
     #[serde(rename(serialize = "sendingType"))]
     sending_type: SendingTypeTable,
     #[serde(rename(serialize = "sendingMethod"))]
     sending_method: SendingMethod,
-    pub messages: Vec<MessageTable>,
+    pub message: MessageTable,
     #[serde(rename(serialize = "createdAt"))]
     created_at: DateTime<Local>,
     #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
+}
+
+impl From<MessageEventTable> for MessageEvent {
+    fn from(e: MessageEventTable) -> Self {
+        MessageEvent {
+            id: Id::try_from(e.document_id).unwrap(),
+            reply_token: e.reply_token,
+            delivery_context: DeliveryContext::from(e.delivery_context),
+            mode: e.mode,
+            webhook_event_id: e.webhook_event_id,
+            message: e.message.into(),
+            created_at: e.created_at,
+        }
+    }
+}
+
+impl From<MessageTable> for Message {
+    fn from(m: MessageTable) -> Self {
+        match m {
+            MessageTable::Text(t) => Message::Text(t.into()),
+            MessageTable::Image(i) => Message::Image(i.into()),
+            MessageTable::Video(v) => Message::Video(v.into()),
+            MessageTable::Audio(a) => Message::Audio(a.into()),
+            MessageTable::File(f) => Message::File(f.into()),
+            MessageTable::Location(l) => Message::Location(l.into()),
+            MessageTable::Sticker(s) => Message::Sticker(s.into()),
+        }
+    }
+}
+
+impl From<TextMessageTable> for TextMessage {
+    fn from(m: TextMessageTable) -> Self {
+        Self {
+            id: m.id,
+            text: m.text,
+            emojis: m.emojis.into_iter().map(|e| e.into()).collect(),
+        }
+    }
+}
+
+impl From<EmojiTable> for Emoji {
+    fn from(e: EmojiTable) -> Self {
+        Self {
+            index: e.index,
+            length: e.length,
+            product_id: e.product_id,
+            emoji_id: e.emoji_id,
+        }
+    }
+}
+
+impl From<ImageMessageTable> for ImageMessage {
+    fn from(m: ImageMessageTable) -> Self {
+        Self {
+            id: m.id,
+            content_provider: m.content_provider.into(),
+            image_set: m.image_set.map(|i| i.into()),
+        }
+    }
+}
+
+impl From<ImageSetTable> for ImageSet {
+    fn from(i: ImageSetTable) -> Self {
+        Self {
+            id: i.id,
+            index: i.index,
+            length: i.length,
+        }
+    }
+}
+
+impl From<VideoMessageTable> for VideoMessage {
+    fn from(m: VideoMessageTable) -> Self {
+        Self {
+            id: m.id,
+            duration: m.duration,
+            content_provider: m.content_provider.into(),
+        }
+    }
+}
+
+impl From<AudioMessageTable> for AudioMessage {
+    fn from(m: AudioMessageTable) -> Self {
+        Self {
+            id: m.id,
+            duration: m.duration,
+            content_provider: m.content_provider.into(),
+        }
+    }
+}
+
+impl From<FileMessageTable> for FileMessage {
+    fn from(m: FileMessageTable) -> Self {
+        Self {
+            id: m.id,
+            file_name: m.file_name,
+            file_size: m.file_size,
+        }
+    }
+}
+
+impl From<LocationMessageTable> for LocationMessage {
+    fn from(m: LocationMessageTable) -> Self {
+        Self {
+            id: m.id,
+            title: m.title,
+            address: m.address,
+            latitude: m.latitude,
+            longitude: m.longitude,
+        }
+    }
+}
+
+impl From<StickerMessageTable> for StickerMessage {
+    fn from(m: StickerMessageTable) -> Self {
+        Self {
+            id: m.id,
+            package_id: m.package_id,
+            sticker_id: m.sticker_id,
+            sticker_resource_type: m.sticker_resource_type.into(),
+            keywords: m.keywords,
+            text: m.text,
+        }
+    }
+}
+
+impl From<StickerResourceTypeTable> for StickerResourceType {
+    fn from(s: StickerResourceTypeTable) -> Self {
+        match s {
+            StickerResourceTypeTable::Static => StickerResourceType::Static,
+            StickerResourceTypeTable::Animation => StickerResourceType::Animation,
+            StickerResourceTypeTable::Sound => StickerResourceType::Sound,
+            StickerResourceTypeTable::AnimationSound => StickerResourceType::AnimationSound,
+            StickerResourceTypeTable::Popup => StickerResourceType::Popup,
+            StickerResourceTypeTable::PupupSound => StickerResourceType::PupupSound,
+            StickerResourceTypeTable::Custom => StickerResourceType::Custom,
+            StickerResourceTypeTable::Message => StickerResourceType::Message,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -118,6 +305,7 @@ pub struct PostbackEventTable {
     webhook_event_id: String,
     #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
+    mode: String,
     #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
     #[serde(rename(serialize = "sendingType"))]
@@ -132,6 +320,62 @@ pub struct PostbackEventTable {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct DeliveryContextTable {
+    is_redelivery: bool,
+}
+
+impl From<DeliveryContextTable> for DeliveryContext {
+    fn from(d: DeliveryContextTable) -> Self {
+        Self {
+            is_redelivery: d.is_redelivery,
+        }
+    }
+}
+
+impl From<PostbackEventTable> for PostbackEvent {
+    fn from(e: PostbackEventTable) -> Self {
+        Self {
+            id: Id::try_from(e.document_id).unwrap(),
+            reply_token: e.reply_token,
+            delivery_context: DeliveryContext::from(e.delivery_context),
+            mode: e.mode,
+            webhook_event_id: e.webhook_event_id,
+            postback: e.postback.into(),
+            created_at: e.created_at,
+        }
+    }
+}
+
+impl From<PostbackTable> for Postback {
+    fn from(p: PostbackTable) -> Self {
+        Self {
+            data: p.data,
+            params: match p.params {
+                PostbackParamsTable::Datetime(p) => PostbackParams::Datetime(p.into()),
+                PostbackParamsTable::RichMenu(p) => PostbackParams::RichMenu(p.into()),
+            },
+        }
+    }
+}
+
+impl From<PostbackDatetimeParamsTable> for PostbackDatetimeParams {
+    fn from(p: PostbackDatetimeParamsTable) -> Self {
+        Self {
+            datetime: p.datetime,
+        }
+    }
+}
+
+impl From<PostbackRichMenuParamsTable> for PostbackRichMenuParams {
+    fn from(p: PostbackRichMenuParamsTable) -> Self {
+        Self {
+            new_rich_menu_alias_id: p.new_rich_menu_alias_id,
+            status: p.status,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct VideoPlayCompleteEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
@@ -141,6 +385,7 @@ pub struct VideoPlayCompleteEventTable {
     webhook_event_id: String,
     #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
+    mode: String,
     #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
     #[serde(rename(serialize = "sendingType"))]
@@ -154,9 +399,26 @@ pub struct VideoPlayCompleteEventTable {
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct DeliveryContextTable {
-    is_redelivery: bool,
+impl From<VideoPlayCompleteEventTable> for VideoPlayCompleteEvent {
+    fn from(e: VideoPlayCompleteEventTable) -> Self {
+        Self {
+            id: Id::try_from(e.document_id).unwrap(),
+            reply_token: e.reply_token,
+            delivery_context: DeliveryContext::from(e.delivery_context),
+            mode: e.mode,
+            webhook_event_id: e.webhook_event_id,
+            video_play_complete: e.video_play_complete.into(),
+            created_at: e.created_at,
+        }
+    }
+}
+
+impl From<VideoPlayCompleteTable> for VideoPlayComplete {
+    fn from(v: VideoPlayCompleteTable) -> Self {
+        Self {
+            tracking_id: v.tracking_id,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Display, Clone)]
@@ -196,20 +458,6 @@ pub struct Sender {
 enum SenderRoleTable {
     #[strum(serialize = "sender")]
     Sender,
-}
-
-#[derive(Serialize, Deserialize, Display, Clone)]
-pub enum EventTypeTable {
-    #[strum(serialize = "message")]
-    Message,
-    #[strum(serialize = "follow")]
-    Follow,
-    #[strum(serialize = "unfollow")]
-    Unfollow,
-    #[strum(serialize = "postback")]
-    Postback,
-    #[strum(serialize = "videoPlayComplete")]
-    VideoPlayComplete,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -284,7 +532,7 @@ pub struct ImageMessageTable {
     #[serde(rename(serialize = "contentProvider"))]
     pub content_provider: ContentProviderTable,
     #[serde(rename(serialize = "imageSet"))]
-    pub image_set: ImageSetTable,
+    pub image_set: Option<ImageSetTable>,
 }
 
 #[derive(Serialize, Deserialize, Display, Clone)]
@@ -299,6 +547,21 @@ pub enum ContentProviderTable {
         #[serde(rename(serialize = "previewImageUrl"))]
         preview_image_url: Option<String>,
     },
+}
+
+impl From<ContentProviderTable> for ContentProvider {
+    fn from(s: ContentProviderTable) -> Self {
+        match s {
+            ContentProviderTable::Line => ContentProvider::Line,
+            ContentProviderTable::External {
+                original_content_url,
+                preview_image_url,
+            } => ContentProvider::External {
+                original_content_url,
+                preview_image_url,
+            },
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -375,7 +638,6 @@ pub enum StickerResourceTypeTable {
     Message,
 }
 
-//
 impl From<NewEvent> for EventTable {
     fn from(e: NewEvent) -> Self {
         match e {
@@ -388,20 +650,19 @@ impl From<NewEvent> for EventTable {
     }
 }
 
-impl From<NewFollowEvent> for FllowEventTable {
+impl From<NewFollowEvent> for FollowEventTable {
     fn from(e: NewFollowEvent) -> Self {
-        FllowEventTable {
+        FollowEventTable {
             document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
-            delivery_context: DeliveryContextTable {
-                is_redelivery: e.delivery_context.is_redelivery,
-            },
+            delivery_context: e.delivery_context.into(),
+            mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
             sending_method: SendingMethod::Reply,
-            created_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
-            updated_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
+            created_at: e.created_at,
+            updated_at: e.created_at,
         }
     }
 }
@@ -412,14 +673,13 @@ impl From<NewUnfollowEvent> for UnfollowEventTable {
             document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
-            delivery_context: DeliveryContextTable {
-                is_redelivery: e.delivery_context.is_redelivery,
-            },
+            delivery_context: e.delivery_context.into(),
+            mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
             sending_method: SendingMethod::Reply,
-            created_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
-            updated_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
+            created_at: e.created_at,
+            updated_at: e.created_at,
         }
     }
 }
@@ -430,15 +690,14 @@ impl From<NewMessageEvent> for MessageEventTable {
             document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
-            delivery_context: DeliveryContextTable {
-                is_redelivery: e.delivery_context.is_redelivery,
-            },
+            delivery_context: e.delivery_context.into(),
+            mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
             sending_method: SendingMethod::Reply,
-            messages: vec![e.message.into()],
-            created_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
-            updated_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
+            message: e.message.into(),
+            created_at: e.created_at,
+            updated_at: e.created_at,
         }
     }
 }
@@ -449,9 +708,8 @@ impl From<NewPostbackEvent> for PostbackEventTable {
             document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
-            delivery_context: DeliveryContextTable {
-                is_redelivery: e.delivery_context.is_redelivery,
-            },
+            delivery_context: e.delivery_context.into(),
+            mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
             sending_method: SendingMethod::Reply,
@@ -462,8 +720,16 @@ impl From<NewPostbackEvent> for PostbackEventTable {
                     NewPostbackParams::RichMenu(p) => PostbackParamsTable::RichMenu(p.into()),
                 },
             },
-            created_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
-            updated_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
+            created_at: e.created_at,
+            updated_at: e.created_at,
+        }
+    }
+}
+
+impl From<NewDeliveryContext> for DeliveryContextTable {
+    fn from(d: NewDeliveryContext) -> Self {
+        DeliveryContextTable {
+            is_redelivery: d.is_redelivery,
         }
     }
 }
@@ -494,14 +760,15 @@ impl From<NewVideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
             delivery_context: DeliveryContextTable {
                 is_redelivery: e.delivery_context.is_redelivery,
             },
+            mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
             sending_method: SendingMethod::Reply,
             video_play_complete: VideoPlayCompleteTable {
                 tracking_id: e.video_play_complete.tracking_id,
             },
-            created_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
-            updated_at: Local.timestamp_opt(e.timestamp, 0).unwrap(),
+            created_at: e.created_at,
+            updated_at: e.created_at,
         }
     }
 }
@@ -547,7 +814,7 @@ impl From<NewImageMessage> for ImageMessageTable {
         ImageMessageTable {
             id: i.id,
             content_provider: i.content_provider.into(),
-            image_set: i.image_set.into(),
+            image_set: i.image_set.map(|i| i.into()),
         }
     }
 }
