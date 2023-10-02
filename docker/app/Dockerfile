@@ -1,6 +1,6 @@
 # Use the official Rust image.
 # https://hub.docker.com/_/rust
-FROM rust:1.69.0
+FROM rust:1.72.1
 
 ENV APP_ROOT /myapp
 WORKDIR $APP_ROOT

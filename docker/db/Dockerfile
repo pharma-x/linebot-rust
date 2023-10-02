@@ -1,4 +1,4 @@
-FROM mysql:8.0.33
+FROM mysql:8.0.34 AS db
 
 ADD /docker/db/my.cnf /etc/mysql/my.cnf
 
