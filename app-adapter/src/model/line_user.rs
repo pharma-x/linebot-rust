@@ -1,10 +1,10 @@
+use chrono::{DateTime, Local};
 use domain::model::{
     line_user::LineUserProfile,
     primary_user_id::PrimaryUserId,
     user::{User, UserProfile},
     user_auth::{AuthUserId, LineId},
 };
-use chrono::{DateTime, Local};
 use sqlx::FromRow;
 
 #[derive(FromRow, Debug)]

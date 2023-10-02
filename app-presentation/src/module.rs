@@ -1,17 +1,13 @@
-use std::sync::Arc;
-use adapter::module::{
-    RepositoriesModule, RepositoriesModuleExt,
-};
+use adapter::module::{RepositoriesModule, RepositoriesModuleExt};
 use adapter::persistance::{firestore::Firestore, mysql::Db};
 use application::usecase::linebot_webhook_usecase::LinebotWebhookUseCase;
 use reqwest::Client;
+use std::sync::Arc;
 
 pub trait ModulesExt {
     type RepositoriesModule: RepositoriesModuleExt;
 
-    fn linebot_webhook_usecase(
-        &self,
-    ) -> &LinebotWebhookUseCase<Self::RepositoriesModule>;
+    fn linebot_webhook_usecase(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule>;
 }
 
 pub struct Modules {
@@ -21,9 +17,7 @@ pub struct Modules {
 impl ModulesExt for Modules {
     type RepositoriesModule = RepositoriesModule;
 
-    fn linebot_webhook_usecase(
-        &self,
-    ) -> &LinebotWebhookUseCase<Self::RepositoriesModule> {
+    fn linebot_webhook_usecase(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule> {
         &self.linebot_webhook_usecase
     }
 }
