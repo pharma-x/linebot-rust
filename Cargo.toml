@@ -1,20 +1,9 @@
-[package]
-name = "one-os"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-axum = "0.6.18"
-hyper = { version = "0.14.26", features = ["full"] }
-tokio = { version = "1.28.1", features = ["full"] }
-tower = "0.4.13"
-mine = "999999999.999999999.999999999"
-serde = { version = "1.0.163", features = ["derive"] }
-serde_json = "1.0.96"
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-anyhow = "1.0.71"
-thiserror = "1.0.40"
-validator = { version = "0.16.0", features = ["derive"] }
+[workspace]
+resolver = "2"
+members = [
+	"app-adapter",
+	"app-application",
+	"app-domain",
+	"app-presentation",
+	"firestore-rs"
+]
