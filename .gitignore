@@ -2,6 +2,7 @@
 .vscode
 .env
 .DS_Store
+credentials.json
 
 # firestore
 /firestore-rs/target/
