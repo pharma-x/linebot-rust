@@ -47,6 +47,7 @@ hex = "0.4"
 backoff = { version = "0.4", features = ["tokio"] }
 redb = { version = "1.2", optional = true }
 moka = { version = "0.12", features = ["future"], optional = true } # Caching library
+dotenv = "0.15.0"
 
 [dev-dependencies]
 cargo-husky = { version = "1.5", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }

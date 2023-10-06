@@ -1,3 +1,4 @@
+use dotenv::dotenv;
 use firestore::*;
 use futures::future::BoxFuture;
 use futures::FutureExt;
@@ -14,6 +15,7 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 
 #[allow(dead_code)]
 pub async fn setup() -> Result<FirestoreDb, Box<dyn std::error::Error + Send + Sync>> {
+    dotenv().ok();
     // Logging with debug enabled
     let filter = tracing_subscriber::EnvFilter::builder().parse("info,firestore=debug")?;
 

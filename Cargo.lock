@@ -659,6 +659,7 @@ dependencies = [
  "backoff",
  "cargo-husky",
  "chrono",
+ "dotenv",
  "futures",
  "gcloud-sdk",
  "hex",
