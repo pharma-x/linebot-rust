@@ -29,22 +29,22 @@ pub enum EventTable {
 
 impl EventTable {
     pub fn document_id(&self) -> &String {
-        return match self {
+        match self {
             EventTable::Follow(e) => &e.document_id,
             EventTable::Unfollow(e) => &e.document_id,
             EventTable::Message(e) => &e.document_id,
             EventTable::Postback(e) => &e.document_id,
             EventTable::VideoPlayComplete(e) => &e.document_id,
-        };
+        }
     }
     pub fn created_at(&self) -> DateTime<Local> {
-        return match self {
+        match self {
             EventTable::Follow(e) => e.created_at,
             EventTable::Unfollow(e) => e.created_at,
             EventTable::Message(e) => e.created_at,
             EventTable::Postback(e) => e.created_at,
             EventTable::VideoPlayComplete(e) => e.created_at,
-        };
+        }
     }
 }
 

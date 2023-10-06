@@ -9,7 +9,9 @@ WORKDIR $APP_ROOT
 COPY . $APP_ROOT
 
 # Install production dependencies and build a release artifact.
-RUN cargo build --release
+RUN apt-get install -y ca-certificates \
+    cargo install sqlx-cli --no-default-features --features mysql; \
+    cargo build --release;
 
 EXPOSE 3000
 
