@@ -16,20 +16,24 @@ pub async fn line_webhook_handler(
     ValidatedRequest(payload): ValidatedRequest<LineWebhookRequests>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let requests: Vec<LineWebhookRequest> = payload.into();
-    let mut result = Ok(StatusCode::OK);
 
+    // Immediately respond with status code 200
+    tokio::spawn(process_line_events(requests, modules.clone()));
+
+    Ok(StatusCode::OK)
+}
+
+async fn process_line_events(requests: Vec<LineWebhookRequest>, modules: Arc<Modules>) {
     for request in requests {
         let event = &request.event;
         match event {
             LineWebhookEvent::Follow(_) => {
-                result = modules
+                let _ = modules
                     .linebot_webhook_usecase()
                     .create_user(request.into())
                     .await
-                    .map(|_| StatusCode::OK)
                     .map_err(|err| {
                         error!("Unexpected error: {:?}", err);
-                        StatusCode::INTERNAL_SERVER_ERROR
                     });
             }
             LineWebhookEvent::Unfollow(e) => {
@@ -46,6 +50,4 @@ pub async fn line_webhook_handler(
             }
         }
     }
-
-    result
 }
