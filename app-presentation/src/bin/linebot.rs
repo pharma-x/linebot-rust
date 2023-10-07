@@ -10,10 +10,6 @@ use std::{net::SocketAddr, sync::Arc};
 
 #[tokio::main]
 async fn main() {
-    //logging
-    let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
-    env::set_var("RUST_LOG", log_level);
-
     init_app();
 
     // DI
@@ -44,5 +40,8 @@ async fn root() -> &'static str {
 
 pub fn init_app() {
     dotenv().ok();
+    //logging
+    let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
+    env::set_var("RUST_LOG", log_level);
     tracing_subscriber::fmt::init();
 }
