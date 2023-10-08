@@ -6,10 +6,9 @@ use axum::{
 };
 
 use serde::de::DeserializeOwned;
-use thiserror::Error;
 use validator::Validate;
 
-use super::validate::ValidatedRequest;
+use crate::context::{errors::ServerError, validate::ValidatedRequest};
 
 #[async_trait]
 impl<T, S, B> FromRequest<S, B> for ValidatedRequest<T>
@@ -26,16 +25,6 @@ where
         value.validate()?;
         Ok(ValidatedRequest(value))
     }
-}
-
-#[derive(Debug, Error)]
-pub enum ServerError {
-    #[error(transparent)]
-    ValidationError(#[from] validator::ValidationErrors),
-    #[error(transparent)]
-    JsonRejection(#[from] axum::extract::rejection::JsonRejection),
-    #[error(transparent)]
-    AxumFormRejection(#[from] FormRejection),
 }
 
 impl IntoResponse for ServerError {
