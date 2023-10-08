@@ -24,7 +24,7 @@ impl<T> Id<T> {
 
 impl<T> TryFrom<String> for Id<T> {
     type Error = anyhow::Error;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
+    fn try_from(value: String) -> anyhow::Result<Self> {
         Uuid::parse_str(&value)
             .map(|id| Self::new(id))
             .map_err(|err| anyhow!("{:?}", err))
