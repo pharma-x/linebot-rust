@@ -45,3 +45,42 @@ pub fn init_app() {
     env::set_var("RUST_LOG", log_level);
     tracing_subscriber::fmt::init();
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use axum_test::{
+        http::header::{HeaderName, HeaderValue},
+        TestServer,
+    };
+    use presentation::model::line_webhook::LineWebhookRequests;
+
+    #[tokio::test]
+    async fn test_linebot_webhook() {
+        init_app();
+        // DI
+        let modules = Modules::new().await;
+        /*
+         * テスト用のサーバーを作成する
+         */
+        let line_webhook_router = Router::new().route("/", post(line_webhook_handler));
+        let test_app = Router::new()
+            .nest("/linebot-webhook", line_webhook_router)
+            .layer(Extension(Arc::new(modules)));
+        let test_server = TestServer::new(test_app.into_make_service()).unwrap();
+
+        let request =
+            LineWebhookRequests::new("U00000000000000000000000000000000".to_string(), vec![]);
+
+        let response = test_server
+            .post("/linebot-webhook")
+            .add_header(
+                HeaderName::from_lowercase(b"x_line_signature").unwrap(),
+                HeaderValue::from_str("test_signature").unwrap(),
+            )
+            .json(&request)
+            .await;
+
+        response.assert_status_ok();
+    }
+}

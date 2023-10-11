@@ -10,26 +10,27 @@ use application::model::{
     },
     line_user_auth::CreateLineUserAuth,
 };
-use serde::Deserialize;
+use derive_new::new;
+use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 use strum_macros::EnumString;
 use validator::Validate;
 
-#[derive(Deserialize, Debug, Validate, Clone)]
+#[derive(new, Serialize, Deserialize, Debug, Validate, Clone)]
 pub struct LineWebhookRequests {
-    destination: String,
-    events: Vec<LineWebhookEvent>,
+    pub destination: String,
+    pub events: Vec<LineWebhookEvent>,
 }
 
 #[derive(Debug, Validate, Clone)]
-pub(crate) struct LineWebhookRequest {
-    pub(crate) destination: String,
-    pub(crate) event: LineWebhookEvent,
+pub struct LineWebhookRequest {
+    pub destination: String,
+    pub event: LineWebhookEvent,
 }
 
-#[derive(Deserialize, Debug, Clone, Display)]
+#[derive(Serialize, Deserialize, Debug, Clone, Display)]
 #[serde(tag = "type")]
-pub(crate) enum LineWebhookEvent {
+pub enum LineWebhookEvent {
     #[strum(serialize = "follow")]
     Follow(LineWebhookFollowEvent),
     #[strum(serialize = "unfollow")]
@@ -42,8 +43,8 @@ pub(crate) enum LineWebhookEvent {
     Message(LineWebhookMessageEvent),
 }
 
-#[derive(Deserialize, Debug, Clone, Validate)]
-pub(crate) struct LineWebhookFollowEvent {
+#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
+pub struct LineWebhookFollowEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -55,8 +56,8 @@ pub(crate) struct LineWebhookFollowEvent {
     delivery_context: LineDeliveryContext,
 }
 
-#[derive(Deserialize, Debug, Clone, Validate)]
-pub(crate) struct LineWebhookUnfollowEvent {
+#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
+pub struct LineWebhookUnfollowEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -68,8 +69,8 @@ pub(crate) struct LineWebhookUnfollowEvent {
     delivery_context: LineDeliveryContext,
 }
 
-#[derive(Deserialize, Debug, Clone, Validate)]
-pub(crate) struct LineWebhookPostbackEvent {
+#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
+pub struct LineWebhookPostbackEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -82,33 +83,33 @@ pub(crate) struct LineWebhookPostbackEvent {
     postback: Option<LineWebhookPostback>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookPostback {
     data: String,
     params: LineWebhookPostbackParams,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)] // JSONにタグ名を含まない
 enum LineWebhookPostbackParams {
     Datetime(LineWebhookPostbackDatetimeParams),
     RichMenu(LineWebhookPostbackRichMenuParams),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookPostbackDatetimeParams {
     datetime: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookPostbackRichMenuParams {
     #[serde(rename(deserialize = "newRichMenuAliasId"))]
     new_rich_menu_alias_id: String,
     status: String,
 }
 
-#[derive(Deserialize, Debug, Clone, Validate)]
-pub(crate) struct LineWebhookVideoPlayCompleteEvent {
+#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
+pub struct LineWebhookVideoPlayCompleteEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
@@ -122,12 +123,12 @@ pub(crate) struct LineWebhookVideoPlayCompleteEvent {
     video_play_complete: Option<LineWebhookVideoPlayComplete>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookVideoPlayComplete {
     tracking_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone, Validate)]
+#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 pub struct LineWebhookMessageEvent {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
@@ -141,7 +142,7 @@ pub struct LineWebhookMessageEvent {
     message: Option<LineWebhookMessage>,
 }
 
-#[derive(Deserialize, Debug, Clone, Display)]
+#[derive(Serialize, Deserialize, Debug, Clone, Display)]
 #[serde(tag = "type")]
 pub enum LineWebhookSource {
     #[strum(serialize = "user")]
@@ -152,13 +153,13 @@ pub enum LineWebhookSource {
     Room(LineWebhookRoomSource),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LineWebhookUserSource {
     #[serde(rename(deserialize = "userId"))]
     user_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LineWebhookGroupSource {
     #[serde(rename(deserialize = "groupId"))]
     group_id: String,
@@ -166,7 +167,7 @@ pub struct LineWebhookGroupSource {
     user_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LineWebhookRoomSource {
     #[serde(rename(deserialize = "roomId"))]
     room_id: String,
@@ -174,13 +175,13 @@ pub struct LineWebhookRoomSource {
     user_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineDeliveryContext {
     #[serde(rename(deserialize = "isRedelivery"))]
     is_redelivery: bool,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")] // JSONにtypeというフィールドでタグ名を含む
 enum LineWebhookMessage {
     #[serde(rename(deserialize = "text"))]
@@ -199,7 +200,7 @@ enum LineWebhookMessage {
     Sticker(LineWebhookStickerMessage),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookTextMessage {
     id: String,
     text: String,
@@ -207,7 +208,7 @@ struct LineWebhookTextMessage {
     mention: Option<LineWebhookMention>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookEmoji {
     index: i32,
     length: i32,
@@ -217,19 +218,19 @@ struct LineWebhookEmoji {
     emoji_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookMention {
     mentionees: Vec<LineWebhookMentionee>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 enum LineWebhookMentionee {
     LineWebhookUserMentionee,
     LineWebhookAllMentionee,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookUserMentionee {
     index: i32,
     length: i32,
@@ -237,13 +238,13 @@ struct LineWebhookUserMentionee {
     user_id: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookAllMentionee {
     index: i32,
     length: i32,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookImageMessage {
     id: String,
     #[serde(rename(deserialize = "contentProvider"))]
@@ -251,7 +252,7 @@ struct LineWebhookImageMessage {
     image_set: Option<LineWebhookImageSet>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 enum LineWebhookContentProvider {
     #[serde(rename(deserialize = "line"))]
@@ -265,14 +266,14 @@ enum LineWebhookContentProvider {
     },
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookImageSet {
     id: String,
     index: i32,
     length: i32,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookVideoMessage {
     id: String,
     duration: i32,
@@ -280,7 +281,7 @@ struct LineWebhookVideoMessage {
     content_provider: LineWebhookContentProvider,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookAudioMessage {
     id: String,
     duration: i32,
@@ -288,7 +289,7 @@ struct LineWebhookAudioMessage {
     content_provider: LineWebhookContentProvider,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookFileMessage {
     id: String,
     #[serde(rename(deserialize = "fileName"))]
@@ -297,7 +298,7 @@ struct LineWebhookFileMessage {
     file_size: i32,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookLocationMessage {
     id: String,
     title: String,
@@ -306,7 +307,7 @@ struct LineWebhookLocationMessage {
     longitude: f64,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LineWebhookStickerMessage {
     id: String,
     #[serde(rename(deserialize = "packageId"))]
@@ -319,7 +320,7 @@ struct LineWebhookStickerMessage {
     text: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone, EnumString)]
+#[derive(Serialize, Deserialize, Debug, Clone, EnumString)]
 enum LineWebhookStickerResourceType {
     #[strum(serialize = "STATIC")]
     Static,
