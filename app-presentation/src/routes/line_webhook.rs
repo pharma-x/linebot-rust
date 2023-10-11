@@ -83,7 +83,6 @@ async fn process_line_events(
     Ok(())
 }
 
-
 /// Verify LINE webhook signature
 ///
 /// # Arguments
