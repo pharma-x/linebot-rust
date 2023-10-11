@@ -83,14 +83,14 @@ async fn process_line_events(
     Ok(())
 }
 
-/*
- * Verify LINE webhook signature
- *
- * # Arguments
- * `channel_secret` - Channel secret string
- * `http_request_body` - HTTP request body string
- * `x_line_signature` - The 'x-line-signature' header from the HTTP request
- */
+
+/// Verify LINE webhook signature
+///
+/// # Arguments
+/// `channel_secret` - Channel secret string
+/// `http_request_body` - HTTP request body string
+/// `x_line_signature` - The 'x-line-signature' header from the HTTP request
+///
 fn verify_line_webhook_signature(
     channel_secret: &String,
     http_request_body: &[u8],
@@ -115,7 +115,7 @@ fn verify_line_webhook_signature(
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
     use dotenv::dotenv;
 
