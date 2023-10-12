@@ -80,13 +80,14 @@ mod test {
             .unwrap_or_else(|_| panic!("LINE_CHANNEL_SECRET must be set!"));
         let http_request_body_vec = serde_json::to_vec(&request).unwrap();
         let http_request_body = http_request_body_vec.as_slice();
-
         // Compute the expected signature using the test channel secret and request body
         let mut mac = Hmac::<Sha256>::new_from_slice(channel_secret.as_bytes()).unwrap();
         mac.update(http_request_body);
         let expected_signature = mac.finalize().into_bytes();
         let expected_signature_str = general_purpose::STANDARD.encode(expected_signature);
-
+        /*
+         * テスト用のリクエストを作成する
+         */
         let response = test_server
             .post("/linebot-webhook")
             .add_header(
