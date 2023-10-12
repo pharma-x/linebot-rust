@@ -3,6 +3,8 @@
 .env
 .DS_Store
 credentials.json
+/docker/mysql/
+/docker/redis/
 
 # firestore
 /firestore-rs/target/
