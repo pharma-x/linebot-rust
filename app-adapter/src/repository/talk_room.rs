@@ -78,7 +78,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
     }
 
     async fn create_talk_room(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
-        let db = Arc::clone(&self.db.0);
+        let db = Arc::clone(&self.db.pool());
         // firestoreの書き込みが失敗したときにもDBへの書き込みも
         let mut tx = db.begin().await.expect("Unable to begin transaction");
         // todo talk_roomsテーブルに紐づけを保管する

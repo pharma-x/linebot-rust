@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::model::{line_user::LineUserTable, primary_user::PrimaryUserTable};
 use crate::repository::DatabaseRepositoryImpl;
 use anyhow::{anyhow, Ok};
@@ -20,7 +22,7 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
     }
 
     async fn get_line_user(&self, source: LineId) -> anyhow::Result<User> {
-        let pool = self.pool.0.clone();
+        let pool = Arc::clone(self.pool.pool());
         let line_id = source.value().to_string();
         let line_user_row = sqlx::query_as::<_, LineUserTable>(
             r#"
@@ -48,7 +50,7 @@ where id = $1
     }
 
     async fn create_line_user(&self, source: LineUserProfile) -> anyhow::Result<User> {
-        let pool = self.pool.0.clone();
+        let pool = Arc::clone(self.pool.pool());
         let mut tx = pool.begin().await.expect("Unable to begin transaction");
         let primary_user_row = sqlx::query_as::<_, PrimaryUserTable>(
             r#"
