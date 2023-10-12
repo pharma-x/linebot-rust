@@ -1,45 +1,56 @@
-version: "3"
+version: "3.8"
+x-environment: &environment
+  MYSQL_USER: docker
+  MYSQL_PASSWORD: password
+  MYSQL_ROOT_PASSWORD: password
+  MYSQL_HOST: db
+  MYSQL_PORT: 3306
+  MYSQL_DATABASE: linebot-rust
+  TZ: 'Asia/Tokyo'
 services:
-  db:
-    platform: linux/amd64 # M1チップ対応
-    build:
-      context: ..
-      dockerfile: docker/db/Dockerfile
-    environment:
-      MYSQL_ROOT_HOST: "%"
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: root
-    container_name: one-db
-    ports:
-      - "3306:3306"
-    volumes:
-      - ../tmp/db:/var/lib/mysql
-    cap_add:
-      - SYS_NICE
-  redis:
-    image: redis:7.0.11-alpine
-    container_name: one-redis
-    command: redis-server --appendonly yes
-    environment:
-      TZ: Asia/Tokyo
-    volumes:
-      - ../tmp/redis:/data
   app:
     build:
       context: ..
       dockerfile: docker/app/Dockerfile
-    platform: linux/amd64 # M1チップ対応
-    image: one-app
-    container_name: one-app
+    image: linebot-rust-app
+    container_name: linebot-rust-app
+    working_dir: /app
+    command: bash
+    tty: true
+    environment:
+      <<: *environment
+      DATABASE_URL: "mysql://docker:password@db:3306/linebot-rust"
     volumes:
-      - ..:/myapp
+      - ../:/app
     ports:
-      - "3000:3000"
+      - 3000:3000
     depends_on:
       - db
       - redis
+    networks:
+      - linebot-rust-network
+  db:
+    build:
+      context: ..
+      dockerfile: docker/db/Dockerfile
+      target: 'linebot-rust-db'
+    image: linebot-rust-db
+    container_name: linebot-rust-db
+    ports:
+      - "3307:3306"
+    environment: *environment
+    volumes:
+      - ./mysql/db:/var/lib/mysql
+    networks:
+      - linebot-rust-network
+  redis:
+    image: redis:7.2.1-alpine
+    container_name: linebot-rust-redis
+    command: redis-server --appendonly yes
+    environment:
+      TZ: Asia/Tokyo
+    volumes:
+      - ./redis:/data
 networks:
-  default:
-    name: one_default
-  pharmax-shared-network:
-    external: true
+  linebot-rust-network:
+    driver: bridge

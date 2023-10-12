@@ -2,18 +2,29 @@
 # https://hub.docker.com/_/rust
 FROM rust:1.72.1
 
-ENV APP_ROOT /myapp
+ENV APP_ROOT /app
 WORKDIR $APP_ROOT
 
 # Copy local code to the container image.
 COPY . $APP_ROOT
 
 # Install production dependencies and build a release artifact.
-RUN apt-get install -y ca-certificates \
+RUN set -eux; \
+    apt-get install -y ca-certificates; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    case "${dpkgArch##*-}" in \
+        amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db' ;; \
+        armhf) rustArch='armv7-unknown-linux-gnueabihf'; rustupSha256='f21c44b01678c645d8fbba1e55e4180a01ac5af2d38bcbd14aa665e0d96ed69a' ;; \
+        arm64) rustArch='aarch64-unknown-linux-gnu'; rustupSha256='673e336c81c65e6b16dcdede33f4cc9ed0f08bde1dbe7a935f113605292dc800' ;; \
+        i386) rustArch='i686-unknown-linux-gnu'; rustupSha256='e7b0f47557c1afcd86939b118cbcf7fb95a5d1d917bdd355157b63ca00fc4333' ;; \
+        *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
+    esac; \
+    cargo install cargo-watch cargo-make; \
     cargo install sqlx-cli --no-default-features --features mysql; \
-    cargo build --release;
+    cargo build --release; \
+    chmod -R +x ./target/release/*;
 
 EXPOSE 3000
 
 # Run the web service on container startup.
-ENTRYPOINT ["target/release/one-app"]
+# ENTRYPOINT ["./target/release/linebot"]
