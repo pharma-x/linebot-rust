@@ -98,5 +98,17 @@ mod test {
             .await;
 
         response.assert_status_ok();
+        /*
+         * signatureの検証エラーで失敗するテスト用のリクエストを作成する
+         */
+        let response = test_server
+            .post("/linebot-webhook")
+            .add_header(
+                HeaderName::from_lowercase(b"x_line_signature").unwrap(),
+                HeaderValue::from_str("invalid_signature").unwrap(),
+            )
+            .json(&request)
+            .await;
+        response.assert_status_unauthorized();
     }
 }
