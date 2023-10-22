@@ -72,6 +72,9 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             }
         };
 
+        /*
+         * talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+         */
         let create_event_talk_room = (talk_room, new_event).into();
         self.repositories
             .talk_room_repository()

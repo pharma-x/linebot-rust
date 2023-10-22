@@ -78,7 +78,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
     }
 
     async fn create_talk_room(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
-        let db = Arc::clone(&self.db.pool());
+        let db = Arc::clone(self.db.pool());
         // firestoreの書き込みが失敗したときにもDBへの書き込みも
         let mut tx = db.begin().await.expect("Unable to begin transaction");
         // todo talk_roomsテーブルに紐づけを保管する
@@ -142,6 +142,12 @@ returning *"#,
         ))
     }
 
+    /// talkRoomをupdateし、イベントを作成する
+    ///
+    /// # Arguments
+    ///
+    /// * `source` - 更新するtalkRoom。latest_messageには最新のイベントを入れる
+    ///
     async fn create_event(&self, source: NewTalkRoom) -> anyhow::Result<()> {
         let firestore = Arc::clone(&self.firestore.0);
         let talk_room_id = source.id.value.to_string();
@@ -155,7 +161,9 @@ returning *"#,
             .object(&talk_room_card_table)
             .execute()
             .await?;
-
+        /*
+         * イベントを作成する
+         */
         let parent_path = firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &talk_room_id)?;
         let new_event = source.latest_message;
         let event_table = EventTable::from(new_event);
