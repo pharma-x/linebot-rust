@@ -132,7 +132,9 @@ mod test {
         let expected_signature = mac.finalize().into_bytes();
         let expected_signature_str = general_purpose::STANDARD.encode(expected_signature);
 
-        // Verify that the computed signature matches the expected signature
+        /*
+         * 計算されたシグネチャが期待されるシグネチャと一致することを検証します
+         */
         let result = verify_line_webhook_signature(
             &channel_secret,
             http_request_body,
@@ -140,7 +142,9 @@ mod test {
         );
         assert!(result.is_ok());
 
-        // Verify that an invalid signature fails verification
+        /*
+         * 無効なシグネチャが検証に失敗することを検証します
+         */
         let result =
             verify_line_webhook_signature(&channel_secret, http_request_body, invalid_signature);
         assert!(result.is_err());
