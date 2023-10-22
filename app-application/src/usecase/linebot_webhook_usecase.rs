@@ -15,7 +15,7 @@ pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
 }
 
 impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
-    pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
+    pub async fn create_follow_event(&self, source: CreateUserEvent) -> anyhow::Result<()> {
         /*
          * userを取得、なければ作成する
          */

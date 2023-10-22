@@ -63,7 +63,7 @@ async fn process_line_events(
         match event {
             LineWebhookEvent::Follow(_) => modules
                 .linebot_webhook_usecase()
-                .create_user(request.into())
+                .create_follow_event(request.into())
                 .await
                 .map_err(|err| anyhow::anyhow!("Unexpected error: {:?}", err))?,
             LineWebhookEvent::Unfollow(e) => {
