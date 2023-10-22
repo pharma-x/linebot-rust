@@ -32,7 +32,7 @@ pub async fn line_webhook_handler(
         .get("x_line_signature")
         .ok_or(StatusCode::BAD_REQUEST)?
         .as_bytes();
-    // リクエストボディを文字列として取得します。
+    // リクエストボディをバイト列として取得します。
     let http_request_body = body_bytes.as_ref();
     // 署名を検証します。
     if let Err(err) =
@@ -41,14 +41,14 @@ pub async fn line_webhook_handler(
         error!("Error: {}", err);
         return Err(StatusCode::UNAUTHORIZED);
     }
-    // ここで body_bytes からあなたの payload をパースします
+    // バイト列からpayloadをパースする
     let payload: LineWebhookRequests = serde_json::from_slice(&body_bytes).map_err(|err| {
         error!("Failed to parse JSON: {}", err);
         StatusCode::BAD_REQUEST
     })?;
     let requests: Vec<LineWebhookRequest> = payload.into();
 
-    // Immediately respond with status code 200
+    // すぐにstatus code 200で返すために、非同期で処理を行う
     tokio::spawn(process_line_events(requests, modules));
 
     Ok(StatusCode::OK)
