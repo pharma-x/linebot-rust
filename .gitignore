@@ -1,2 +1,16 @@
 /target
 .vscode
+.env
+.DS_Store
+credentials.json
+/docker/mysql/
+/docker/redis/
+
+# firestore
+/firestore-rs/target/
+/firestore-rs/Cargo.lock
+/firestore-rs/**/*.rs.bk
+/firestore-rs/.idea/
+/firestore-rs/*.tmp
+/firestore-rs/*.orig
+/firestore-rs/*.swp
