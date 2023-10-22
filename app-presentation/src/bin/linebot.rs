@@ -86,7 +86,7 @@ mod test {
         let expected_signature = mac.finalize().into_bytes();
         let expected_signature_str = general_purpose::STANDARD.encode(expected_signature);
         /*
-         * テスト用のリクエストを作成する
+         * signatureの検証に成功するテスト用のリクエストを作成する
          */
         let response = test_server
             .post("/linebot-webhook")
@@ -96,7 +96,6 @@ mod test {
             )
             .json(&request)
             .await;
-
         response.assert_status_ok();
         /*
          * signatureの検証エラーで失敗するテスト用のリクエストを作成する
