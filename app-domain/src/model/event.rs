@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use derive_new::new;
+use fake::faker::boolean;
 use rust_decimal::Decimal;
 
 use crate::model::Id;
@@ -216,6 +217,25 @@ pub enum NewEvent {
     Postback(NewPostbackEvent),
     VideoPlayComplete(NewVideoPlayCompleteEvent),
     Message(NewMessageEvent),
+}
+
+impl NewEvent {
+    pub fn created_at(&self) -> &DateTime<Local> {
+        match self {
+            NewEvent::Follow(e) => &e.created_at,
+            NewEvent::Unfollow(e) => &e.created_at,
+            NewEvent::Postback(e) => &e.created_at,
+            NewEvent::VideoPlayComplete(e) => &e.created_at,
+            NewEvent::Message(e) => &e.created_at,
+        }
+    }
+    pub fn follow(&self) -> bool {
+        match self {
+            NewEvent::Unfollow(_) => false,
+            _ => true,
+        }
+    }
+    pub fn latest_message(&self) -> bool {}
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -19,4 +19,9 @@ impl UserProfile {
             UserProfile::Line(line) => Some(&line.auth_id),
         }
     }
+    pub fn display_name(&self) -> Option<&String> {
+        match self {
+            UserProfile::Line(line) => Some(&line.display_name),
+        }
+    }
 }
