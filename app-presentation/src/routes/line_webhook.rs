@@ -115,8 +115,31 @@ fn verify_line_webhook_signature(
 
 #[cfg(test)]
 mod test {
+    use crate::{model::line_webhook::LineWebhookFollowEvent, module::test::TestModules};
+
     use super::*;
+    use adapter::model::{
+        event::EventTable,
+        talk_room::{TalkRoomCardTable, TalkRoomTable, TalkRoomWrapper},
+    };
+    use application::model::event::CreateUserEvent;
+    use domain::{
+        model::{
+            event::NewEvent,
+            line_user::LineUserProfile,
+            primary_user_id::PrimaryUserId,
+            talk_room::NewTalkRoom,
+            user::{User, UserProfile},
+            user_auth::AuthUserId,
+        },
+        repository::{
+            talk_room::MockTalkRoomRepository, user::MockUserRepository,
+            user_auth::MockUserAuthRepository,
+        },
+    };
     use dotenv::dotenv;
+    use fake::{Fake, Faker};
+    use mockall::predicate;
 
     #[test]
     fn test_verify_line_webhook_signature() {
@@ -148,5 +171,81 @@ mod test {
         let result =
             verify_line_webhook_signature(&channel_secret, http_request_body, invalid_signature);
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_process_line_follow_event() {
+        dotenv().ok();
+        let user_auth_repository = MockUserAuthRepository::new();
+        let mut user_repository = MockUserRepository::new();
+        let mut talk_room_repository = MockTalkRoomRepository::new();
+
+        let destintion = "line_id".to_string();
+        let line_webhook_event = LineWebhookEvent::Follow(Faker.fake::<LineWebhookFollowEvent>());
+        let request = LineWebhookRequest::new(destintion, line_webhook_event);
+
+        let create_user_event = CreateUserEvent::from(request.clone());
+        let create_line_user_auth = create_user_event.create_line_user_auth;
+        /*
+         * ユーザーが存在するパターン
+         */
+        let auth_user_id = AuthUserId::from(create_line_user_auth);
+        let primary_user_id = PrimaryUserId::new("primay_user_id".to_string());
+        let user_display_name = "display_name".to_string();
+        let user = User::new(
+            primary_user_id.clone(),
+            UserProfile::Line(LineUserProfile::new(
+                auth_user_id.clone(),
+                user_display_name.clone(),
+                "picture_url".to_string(),
+            )),
+        );
+        let cloned_user = user.clone();
+        user_repository
+            .expect_get_user()
+            .with(predicate::eq(auth_user_id))
+            .once()
+            .returning(move |_| Ok(user.clone()));
+        /*
+         * talk_roomが存在するパターン
+         */
+        let new_event = NewEvent::from(create_user_event.create_event);
+        let new_talk_room = NewTalkRoom::from((cloned_user, new_event.clone())).clone();
+        let talk_room = TalkRoomWrapper::from((
+            TalkRoomTable::from(new_talk_room.clone()),
+            TalkRoomCardTable::from(new_talk_room.clone()),
+            EventTable::from(new_event.clone()),
+        ))
+        .0;
+        // let new_talk_room = NewTalkRoom::from((talk_room.clone(), new_event)).clone();
+        talk_room_repository
+            .expect_get_talk_room()
+            .with(predicate::eq(primary_user_id))
+            .once()
+            .returning(move |_| Ok(talk_room.clone()));
+
+        /*
+         * talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+         */
+        talk_room_repository
+            .expect_create_event()
+            // .with(predicate::eq(new_talk_room))
+            .withf(|_| true)
+            .once()
+            .returning(move |_| Ok(()));
+
+        /*
+         * 最後にtest用のモジュールで処理が通れば成功
+         */
+        let modules = Arc::new(
+            TestModules::new(user_auth_repository, user_repository, talk_room_repository).await,
+        );
+        let response = modules
+            .linebot_webhook_usecase()
+            .create_follow_event(request.into())
+            .await
+            .map_err(|err| anyhow::anyhow!("Unexpected error: {:?}", err));
+
+        assert!(response.is_ok());
     }
 }

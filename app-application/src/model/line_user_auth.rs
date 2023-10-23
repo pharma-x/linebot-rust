@@ -3,7 +3,7 @@ use domain::model::user_auth::{
     AuthToken, AuthUserId, LineAuthToken, LineId, LineUserAuthData, UserAuthData,
 };
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug)]
 pub struct CreateLineUserAuth {
     pub user_id: String,
 }

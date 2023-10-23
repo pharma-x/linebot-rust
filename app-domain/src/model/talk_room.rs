@@ -9,7 +9,7 @@ use crate::model::{
     Id,
 };
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct TalkRoom {
     pub id: Id<TalkRoom>,
     pub primary_user_id: PrimaryUserId,
@@ -25,7 +25,7 @@ pub struct TalkRoom {
 }
 
 // talkRoomのupdate時にも使う
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewTalkRoom {
     pub id: Id<TalkRoom>,
     pub primary_user_id: PrimaryUserId,

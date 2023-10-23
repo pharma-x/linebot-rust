@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 #[derive(new)]
 pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
-    repositories: Arc<R>,
+    pub repositories: Arc<R>,
 }
 
 impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
@@ -75,10 +75,10 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
         /*
          * talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
          */
-        let create_event_talk_room = (talk_room, new_event).into();
+        let new_talk_room = (talk_room, new_event).into();
         self.repositories
             .talk_room_repository()
-            .create_event(create_event_talk_room)
+            .create_event(new_talk_room)
             .await?;
 
         Ok(())

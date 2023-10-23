@@ -9,3 +9,4 @@ adapter = { path = "../app-adapter" }
 anyhow = "1.0.71"
 derive-new = "0.5.9"
 chrono = "0.4.31"
+rust_decimal = "1.32.0"

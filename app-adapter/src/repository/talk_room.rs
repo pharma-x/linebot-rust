@@ -1,11 +1,10 @@
 use crate::model::event::EventTable;
-use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
+use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable, TalkRoomWrapper};
 use crate::repository::{
     DbFirestoreRepositoryImpl, RepositoryError, EVENT_COLLECTION_NAME,
     TALK_ROOM_CARD_COLLECTION_NAME, TALK_ROOM_COLLECTION_NAME,
 };
 use async_trait::async_trait;
-use domain::model::event::Event;
 use domain::{
     model::{
         primary_user_id::PrimaryUserId,
@@ -62,19 +61,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .await?
             .ok_or(RepositoryError::NotFound(event_document_id.to_string()))?;
 
-        Ok(TalkRoom::new(
-            talk_room_document_id.to_string().try_into().unwrap(),
-            primary_user_id,
-            talk_room_card_table.display_name,
-            talk_room_card_table.rsvp,
-            talk_room_card_table.pinned,
-            talk_room_card_table.follow,
-            Event::from(event_table),
-            talk_room_card_table.latest_messaged_at,
-            talk_room_card_table.sort_time,
-            talk_room_card_table.created_at,
-            talk_room_card_table.updated_at,
-        ))
+        Ok(TalkRoomWrapper::from((talk_room_table.clone(), talk_room_card_table, event_table)).0)
     }
 
     async fn create_talk_room(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
@@ -127,19 +114,7 @@ returning *"#,
             .await?
             .ok_or(RepositoryError::NotFound(event_document_id.to_string()))?;
 
-        Ok(TalkRoom::new(
-            talk_room_table.document_id.try_into().unwrap(),
-            PrimaryUserId::new(talk_room_table.primary_user_id),
-            talk_room_card_table.display_name,
-            talk_room_card_table.rsvp,
-            talk_room_card_table.pinned,
-            talk_room_card_table.follow,
-            Event::from(event_table),
-            talk_room_card_table.latest_messaged_at,
-            talk_room_card_table.sort_time,
-            talk_room_card_table.created_at,
-            talk_room_card_table.updated_at,
-        ))
+        Ok(TalkRoomWrapper::from((talk_room_table.clone(), talk_room_card_table, event_table)).0)
     }
 
     /// talkRoomをupdateし、イベントを作成する

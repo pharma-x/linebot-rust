@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local};
+use rust_decimal::{prelude::FromPrimitive, prelude::ToPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
@@ -261,8 +262,10 @@ impl From<LocationMessageTable> for LocationMessage {
             id: m.id,
             title: m.title,
             address: m.address,
-            latitude: m.latitude,
-            longitude: m.longitude,
+            latitude: Decimal::from_f64(m.latitude)
+                .unwrap_or_else(|| panic!("Failed to convert f64 {} to Decimal", m.latitude)),
+            longitude: Decimal::from_f64(m.latitude)
+                .unwrap_or_else(|| panic!("Failed to convert f64 {} to Decimal", m.latitude)),
         }
     }
 }
@@ -880,8 +883,14 @@ impl From<NewLocationMessage> for LocationMessageTable {
             id: l.id,
             title: l.title,
             address: l.address,
-            latitude: l.latitude,
-            longitude: l.longitude,
+            latitude: l
+                .latitude
+                .to_f64()
+                .unwrap_or_else(|| panic!("Failed to convert Decimal {} to f64", l.latitude)),
+            longitude: l
+                .longitude
+                .to_f64()
+                .unwrap_or_else(|| panic!("Failed to convert Decimal {} to f64", l.longitude)),
         }
     }
 }

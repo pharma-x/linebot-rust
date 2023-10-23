@@ -37,3 +37,47 @@ impl Modules {
         }
     }
 }
+
+pub mod test {
+    use super::ModulesExt;
+    use adapter::module::test::TestRepositoriesModule;
+    use application::usecase::linebot_webhook_usecase::LinebotWebhookUseCase;
+    use domain::repository::{
+        talk_room::MockTalkRoomRepository, user::MockUserRepository,
+        user_auth::MockUserAuthRepository,
+    };
+    use std::sync::Arc;
+
+    pub struct TestModules {
+        linebot_webhook_usecase: LinebotWebhookUseCase<TestRepositoriesModule>,
+    }
+
+    impl ModulesExt for TestModules {
+        type RepositoriesModule = TestRepositoriesModule;
+
+        fn linebot_webhook_usecase(&self) -> &LinebotWebhookUseCase<Self::RepositoriesModule> {
+            &self.linebot_webhook_usecase
+        }
+    }
+
+    impl TestModules {
+        pub async fn new(
+            user_auth_repository: MockUserAuthRepository,
+            user_repository: MockUserRepository,
+            talk_room_repository: MockTalkRoomRepository,
+        ) -> Self {
+            let repositories_module = Arc::new(TestRepositoriesModule::new(
+                user_auth_repository,
+                user_repository,
+                talk_room_repository,
+            ));
+
+            let linebot_webhook_usecase: LinebotWebhookUseCase<TestRepositoriesModule> =
+                LinebotWebhookUseCase::new(repositories_module);
+
+            Self {
+                linebot_webhook_usecase,
+            }
+        }
+    }
+}

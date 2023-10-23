@@ -5,6 +5,7 @@ use crate::model::{
 };
 use async_trait::async_trait;
 
+#[mockall::automock]
 #[async_trait]
 pub trait UserAuthRepository {
     async fn get_user_profile(&self, source: UserAuthData) -> anyhow::Result<UserProfile>;

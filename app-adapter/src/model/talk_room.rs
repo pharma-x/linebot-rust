@@ -4,9 +4,12 @@ use sqlx::FromRow;
 use strum_macros::Display;
 
 use domain::model::{
-    event::{NewEvent, NewMessage, NewMessageEvent},
-    talk_room::NewTalkRoom,
+    event::{Event, NewEvent, NewMessage, NewMessageEvent},
+    primary_user_id::PrimaryUserId,
+    talk_room::{NewTalkRoom, TalkRoom},
 };
+
+use super::event::EventTable;
 
 #[derive(FromRow)]
 pub struct TalkRoomDbTable {
@@ -202,6 +205,30 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
             created_at: s.created_at,
             updated_at: s.created_at,
         }
+    }
+}
+
+pub struct TalkRoomWrapper(pub TalkRoom);
+
+impl From<(TalkRoomTable, TalkRoomCardTable, EventTable)> for TalkRoomWrapper {
+    fn from(s: (TalkRoomTable, TalkRoomCardTable, EventTable)) -> Self {
+        let talk_room_table = s.0;
+        let talk_room_card_table = s.1;
+        let event_table = s.2;
+
+        TalkRoomWrapper(TalkRoom::new(
+            talk_room_table.document_id.to_string().try_into().unwrap(),
+            PrimaryUserId::new(talk_room_table.primary_user_id),
+            talk_room_card_table.display_name,
+            talk_room_card_table.rsvp,
+            talk_room_card_table.pinned,
+            talk_room_card_table.follow,
+            Event::from(event_table),
+            talk_room_card_table.latest_messaged_at,
+            talk_room_card_table.sort_time,
+            talk_room_card_table.created_at,
+            talk_room_card_table.updated_at,
+        ))
     }
 }
 

@@ -1,9 +1,10 @@
 use chrono::{DateTime, Local};
 use derive_new::new;
+use rust_decimal::Decimal;
 
 use crate::model::Id;
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum Event {
     Follow(FollowEvent),
     Unfollow(UnfollowEvent),
@@ -12,7 +13,7 @@ pub enum Event {
     Message(MessageEvent),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FollowEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -22,7 +23,7 @@ pub struct FollowEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct UnfollowEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -32,7 +33,7 @@ pub struct UnfollowEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct PostbackEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -43,7 +44,7 @@ pub struct PostbackEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct VideoPlayCompleteEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -54,7 +55,7 @@ pub struct VideoPlayCompleteEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct MessageEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -65,7 +66,7 @@ pub struct MessageEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum EventType {
     Message,
     Follow,
@@ -74,40 +75,40 @@ pub enum EventType {
     VideoPlayComplete,
 }
 
-#[derive(new, Debug, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct DeliveryContext {
     pub is_redelivery: bool,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct Postback {
     pub data: String,
     pub params: PostbackParams,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum PostbackParams {
     Datetime(PostbackDatetimeParams),
     RichMenu(PostbackRichMenuParams),
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct PostbackDatetimeParams {
     pub datetime: String,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct PostbackRichMenuParams {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct VideoPlayComplete {
     pub tracking_id: String,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum Message {
     Text(TextMessage),
     Image(ImageMessage),
@@ -118,14 +119,14 @@ pub enum Message {
     Sticker(StickerMessage),
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct TextMessage {
     pub id: String,
     pub text: String,
     pub emojis: Vec<Emoji>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct Emoji {
     pub index: i32,
     pub length: i32,
@@ -133,14 +134,14 @@ pub struct Emoji {
     pub emoji_id: String,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct ImageMessage {
     pub id: String,
     pub content_provider: ContentProvider,
     pub image_set: Option<ImageSet>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum ContentProvider {
     Line,
     External {
@@ -149,44 +150,44 @@ pub enum ContentProvider {
     },
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct ImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct VideoMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: ContentProvider,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct AudioMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: ContentProvider,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct FileMessage {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct LocationMessage {
     pub id: String,
     pub title: String,
     pub address: String,
-    pub latitude: f64,
-    pub longitude: f64,
+    pub latitude: Decimal,
+    pub longitude: Decimal,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct StickerMessage {
     pub id: String,
     pub package_id: String,
@@ -196,7 +197,7 @@ pub struct StickerMessage {
     pub text: Option<String>,
 }
 
-#[derive(new, Clone)]
+#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum StickerResourceType {
     Static,
     Animation,
@@ -208,7 +209,7 @@ pub enum StickerResourceType {
     Message,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewEvent {
     Follow(NewFollowEvent),
     Unfollow(NewUnfollowEvent),
@@ -217,7 +218,7 @@ pub enum NewEvent {
     Message(NewMessageEvent),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewFollowEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -227,7 +228,7 @@ pub struct NewFollowEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewUnfollowEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -237,7 +238,7 @@ pub struct NewUnfollowEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewPostbackEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -248,7 +249,7 @@ pub struct NewPostbackEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewVideoPlayCompleteEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -259,7 +260,7 @@ pub struct NewVideoPlayCompleteEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewMessageEvent {
     pub id: Id<Event>,
     pub reply_token: String,
@@ -270,40 +271,40 @@ pub struct NewMessageEvent {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewDeliveryContext {
     pub is_redelivery: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewPostback {
     pub data: String,
     pub params: NewPostbackParams,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewPostbackParams {
     Datetime(NewPostbackDatetimeParams),
     RichMenu(NewPostbackRichMenuParams),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewPostbackDatetimeParams {
     pub datetime: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewPostbackRichMenuParams {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewVideoPlayComplete {
     pub tracking_id: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewMessage {
     Text(NewTextMessage),
     Image(NewImageMessage),
@@ -314,14 +315,14 @@ pub enum NewMessage {
     Sticker(NewStickerMessage),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewTextMessage {
     pub id: String,
     pub text: String,
     pub emojis: Vec<NewEmoji>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewEmoji {
     pub index: i32,
     pub length: i32,
@@ -329,14 +330,14 @@ pub struct NewEmoji {
     pub emoji_id: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewImageMessage {
     pub id: String,
     pub content_provider: NewContentProvider,
     pub image_set: Option<NewImageSet>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewContentProvider {
     Line,
     External {
@@ -345,44 +346,44 @@ pub enum NewContentProvider {
     },
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewVideoMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: NewContentProvider,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewAudioMessage {
     pub id: String,
     pub duration: i32,
     pub content_provider: NewContentProvider,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewFileMessage {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewLocationMessage {
     pub id: String,
     pub title: String,
     pub address: String,
-    pub latitude: f64,
-    pub longitude: f64,
+    pub latitude: Decimal,
+    pub longitude: Decimal,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewStickerMessage {
     pub id: String,
     pub package_id: String,
@@ -392,7 +393,7 @@ pub struct NewStickerMessage {
     pub text: Option<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewStickerResourceType {
     Static,
     Animation,
