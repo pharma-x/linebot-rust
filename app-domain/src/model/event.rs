@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use derive_new::new;
-use fake::faker::boolean;
 use rust_decimal::Decimal;
 
 use crate::model::Id;
@@ -235,7 +234,6 @@ impl NewEvent {
             _ => true,
         }
     }
-    pub fn latest_message(&self) -> bool {}
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

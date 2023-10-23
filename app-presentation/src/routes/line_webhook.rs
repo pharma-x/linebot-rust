@@ -200,7 +200,9 @@ mod test {
                 "picture_url".to_string(),
             )),
         );
-        let cloned_user = user.clone();
+        // let cloned_user = user.clone();
+        let new_event = NewEvent::from(create_user_event.create_event);
+        let new_talk_room = NewTalkRoom::from((user.clone(), new_event.clone()));
         user_repository
             .expect_get_user()
             .with(predicate::eq(auth_user_id))
@@ -209,8 +211,6 @@ mod test {
         /*
          * talk_roomが存在するパターン
          */
-        let new_event = NewEvent::from(create_user_event.create_event);
-        let new_talk_room = NewTalkRoom::from((cloned_user, new_event.clone())).clone();
         let talk_room = TalkRoomWrapper::from((
             TalkRoomTable::from(new_talk_room.clone()),
             TalkRoomCardTable::from(new_talk_room.clone()),

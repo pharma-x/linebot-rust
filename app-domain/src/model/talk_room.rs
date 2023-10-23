@@ -70,12 +70,13 @@ impl From<(User, NewEvent)> for NewTalkRoom {
     fn from(s: (User, NewEvent)) -> Self {
         let user = s.0;
         let primary_user_id = user.id;
+        let default_display_name = String::from("");
         let display_name = user
             .user_profile
             .display_name()
-            .unwrap_or_else(|| &"".to_string());
+            .unwrap_or(&default_display_name);
         let new_event = s.1;
-        let event_created_at = new_event.created_at().clone();
+        let event_created_at = *new_event.created_at();
         let follow = new_event.follow();
         NewTalkRoom::new(
             Id::gen(),
