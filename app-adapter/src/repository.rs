@@ -43,8 +43,8 @@ pub enum RepositoryError {
     Unexpected(String),
     #[error("NotAuthFound, auth_id is {0}")]
     NotAuthFound(String),
-    #[error("NotFound, id is {0}")]
-    NotFound(String),
+    #[error("NotFound, type is {0}, id is {1}")]
+    NotFound(String, String),
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

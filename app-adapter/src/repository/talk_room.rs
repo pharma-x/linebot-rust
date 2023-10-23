@@ -14,6 +14,7 @@ use domain::{
 };
 use firestore::*;
 use futures::StreamExt;
+use std::any::type_name;
 use std::sync::Arc;
 
 #[async_trait]
@@ -38,9 +39,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .collect::<Vec<TalkRoomTable>>()
             .await;
 
-        let talk_room_table = talk_room_vec
-            .first()
-            .ok_or(RepositoryError::NotFound(primary_user_id_str.clone()))?;
+        let talk_room_table = talk_room_vec.first().ok_or(RepositoryError::NotFound(
+            type_name::<TalkRoomTable>().to_string(),
+            primary_user_id_str.clone(),
+        ))?;
         let talk_room_document_id = &talk_room_table.document_id;
         let talk_room_card_table: TalkRoomCardTable = firestore
             .fluent()
@@ -49,7 +51,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .obj()
             .one(talk_room_document_id)
             .await?
-            .ok_or(RepositoryError::NotFound(primary_user_id_str))?;
+            .ok_or(RepositoryError::NotFound(
+                type_name::<TalkRoomCardTable>().to_string(),
+                primary_user_id_str,
+            ))?;
 
         let event_document_id = talk_room_card_table.latest_message.document_id();
         let event_table: EventTable = firestore
@@ -59,7 +64,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .obj()
             .one(event_document_id)
             .await?
-            .ok_or(RepositoryError::NotFound(event_document_id.to_string()))?;
+            .ok_or(RepositoryError::NotFound(
+                type_name::<EventTable>().to_string(),
+                event_document_id.to_string(),
+            ))?;
 
         Ok(TalkRoomWrapper::from((talk_room_table.clone(), talk_room_card_table, event_table)).0)
     }
@@ -112,7 +120,10 @@ returning *"#,
             .obj()
             .one(event_document_id)
             .await?
-            .ok_or(RepositoryError::NotFound(event_document_id.to_string()))?;
+            .ok_or(RepositoryError::NotFound(
+                type_name::<EventTable>().to_string(),
+                event_document_id.to_string(),
+            ))?;
 
         Ok(TalkRoomWrapper::from((talk_room_table.clone(), talk_room_card_table, event_table)).0)
     }

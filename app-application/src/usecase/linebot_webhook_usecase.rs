@@ -59,7 +59,7 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
         let talk_room = match res_talk_room {
             Ok(s) => s,
             Err(anyhow_err) => {
-                if let Some(RepositoryError::NotFound(_)) =
+                if let Some(RepositoryError::NotFound(_, _)) =
                     anyhow_err.downcast_ref::<RepositoryError>()
                 {
                     self.repositories
