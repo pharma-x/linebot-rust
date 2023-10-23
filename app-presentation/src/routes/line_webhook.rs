@@ -191,12 +191,11 @@ mod test {
          */
         let auth_user_id = AuthUserId::from(create_line_user_auth);
         let primary_user_id = PrimaryUserId::new("primay_user_id".to_string());
-        let user_display_name = "display_name".to_string();
         let user = User::new(
             primary_user_id.clone(),
             UserProfile::Line(LineUserProfile::new(
                 auth_user_id.clone(),
-                user_display_name.clone(),
+                "display_name".to_string(),
                 "picture_url".to_string(),
             )),
         );
