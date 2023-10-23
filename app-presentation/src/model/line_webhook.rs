@@ -88,14 +88,14 @@ pub struct LineWebhookPostbackEvent {
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
-    postback: Option<LineWebhookPostback>,
+    postback: LineWebhookPostback,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
 struct LineWebhookPostback {
     data: String,
-    params: LineWebhookPostbackParams,
+    params: Option<LineWebhookPostbackParams>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -108,8 +108,13 @@ enum LineWebhookPostbackParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookPostbackDatetimeParams {
-    datetime: String,
+enum LineWebhookPostbackDatetimeParams {
+    #[serde(rename(deserialize = "datetime"))]
+    DateTime(String),
+    #[serde(rename(deserialize = "date"))]
+    Date(String),
+    #[serde(rename(deserialize = "time"))]
+    Time(String),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -154,7 +159,7 @@ pub struct LineWebhookMessageEvent {
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
-    message: Option<LineWebhookMessage>,
+    message: LineWebhookMessage,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Display)]
@@ -392,192 +397,269 @@ impl From<LineWebhookRequest> for CreateUserEvent {
     fn from(r: LineWebhookRequest) -> Self {
         let event = r.event;
         let create_event = match event {
-            LineWebhookEvent::Follow(s) => CreateEvent::Follow(CreateFollowEvent {
-                reply_token: s.reply_token,
-                delivery_context: CreateDeliveryContext {
-                    is_redelivery: s.delivery_context.is_redelivery,
-                },
-                mode: s.mode,
-                webhook_event_id: s.webhook_event_id,
-                timestamp: s.timestamp,
-            }),
-            LineWebhookEvent::Unfollow(s) => CreateEvent::Unfollow(CreateUnfollowEvent {
-                reply_token: s.reply_token,
-                delivery_context: CreateDeliveryContext {
-                    is_redelivery: s.delivery_context.is_redelivery,
-                },
-                mode: s.mode,
-                webhook_event_id: s.webhook_event_id,
-                timestamp: s.timestamp,
-            }),
-            LineWebhookEvent::Postback(s) => CreateEvent::Postback(CreatePostbackEvent {
-                reply_token: s.reply_token,
-                delivery_context: CreateDeliveryContext {
-                    is_redelivery: s.delivery_context.is_redelivery,
-                },
-                postback: CreatePostback {
-                    data: s.postback.clone().unwrap().data,
-                    params: match s.postback.clone().unwrap().params {
-                        LineWebhookPostbackParams::Datetime(p) => {
-                            CreatePostbackParams::Datetime(CreatePostbackDatetimeParams {
-                                datetime: p.datetime,
-                            })
-                        }
-                        LineWebhookPostbackParams::RichMenu(p) => {
-                            CreatePostbackParams::RichMenu(CreatePostbackRichMenuParams {
-                                new_rich_menu_alias_id: p.new_rich_menu_alias_id,
-                                status: p.status,
-                            })
-                        }
-                    },
-                },
-                mode: s.mode,
-                webhook_event_id: s.webhook_event_id,
-                timestamp: s.timestamp,
-            }),
-            LineWebhookEvent::VideoPlayComplete(s) => CreateEvent::VideoPlayComplete({
-                CreateVideoPlayCompleteEvent {
-                    reply_token: s.reply_token,
-                    delivery_context: CreateDeliveryContext {
-                        is_redelivery: s.delivery_context.is_redelivery,
-                    },
-                    video_play_complete: CreateVideoPlayComplete {
-                        tracking_id: s.video_play_complete.unwrap().tracking_id,
-                    },
-                    mode: s.mode,
-                    webhook_event_id: s.webhook_event_id,
-                    timestamp: s.timestamp,
-                }
-            }),
-            LineWebhookEvent::Message(s) => CreateEvent::Message({
-                CreateMessageEvent {
-                    reply_token: s.reply_token,
-                    delivery_context: CreateDeliveryContext {
-                        is_redelivery: s.delivery_context.is_redelivery,
-                    },
-                    message: match s.message.unwrap() {
-                        LineWebhookMessage::Text(m) => CreateMessage::Text(CreateTextMessage {
-                            id: m.id,
-                            text: m.text,
-                            emojis: m
-                                .emojis
-                                .iter()
-                                .map(|e| CreateEmoji {
-                                    index: e.index,
-                                    length: e.length,
-                                    product_id: e.product_id.clone(),
-                                    emoji_id: e.emoji_id.clone(),
-                                })
-                                .collect(),
-                        }),
-                        LineWebhookMessage::Image(m) => CreateMessage::Image(CreateImageMessage {
-                            id: m.id,
-                            content_provider: match m.content_provider {
-                                LineWebhookContentProvider::Line => CreateContentProvider::Line,
-                                LineWebhookContentProvider::External {
-                                    original_content_url,
-                                    preview_image_url,
-                                } => CreateContentProvider::External {
-                                    original_content_url,
-                                    preview_image_url,
-                                },
-                            },
-                            image_set: m.image_set.map(|i| CreateImageSet {
-                                id: i.id,
-                                index: i.index,
-                                length: i.length,
-                            }),
-                        }),
-                        LineWebhookMessage::Video(m) => CreateMessage::Video(CreateVideoMessage {
-                            id: m.id,
-                            duration: m.duration,
-                            content_provider: match m.content_provider {
-                                LineWebhookContentProvider::Line => CreateContentProvider::Line,
-                                LineWebhookContentProvider::External {
-                                    original_content_url,
-                                    preview_image_url,
-                                } => CreateContentProvider::External {
-                                    original_content_url,
-                                    preview_image_url,
-                                },
-                            },
-                        }),
-                        LineWebhookMessage::Audio(m) => CreateMessage::Audio(CreateAudioMessage {
-                            id: m.id,
-                            duration: m.duration,
-                            content_provider: match m.content_provider {
-                                LineWebhookContentProvider::Line => CreateContentProvider::Line,
-                                LineWebhookContentProvider::External {
-                                    original_content_url,
-                                    preview_image_url,
-                                } => CreateContentProvider::External {
-                                    original_content_url,
-                                    preview_image_url,
-                                },
-                            },
-                        }),
-                        LineWebhookMessage::File(m) => CreateMessage::File(CreateFileMessage {
-                            id: m.id,
-                            file_name: m.file_name,
-                            file_size: m.file_size,
-                        }),
-                        LineWebhookMessage::Location(m) => {
-                            CreateMessage::Location(CreateLocationMessage {
-                                id: m.id,
-                                title: m.title,
-                                address: m.address,
-                                latitude: m.latitude,
-                                longitude: m.longitude,
-                            })
-                        }
-                        LineWebhookMessage::Sticker(m) => {
-                            CreateMessage::Sticker(CreateStickerMessage {
-                                id: m.id,
-                                package_id: m.package_id,
-                                sticker_id: m.sticker_id,
-                                sticker_resource_type: match m.sticker_resource_type {
-                                    LineWebhookStickerResourceType::Static => {
-                                        CreateStickerResourceType::Static
-                                    }
-                                    LineWebhookStickerResourceType::Animation => {
-                                        CreateStickerResourceType::Animation
-                                    }
-                                    LineWebhookStickerResourceType::Sound => {
-                                        CreateStickerResourceType::Sound
-                                    }
-                                    LineWebhookStickerResourceType::AnimationSound => {
-                                        CreateStickerResourceType::AnimationSound
-                                    }
-                                    LineWebhookStickerResourceType::Popup => {
-                                        CreateStickerResourceType::Popup
-                                    }
-                                    LineWebhookStickerResourceType::PupupSound => {
-                                        CreateStickerResourceType::PupupSound
-                                    }
-                                    LineWebhookStickerResourceType::Custom => {
-                                        CreateStickerResourceType::Custom
-                                    }
-                                    LineWebhookStickerResourceType::Message => {
-                                        CreateStickerResourceType::Message
-                                    }
-                                },
-                                keywords: m.keywords,
-                                text: m.text,
-                            })
-                        }
-                    },
-                    mode: s.mode,
-                    webhook_event_id: s.webhook_event_id,
-                    timestamp: s.timestamp,
-                }
-            }),
+            LineWebhookEvent::Follow(s) => CreateEvent::Follow(s.into()),
+            LineWebhookEvent::Unfollow(s) => CreateEvent::Unfollow(s.into()),
+            LineWebhookEvent::Postback(s) => CreateEvent::Postback(s.into()),
+            LineWebhookEvent::VideoPlayComplete(s) => CreateEvent::VideoPlayComplete(s.into()),
+            LineWebhookEvent::Message(s) => CreateEvent::Message(s.into()),
         };
-
-        CreateUserEvent {
+        Self {
             create_line_user_auth: CreateLineUserAuth {
                 user_id: r.destination,
             },
             create_event,
+        }
+    }
+}
+
+impl From<LineWebhookFollowEvent> for CreateFollowEvent {
+    fn from(s: LineWebhookFollowEvent) -> Self {
+        Self {
+            reply_token: s.reply_token,
+            delivery_context: CreateDeliveryContext {
+                is_redelivery: s.delivery_context.is_redelivery,
+            },
+            mode: s.mode,
+            webhook_event_id: s.webhook_event_id,
+            timestamp: s.timestamp,
+        }
+    }
+}
+
+impl From<LineWebhookUnfollowEvent> for CreateUnfollowEvent {
+    fn from(s: LineWebhookUnfollowEvent) -> Self {
+        Self {
+            reply_token: s.reply_token,
+            delivery_context: CreateDeliveryContext {
+                is_redelivery: s.delivery_context.is_redelivery,
+            },
+            mode: s.mode,
+            webhook_event_id: s.webhook_event_id,
+            timestamp: s.timestamp,
+        }
+    }
+}
+
+impl From<LineWebhookPostbackEvent> for CreatePostbackEvent {
+    fn from(s: LineWebhookPostbackEvent) -> Self {
+        Self {
+            reply_token: s.reply_token,
+            delivery_context: CreateDeliveryContext {
+                is_redelivery: s.delivery_context.is_redelivery,
+            },
+            postback: CreatePostback {
+                data: s.postback.clone().data,
+                params: s.postback.clone().params.unwrap().into(),
+            },
+            mode: s.mode,
+            webhook_event_id: s.webhook_event_id,
+            timestamp: s.timestamp,
+        }
+    }
+}
+
+impl From<LineWebhookPostbackParams> for CreatePostbackParams {
+    fn from(s: LineWebhookPostbackParams) -> Self {
+        match s {
+            LineWebhookPostbackParams::Datetime(p) => CreatePostbackParams::Datetime(p.into()),
+            LineWebhookPostbackParams::RichMenu(p) => CreatePostbackParams::RichMenu(p.into()),
+        }
+    }
+}
+
+impl From<LineWebhookPostbackDatetimeParams> for CreatePostbackDatetimeParams {
+    fn from(s: LineWebhookPostbackDatetimeParams) -> Self {
+        match s {
+            LineWebhookPostbackDatetimeParams::DateTime(datetime) => {
+                CreatePostbackDatetimeParams::DateTime(datetime)
+            }
+            LineWebhookPostbackDatetimeParams::Date(date) => {
+                CreatePostbackDatetimeParams::Date(date)
+            }
+            LineWebhookPostbackDatetimeParams::Time(time) => {
+                CreatePostbackDatetimeParams::Time(time)
+            }
+        }
+    }
+}
+
+impl From<LineWebhookPostbackRichMenuParams> for CreatePostbackRichMenuParams {
+    fn from(s: LineWebhookPostbackRichMenuParams) -> Self {
+        Self {
+            new_rich_menu_alias_id: s.new_rich_menu_alias_id,
+            status: s.status,
+        }
+    }
+}
+
+impl From<LineWebhookVideoPlayCompleteEvent> for CreateVideoPlayCompleteEvent {
+    fn from(s: LineWebhookVideoPlayCompleteEvent) -> Self {
+        Self {
+            reply_token: s.reply_token,
+            delivery_context: CreateDeliveryContext {
+                is_redelivery: s.delivery_context.is_redelivery,
+            },
+            video_play_complete: CreateVideoPlayComplete {
+                tracking_id: s.video_play_complete.unwrap().tracking_id,
+            },
+            mode: s.mode,
+            webhook_event_id: s.webhook_event_id,
+            timestamp: s.timestamp,
+        }
+    }
+}
+
+impl From<LineWebhookMessageEvent> for CreateMessageEvent {
+    fn from(s: LineWebhookMessageEvent) -> Self {
+        Self {
+            reply_token: s.reply_token,
+            delivery_context: CreateDeliveryContext {
+                is_redelivery: s.delivery_context.is_redelivery,
+            },
+            message: s.message.into(),
+            mode: s.mode,
+            webhook_event_id: s.webhook_event_id,
+            timestamp: s.timestamp,
+        }
+    }
+}
+
+impl From<LineWebhookMessage> for CreateMessage {
+    fn from(s: LineWebhookMessage) -> Self {
+        match s {
+            LineWebhookMessage::Text(m) => CreateMessage::Text(m.into()),
+            LineWebhookMessage::Image(m) => CreateMessage::Image(m.into()),
+            LineWebhookMessage::Video(m) => CreateMessage::Video(m.into()),
+            LineWebhookMessage::Audio(m) => CreateMessage::Audio(m.into()),
+            LineWebhookMessage::File(m) => CreateMessage::File(m.into()),
+            LineWebhookMessage::Location(m) => CreateMessage::Location(m.into()),
+            LineWebhookMessage::Sticker(m) => CreateMessage::Sticker(m.into()),
+        }
+    }
+}
+
+impl From<LineWebhookTextMessage> for CreateTextMessage {
+    fn from(s: LineWebhookTextMessage) -> Self {
+        Self {
+            id: s.id,
+            text: s.text,
+            emojis: s
+                .emojis
+                .iter()
+                .map(|e| CreateEmoji {
+                    index: e.index,
+                    length: e.length,
+                    product_id: e.product_id.clone(),
+                    emoji_id: e.emoji_id.clone(),
+                })
+                .collect(),
+        }
+    }
+}
+
+impl From<LineWebhookImageMessage> for CreateImageMessage {
+    fn from(s: LineWebhookImageMessage) -> Self {
+        Self {
+            id: s.id,
+            content_provider: s.content_provider.into(),
+            image_set: s.image_set.map(|i| i.into()),
+        }
+    }
+}
+
+impl From<LineWebhookContentProvider> for CreateContentProvider {
+    fn from(value: LineWebhookContentProvider) -> Self {
+        match value {
+            LineWebhookContentProvider::Line => CreateContentProvider::Line,
+            LineWebhookContentProvider::External {
+                original_content_url,
+                preview_image_url,
+            } => CreateContentProvider::External {
+                original_content_url,
+                preview_image_url,
+            },
+        }
+    }
+}
+
+impl From<LineWebhookImageSet> for CreateImageSet {
+    fn from(s: LineWebhookImageSet) -> Self {
+        Self {
+            id: s.id,
+            index: s.index,
+            length: s.length,
+        }
+    }
+}
+
+impl From<LineWebhookVideoMessage> for CreateVideoMessage {
+    fn from(s: LineWebhookVideoMessage) -> Self {
+        Self {
+            id: s.id,
+            duration: s.duration,
+            content_provider: s.content_provider.into(),
+        }
+    }
+}
+
+impl From<LineWebhookAudioMessage> for CreateAudioMessage {
+    fn from(s: LineWebhookAudioMessage) -> Self {
+        Self {
+            id: s.id,
+            duration: s.duration,
+            content_provider: s.content_provider.into(),
+        }
+    }
+}
+
+impl From<LineWebhookFileMessage> for CreateFileMessage {
+    fn from(s: LineWebhookFileMessage) -> Self {
+        Self {
+            id: s.id,
+            file_name: s.file_name,
+            file_size: s.file_size,
+        }
+    }
+}
+
+impl From<LineWebhookLocationMessage> for CreateLocationMessage {
+    fn from(s: LineWebhookLocationMessage) -> Self {
+        Self {
+            id: s.id,
+            title: s.title,
+            address: s.address,
+            latitude: s.latitude,
+            longitude: s.longitude,
+        }
+    }
+}
+
+impl From<LineWebhookStickerMessage> for CreateStickerMessage {
+    fn from(s: LineWebhookStickerMessage) -> Self {
+        Self {
+            id: s.id,
+            package_id: s.package_id,
+            sticker_id: s.sticker_id,
+            sticker_resource_type: s.sticker_resource_type.into(),
+            keywords: s.keywords,
+            text: s.text,
+        }
+    }
+}
+
+impl From<LineWebhookStickerResourceType> for CreateStickerResourceType {
+    fn from(s: LineWebhookStickerResourceType) -> Self {
+        match s {
+            LineWebhookStickerResourceType::Static => CreateStickerResourceType::Static,
+            LineWebhookStickerResourceType::Animation => CreateStickerResourceType::Animation,
+            LineWebhookStickerResourceType::Sound => CreateStickerResourceType::Sound,
+            LineWebhookStickerResourceType::AnimationSound => {
+                CreateStickerResourceType::AnimationSound
+            }
+            LineWebhookStickerResourceType::Popup => CreateStickerResourceType::Popup,
+            LineWebhookStickerResourceType::PupupSound => CreateStickerResourceType::PupupSound,
+            LineWebhookStickerResourceType::Custom => CreateStickerResourceType::Custom,
+            LineWebhookStickerResourceType::Message => CreateStickerResourceType::Message,
         }
     }
 }

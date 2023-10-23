@@ -363,8 +363,10 @@ impl From<PostbackTable> for Postback {
 
 impl From<PostbackDatetimeParamsTable> for PostbackDatetimeParams {
     fn from(p: PostbackDatetimeParamsTable) -> Self {
-        Self {
-            datetime: p.datetime,
+        match p {
+            PostbackDatetimeParamsTable::DateTime(d) => PostbackDatetimeParams::DateTime(d),
+            PostbackDatetimeParamsTable::Date(d) => PostbackDatetimeParams::Date(d),
+            PostbackDatetimeParamsTable::Time(t) => PostbackDatetimeParams::Time(t),
         }
     }
 }
@@ -476,8 +478,13 @@ pub enum PostbackParamsTable {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct PostbackDatetimeParamsTable {
-    pub datetime: String,
+pub enum PostbackDatetimeParamsTable {
+    #[serde(rename(serialize = "datetime"))]
+    DateTime(String),
+    #[serde(rename(serialize = "date"))]
+    Date(String),
+    #[serde(rename(serialize = "time"))]
+    Time(String),
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -739,8 +746,10 @@ impl From<NewDeliveryContext> for DeliveryContextTable {
 
 impl From<NewPostbackDatetimeParams> for PostbackDatetimeParamsTable {
     fn from(p: NewPostbackDatetimeParams) -> Self {
-        PostbackDatetimeParamsTable {
-            datetime: p.datetime,
+        match p {
+            NewPostbackDatetimeParams::DateTime(p) => PostbackDatetimeParamsTable::DateTime(p),
+            NewPostbackDatetimeParams::Date(p) => PostbackDatetimeParamsTable::Date(p),
+            NewPostbackDatetimeParams::Time(p) => PostbackDatetimeParamsTable::Time(p),
         }
     }
 }

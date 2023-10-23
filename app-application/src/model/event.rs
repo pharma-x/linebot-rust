@@ -105,8 +105,10 @@ pub enum CreatePostbackParams {
 }
 
 #[derive(new, Clone)]
-pub struct CreatePostbackDatetimeParams {
-    pub datetime: String,
+pub enum CreatePostbackDatetimeParams {
+    DateTime(String),
+    Date(String),
+    Time(String),
 }
 
 #[derive(new, Clone)]
@@ -311,8 +313,10 @@ impl From<CreatePostbackParams> for NewPostbackParams {
 
 impl From<CreatePostbackDatetimeParams> for NewPostbackDatetimeParams {
     fn from(s: CreatePostbackDatetimeParams) -> Self {
-        Self {
-            datetime: s.datetime,
+        match s {
+            CreatePostbackDatetimeParams::DateTime(s) => NewPostbackDatetimeParams::DateTime(s),
+            CreatePostbackDatetimeParams::Date(s) => NewPostbackDatetimeParams::Date(s),
+            CreatePostbackDatetimeParams::Time(s) => NewPostbackDatetimeParams::Time(s),
         }
     }
 }

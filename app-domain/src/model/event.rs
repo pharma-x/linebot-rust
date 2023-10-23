@@ -93,8 +93,10 @@ pub enum PostbackParams {
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct PostbackDatetimeParams {
-    pub datetime: String,
+pub enum PostbackDatetimeParams {
+    DateTime(String),
+    Date(String),
+    Time(String),
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
@@ -307,8 +309,10 @@ pub enum NewPostbackParams {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewPostbackDatetimeParams {
-    pub datetime: String,
+pub enum NewPostbackDatetimeParams {
+    DateTime(String),
+    Date(String),
+    Time(String),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
