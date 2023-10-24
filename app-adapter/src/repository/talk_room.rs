@@ -1,11 +1,10 @@
 use crate::model::event::EventTable;
-use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
+use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable, TalkRoomWrapper};
 use crate::repository::{
     DbFirestoreRepositoryImpl, RepositoryError, EVENT_COLLECTION_NAME,
     TALK_ROOM_CARD_COLLECTION_NAME, TALK_ROOM_COLLECTION_NAME,
 };
 use async_trait::async_trait;
-use domain::model::event::Event;
 use domain::{
     model::{
         primary_user_id::PrimaryUserId,
@@ -15,6 +14,7 @@ use domain::{
 };
 use firestore::*;
 use futures::StreamExt;
+use std::any::type_name;
 use std::sync::Arc;
 
 #[async_trait]
@@ -39,9 +39,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .collect::<Vec<TalkRoomTable>>()
             .await;
 
-        let talk_room_table = talk_room_vec
-            .first()
-            .ok_or(RepositoryError::NotFound(primary_user_id_str.clone()))?;
+        let talk_room_table = talk_room_vec.first().ok_or(RepositoryError::NotFound(
+            type_name::<TalkRoomTable>().to_string(),
+            primary_user_id_str.clone(),
+        ))?;
         let talk_room_document_id = &talk_room_table.document_id;
         let talk_room_card_table: TalkRoomCardTable = firestore
             .fluent()
@@ -50,7 +51,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .obj()
             .one(talk_room_document_id)
             .await?
-            .ok_or(RepositoryError::NotFound(primary_user_id_str))?;
+            .ok_or(RepositoryError::NotFound(
+                type_name::<TalkRoomCardTable>().to_string(),
+                primary_user_id_str,
+            ))?;
 
         let event_document_id = talk_room_card_table.latest_message.document_id();
         let event_table: EventTable = firestore
@@ -60,25 +64,16 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .obj()
             .one(event_document_id)
             .await?
-            .ok_or(RepositoryError::NotFound(event_document_id.to_string()))?;
+            .ok_or(RepositoryError::NotFound(
+                type_name::<EventTable>().to_string(),
+                event_document_id.to_string(),
+            ))?;
 
-        Ok(TalkRoom::new(
-            talk_room_document_id.to_string().try_into().unwrap(),
-            primary_user_id,
-            talk_room_card_table.display_name,
-            talk_room_card_table.rsvp,
-            talk_room_card_table.pinned,
-            talk_room_card_table.follow,
-            Event::from(event_table),
-            talk_room_card_table.latest_messaged_at,
-            talk_room_card_table.sort_time,
-            talk_room_card_table.created_at,
-            talk_room_card_table.updated_at,
-        ))
+        Ok(TalkRoomWrapper::from((talk_room_table.clone(), talk_room_card_table, event_table)).0)
     }
 
     async fn create_talk_room(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
-        let db = Arc::clone(&self.db.pool());
+        let db = Arc::clone(self.db.pool());
         // firestoreの書き込みが失敗したときにもDBへの書き込みも
         let mut tx = db.begin().await.expect("Unable to begin transaction");
         // todo talk_roomsテーブルに紐づけを保管する
@@ -125,23 +120,20 @@ returning *"#,
             .obj()
             .one(event_document_id)
             .await?
-            .ok_or(RepositoryError::NotFound(event_document_id.to_string()))?;
+            .ok_or(RepositoryError::NotFound(
+                type_name::<EventTable>().to_string(),
+                event_document_id.to_string(),
+            ))?;
 
-        Ok(TalkRoom::new(
-            talk_room_table.document_id.try_into().unwrap(),
-            PrimaryUserId::new(talk_room_table.primary_user_id),
-            talk_room_card_table.display_name,
-            talk_room_card_table.rsvp,
-            talk_room_card_table.pinned,
-            talk_room_card_table.follow,
-            Event::from(event_table),
-            talk_room_card_table.latest_messaged_at,
-            talk_room_card_table.sort_time,
-            talk_room_card_table.created_at,
-            talk_room_card_table.updated_at,
-        ))
+        Ok(TalkRoomWrapper::from((talk_room_table.clone(), talk_room_card_table, event_table)).0)
     }
 
+    /// talkRoomをupdateし、イベントを作成する
+    ///
+    /// # Arguments
+    ///
+    /// * `source` - 更新するtalkRoom。latest_messageには最新のイベントを入れる
+    ///
     async fn create_event(&self, source: NewTalkRoom) -> anyhow::Result<()> {
         let firestore = Arc::clone(&self.firestore.0);
         let talk_room_id = source.id.value.to_string();
@@ -155,7 +147,9 @@ returning *"#,
             .object(&talk_room_card_table)
             .execute()
             .await?;
-
+        /*
+         * イベントを作成する
+         */
         let parent_path = firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &talk_room_id)?;
         let new_event = source.latest_message;
         let event_table = EventTable::from(new_event);

@@ -1,7 +1,7 @@
 use derive_new::new;
 use serde::Serialize;
 
-#[derive(new, Clone, Serialize)]
+#[derive(new, Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct PrimaryUserId {
     id: String,
 }

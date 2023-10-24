@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local};
+use rust_decimal::{prelude::FromPrimitive, prelude::ToPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
@@ -261,8 +262,10 @@ impl From<LocationMessageTable> for LocationMessage {
             id: m.id,
             title: m.title,
             address: m.address,
-            latitude: m.latitude,
-            longitude: m.longitude,
+            latitude: Decimal::from_f64(m.latitude)
+                .unwrap_or_else(|| panic!("Failed to convert f64 {} to Decimal", m.latitude)),
+            longitude: Decimal::from_f64(m.latitude)
+                .unwrap_or_else(|| panic!("Failed to convert f64 {} to Decimal", m.latitude)),
         }
     }
 }
@@ -360,8 +363,10 @@ impl From<PostbackTable> for Postback {
 
 impl From<PostbackDatetimeParamsTable> for PostbackDatetimeParams {
     fn from(p: PostbackDatetimeParamsTable) -> Self {
-        Self {
-            datetime: p.datetime,
+        match p {
+            PostbackDatetimeParamsTable::DateTime(d) => PostbackDatetimeParams::DateTime(d),
+            PostbackDatetimeParamsTable::Date(d) => PostbackDatetimeParams::Date(d),
+            PostbackDatetimeParamsTable::Time(t) => PostbackDatetimeParams::Time(t),
         }
     }
 }
@@ -473,8 +478,13 @@ pub enum PostbackParamsTable {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct PostbackDatetimeParamsTable {
-    pub datetime: String,
+pub enum PostbackDatetimeParamsTable {
+    #[serde(rename(serialize = "datetime"))]
+    DateTime(String),
+    #[serde(rename(serialize = "date"))]
+    Date(String),
+    #[serde(rename(serialize = "time"))]
+    Time(String),
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -736,8 +746,10 @@ impl From<NewDeliveryContext> for DeliveryContextTable {
 
 impl From<NewPostbackDatetimeParams> for PostbackDatetimeParamsTable {
     fn from(p: NewPostbackDatetimeParams) -> Self {
-        PostbackDatetimeParamsTable {
-            datetime: p.datetime,
+        match p {
+            NewPostbackDatetimeParams::DateTime(p) => PostbackDatetimeParamsTable::DateTime(p),
+            NewPostbackDatetimeParams::Date(p) => PostbackDatetimeParamsTable::Date(p),
+            NewPostbackDatetimeParams::Time(p) => PostbackDatetimeParamsTable::Time(p),
         }
     }
 }
@@ -880,8 +892,14 @@ impl From<NewLocationMessage> for LocationMessageTable {
             id: l.id,
             title: l.title,
             address: l.address,
-            latitude: l.latitude,
-            longitude: l.longitude,
+            latitude: l
+                .latitude
+                .to_f64()
+                .unwrap_or_else(|| panic!("Failed to convert Decimal {} to f64", l.latitude)),
+            longitude: l
+                .longitude
+                .to_f64()
+                .unwrap_or_else(|| panic!("Failed to convert Decimal {} to f64", l.longitude)),
         }
     }
 }

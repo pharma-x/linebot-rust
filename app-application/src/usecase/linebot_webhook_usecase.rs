@@ -11,11 +11,11 @@ use std::sync::Arc;
 
 #[derive(new)]
 pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
-    repositories: Arc<R>,
+    pub repositories: Arc<R>,
 }
 
 impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
-    pub async fn create_user(&self, source: CreateUserEvent) -> anyhow::Result<()> {
+    pub async fn create_follow_event(&self, source: CreateUserEvent) -> anyhow::Result<()> {
         /*
          * userを取得、なければ作成する
          */
@@ -28,21 +28,18 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
         let user = match res_user {
             Ok(s) => s,
             Err(anyhow_err) => {
-                if let Some(repository_err) = anyhow_err.downcast_ref::<RepositoryError>() {
-                    match repository_err {
-                        RepositoryError::NotAuthFound(_) => {
-                            let user_profile = self
-                                .repositories
-                                .user_auth_repository()
-                                .get_user_profile(create_line_user_auth.try_into()?)
-                                .await?;
-                            self.repositories
-                                .user_repository()
-                                .create_user(user_profile)
-                                .await?
-                        }
-                        _ => return Err(anyhow_err),
-                    }
+                if let Some(RepositoryError::NotAuthFound(_)) =
+                    anyhow_err.downcast_ref::<RepositoryError>()
+                {
+                    let user_profile = self
+                        .repositories
+                        .user_auth_repository()
+                        .get_user_profile(create_line_user_auth.try_into()?)
+                        .await?;
+                    self.repositories
+                        .user_repository()
+                        .create_user(user_profile)
+                        .await?
                 } else {
                     // anyhow_errがRepositoryErrorではない場合
                     return Err(anyhow_err);
@@ -62,27 +59,26 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
         let talk_room = match res_talk_room {
             Ok(s) => s,
             Err(anyhow_err) => {
-                if let Some(repository_err) = anyhow_err.downcast_ref::<RepositoryError>() {
-                    match repository_err {
-                        RepositoryError::NotFound(_) => {
-                            self.repositories
-                                .talk_room_repository()
-                                .create_talk_room((user, new_event.clone()).into())
-                                .await?
-                        }
-                        _ => return Err(anyhow_err),
-                    }
+                if let Some(RepositoryError::NotFound(_, _)) =
+                    anyhow_err.downcast_ref::<RepositoryError>()
+                {
+                    self.repositories
+                        .talk_room_repository()
+                        .create_talk_room((user, new_event.clone()).into())
+                        .await?
                 } else {
-                    // anyhow_errがRepositoryErrorではない場合
                     return Err(anyhow_err);
                 }
             }
         };
 
-        let create_event_talk_room = (talk_room, new_event).into();
+        /*
+         * talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+         */
+        let new_talk_room = (talk_room, new_event).into();
         self.repositories
             .talk_room_repository()
-            .create_event(create_event_talk_room)
+            .create_event(new_talk_room)
             .await?;
 
         Ok(())

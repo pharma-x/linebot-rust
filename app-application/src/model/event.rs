@@ -13,6 +13,7 @@ use domain::model::{
     },
     Id,
 };
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 
 #[derive(new, Clone)]
 pub struct CreateUserEvent {
@@ -104,8 +105,10 @@ pub enum CreatePostbackParams {
 }
 
 #[derive(new, Clone)]
-pub struct CreatePostbackDatetimeParams {
-    pub datetime: String,
+pub enum CreatePostbackDatetimeParams {
+    DateTime(String),
+    Date(String),
+    Time(String),
 }
 
 #[derive(new, Clone)]
@@ -310,8 +313,10 @@ impl From<CreatePostbackParams> for NewPostbackParams {
 
 impl From<CreatePostbackDatetimeParams> for NewPostbackDatetimeParams {
     fn from(s: CreatePostbackDatetimeParams) -> Self {
-        Self {
-            datetime: s.datetime,
+        match s {
+            CreatePostbackDatetimeParams::DateTime(s) => NewPostbackDatetimeParams::DateTime(s),
+            CreatePostbackDatetimeParams::Date(s) => NewPostbackDatetimeParams::Date(s),
+            CreatePostbackDatetimeParams::Time(s) => NewPostbackDatetimeParams::Time(s),
         }
     }
 }
@@ -471,8 +476,10 @@ impl From<CreateLocationMessage> for NewLocationMessage {
             id: s.id,
             title: s.title,
             address: s.address,
-            latitude: s.latitude,
-            longitude: s.longitude,
+            latitude: Decimal::from_f64(s.latitude)
+                .unwrap_or_else(|| panic!("Failed to convert Decimal {} to f64", s.latitude)),
+            longitude: Decimal::from_f64(s.longitude)
+                .unwrap_or_else(|| panic!("Failed to convert Decimal {} to f64", s.longitude)),
         }
     }
 }

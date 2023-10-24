@@ -4,6 +4,7 @@ use crate::model::{
 };
 use async_trait::async_trait;
 
+#[mockall::automock]
 #[async_trait]
 pub trait TalkRoomRepository {
     async fn get_talk_room(&self, source: PrimaryUserId) -> anyhow::Result<TalkRoom>;

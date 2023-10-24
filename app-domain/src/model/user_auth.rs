@@ -1,6 +1,6 @@
 use derive_new::new;
 
-#[derive(new, Debug, Clone)]
+#[derive(new, Debug, Clone, PartialEq, Eq)]
 pub enum AuthUserId {
     Line(LineId),
 }
@@ -13,7 +13,7 @@ impl AuthUserId {
     }
 }
 
-#[derive(new, Debug, Clone)]
+#[derive(new, Debug, Clone, PartialEq, Eq)]
 pub struct LineId {
     pub value: String,
 }

@@ -52,3 +52,47 @@ impl RepositoriesModule {
         }
     }
 }
+
+pub mod test {
+    use super::RepositoriesModuleExt;
+    use domain::repository::{
+        talk_room::MockTalkRoomRepository, user::MockUserRepository,
+        user_auth::MockUserAuthRepository,
+    };
+
+    pub struct TestRepositoriesModule {
+        user_auth_repository: MockUserAuthRepository,
+        user_repository: MockUserRepository,
+        talk_room_repository: MockTalkRoomRepository,
+    }
+
+    impl RepositoriesModuleExt for TestRepositoriesModule {
+        type UserAuthRepo = MockUserAuthRepository;
+        type UserRepo = MockUserRepository;
+        type TalkRoomRepo = MockTalkRoomRepository;
+
+        fn user_auth_repository(&self) -> &Self::UserAuthRepo {
+            &self.user_auth_repository
+        }
+        fn user_repository(&self) -> &Self::UserRepo {
+            &self.user_repository
+        }
+        fn talk_room_repository(&self) -> &Self::TalkRoomRepo {
+            &self.talk_room_repository
+        }
+    }
+
+    impl TestRepositoriesModule {
+        pub fn new(
+            user_auth_repository: MockUserAuthRepository,
+            user_repository: MockUserRepository,
+            talk_room_repository: MockTalkRoomRepository,
+        ) -> Self {
+            Self {
+                user_auth_repository,
+                user_repository,
+                talk_room_repository,
+            }
+        }
+    }
+}
