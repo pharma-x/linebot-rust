@@ -17,13 +17,3 @@ CREATE TABLE line_users (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 
 CREATE INDEX idx_line_users_primary_user_id ON line_users(primary_user_id);
-
--- document_id: UUID v4 を使っても36桁
-CREATE TABLE talk_rooms (
-  document_id VARCHAR(36) NOT NULL PRIMARY KEY,
-  primary_user_id BIGINT NOT NULL,
-  FOREIGN KEY(primary_user_id) REFERENCES primary_users(id),
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) CHARACTER SET utf8mb4;
-
-CREATE INDEX idx_talk_rooms_primary_user_id ON talk_rooms(primary_user_id);
