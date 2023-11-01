@@ -27,4 +27,4 @@ RUN set -eux; \
 EXPOSE 3000
 
 # Run the web service on container startup.
-# ENTRYPOINT ["./target/release/linebot"]
+ENTRYPOINT ["./target/release/linebot"]
