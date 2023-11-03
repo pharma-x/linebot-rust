@@ -29,7 +29,7 @@ pub async fn line_webhook_handler(
         .unwrap_or_else(|_| panic!("LINE_CHANNEL_SECRET must be set!"));
     // x-line-signature ヘッダーを文字列として取得します。
     let x_line_signature = headers
-        .get("x_line_signature")
+        .get("x-line-signature")
         .ok_or(StatusCode::BAD_REQUEST)?
         .as_bytes();
     // リクエストボディをバイト列として取得します。
