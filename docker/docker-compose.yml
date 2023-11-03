@@ -11,7 +11,7 @@ services:
   app:
     build:
       context: ..
-      dockerfile: docker/app/Dockerfile
+      dockerfile: docker/app/Dockerfile.local
     image: linebot-rust-app
     container_name: linebot-rust-app
     working_dir: /app
@@ -26,7 +26,6 @@ services:
       - 3000:3000
     depends_on:
       - db
-      - redis
     networks:
       - linebot-rust-network
   db:
@@ -43,14 +42,6 @@ services:
       - ./mysql/db:/var/lib/mysql
     networks:
       - linebot-rust-network
-  redis:
-    image: redis:7.2.1-alpine
-    container_name: linebot-rust-redis
-    command: redis-server --appendonly yes
-    environment:
-      TZ: Asia/Tokyo
-    volumes:
-      - ./redis:/data
 networks:
   linebot-rust-network:
     driver: bridge
