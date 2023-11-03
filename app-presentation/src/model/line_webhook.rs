@@ -35,15 +35,15 @@ pub struct LineWebhookRequest {
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
 pub enum LineWebhookEvent {
-    #[strum(serialize = "follow")]
+    #[serde(rename(deserialize = "follow"))]
     Follow(LineWebhookFollowEvent),
-    #[strum(serialize = "unfollow")]
+    #[serde(rename(deserialize = "unfollow"))]
     Unfollow(LineWebhookUnfollowEvent),
-    #[strum(serialize = "postback")]
+    #[serde(rename(deserialize = "postback"))]
     Postback(LineWebhookPostbackEvent),
-    #[strum(serialize = "videoPlayComplete")]
+    #[serde(rename(deserialize = "videoPlayComplete"))]
     VideoPlayComplete(LineWebhookVideoPlayCompleteEvent),
-    #[strum(serialize = "message")]
+    #[serde(rename(deserialize = "message"))]
     Message(LineWebhookMessageEvent),
 }
 
@@ -65,8 +65,6 @@ pub struct LineWebhookFollowEvent {
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
 pub struct LineWebhookUnfollowEvent {
-    #[serde(rename(deserialize = "replyToken"))]
-    reply_token: String,
     mode: String,
     timestamp: i64,
     source: Option<LineWebhookSource>,
@@ -144,6 +142,7 @@ pub struct LineWebhookVideoPlayCompleteEvent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
 struct LineWebhookVideoPlayComplete {
+    #[serde(rename(deserialize = "trackingId"))]
     tracking_id: String,
 }
 
@@ -166,11 +165,11 @@ pub struct LineWebhookMessageEvent {
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
 pub enum LineWebhookSource {
-    #[strum(serialize = "user")]
+    #[serde(rename(deserialize = "user"))]
     User(LineWebhookUserSource),
-    #[strum(serialize = "group")]
+    #[serde(rename(deserialize = "group"))]
     Group(LineWebhookGroupSource),
-    #[strum(serialize = "room")]
+    #[serde(rename(deserialize = "room"))]
     Room(LineWebhookRoomSource),
 }
 
@@ -429,7 +428,6 @@ impl From<LineWebhookFollowEvent> for CreateFollowEvent {
 impl From<LineWebhookUnfollowEvent> for CreateUnfollowEvent {
     fn from(s: LineWebhookUnfollowEvent) -> Self {
         Self {
-            reply_token: s.reply_token,
             delivery_context: CreateDeliveryContext {
                 is_redelivery: s.delivery_context.is_redelivery,
             },
@@ -661,5 +659,94 @@ impl From<LineWebhookStickerResourceType> for CreateStickerResourceType {
             LineWebhookStickerResourceType::Custom => CreateStickerResourceType::Custom,
             LineWebhookStickerResourceType::Message => CreateStickerResourceType::Message,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    /*
+     * follow event
+     */
+    #[test]
+    fn test_line_webhook_follow_event() {
+        let destintion = "line_id".to_string();
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "follow",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U00000000000000000000000000000000"
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destintion, line_webhook_event);
+    }
+    /*
+     * unfollow event
+     */
+    #[test]
+    fn test_line_webhook_unfollow_event() {
+        let destintion = "line_id".to_string();
+        let json = r#"
+        {
+            "type": "unfollow",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U00000000000000000000000000000000"
+                },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destintion, line_webhook_event);
+    }
+    /*
+     * unfollow event
+     */
+    #[test]
+    fn test_line_webhook_video_play_complete_event() {
+        let destintion = "line_id".to_string();
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "videoPlayComplete",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U00000000000000000000000000000000"
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "videoPlayComplete": {
+                "trackingId": "track-id"
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destintion, line_webhook_event);
     }
 }

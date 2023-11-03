@@ -58,8 +58,11 @@ mod test {
     use presentation::model::line_webhook::LineWebhookRequests;
     use sha2::Sha256;
 
+    /*
+     * 空のリクエストを受信できるかテストする
+     */
     #[tokio::test]
-    async fn test_linebot_webhook() {
+    async fn test_line_webhook_signature() {
         init_app();
         // DI
         let modules = Modules::new().await;

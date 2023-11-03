@@ -26,7 +26,6 @@ pub struct FollowEvent {
 #[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct UnfollowEvent {
     pub id: Id<Event>,
-    pub reply_token: String,
     pub delivery_context: DeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
@@ -251,7 +250,6 @@ pub struct NewFollowEvent {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewUnfollowEvent {
     pub id: Id<Event>,
-    pub reply_token: String,
     pub delivery_context: NewDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,

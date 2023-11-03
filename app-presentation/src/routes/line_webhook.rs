@@ -174,7 +174,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_process_line_follow_event() {
+    async fn test_process_fake_follow_event() {
         dotenv().ok();
         let user_auth_repository = MockUserAuthRepository::new();
         let mut user_repository = MockUserRepository::new();

@@ -41,7 +41,6 @@ pub struct CreateFollowEvent {
 
 #[derive(new, Clone)]
 pub struct CreateUnfollowEvent {
-    pub reply_token: String,
     pub delivery_context: CreateDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
@@ -264,7 +263,6 @@ impl From<CreateUnfollowEvent> for NewUnfollowEvent {
         let created_at = Local.timestamp_opt(s.timestamp, 0).unwrap();
         Self {
             id,
-            reply_token: s.reply_token,
             delivery_context: NewDeliveryContext::from(s.delivery_context),
             mode: s.mode,
             webhook_event_id: s.webhook_event_id,
