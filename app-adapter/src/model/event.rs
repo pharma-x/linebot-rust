@@ -101,8 +101,6 @@ impl From<FollowEventTable> for FollowEvent {
 pub struct UnfollowEventTable {
     #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "replyToken"))]
-    reply_token: String,
     #[serde(rename(serialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(serialize = "DeliveryContext"))]
@@ -124,7 +122,6 @@ impl From<UnfollowEventTable> for UnfollowEvent {
     fn from(e: UnfollowEventTable) -> Self {
         UnfollowEvent {
             id: Id::try_from(e.document_id).unwrap(),
-            reply_token: e.reply_token,
             delivery_context: DeliveryContext::from(e.delivery_context),
             mode: e.mode,
             webhook_event_id: e.webhook_event_id,
@@ -681,7 +678,6 @@ impl From<NewUnfollowEvent> for UnfollowEventTable {
     fn from(e: NewUnfollowEvent) -> Self {
         UnfollowEventTable {
             document_id: e.id.value.to_string(),
-            reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
             mode: e.mode,

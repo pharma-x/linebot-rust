@@ -24,7 +24,7 @@ async fn main() {
         .layer(Extension(Arc::new(modules)));
 
     // localhost:3000
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
 
     tracing::debug!("Server listening on {}", addr);
 
@@ -58,8 +58,11 @@ mod test {
     use presentation::model::line_webhook::LineWebhookRequests;
     use sha2::Sha256;
 
+    /*
+     * 空のリクエストを受信できるかテストする
+     */
     #[tokio::test]
-    async fn test_linebot_webhook() {
+    async fn test_line_webhook_signature() {
         init_app();
         // DI
         let modules = Modules::new().await;
@@ -91,7 +94,7 @@ mod test {
         let response = test_server
             .post("/linebot-webhook")
             .add_header(
-                HeaderName::from_lowercase(b"x_line_signature").unwrap(),
+                HeaderName::from_lowercase(b"x-line-signature").unwrap(),
                 HeaderValue::from_str(&expected_signature_str).unwrap(),
             )
             .json(&request)
@@ -103,7 +106,7 @@ mod test {
         let response = test_server
             .post("/linebot-webhook")
             .add_header(
-                HeaderName::from_lowercase(b"x_line_signature").unwrap(),
+                HeaderName::from_lowercase(b"x-line-signature").unwrap(),
                 HeaderValue::from_str("invalid_signature").unwrap(),
             )
             .json(&request)
