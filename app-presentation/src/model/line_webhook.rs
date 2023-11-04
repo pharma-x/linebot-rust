@@ -255,7 +255,9 @@ struct LineWebhookMention {
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
 enum LineWebhookMentionee {
+    #[serde(rename(deserialize = "user"))]
     LineWebhookUserMentionee,
+    #[serde(rename(deserialize = "all"))]
     LineWebhookAllMentionee,
 }
 
@@ -362,21 +364,21 @@ struct LineWebhookStickerMessage {
 #[derive(Serialize, Deserialize, Debug, Clone, EnumString)]
 #[cfg_attr(test, derive(Dummy))]
 enum LineWebhookStickerResourceType {
-    #[strum(serialize = "STATIC")]
+    #[serde(rename(deserialize = "STATIC"))]
     Static,
-    #[strum(serialize = "ANIMATION")]
+    #[serde(rename(deserialize = "ANIMATION"))]
     Animation,
-    #[strum(serialize = "SOUND")]
+    #[serde(rename(deserialize = "SOUND"))]
     Sound,
-    #[strum(serialize = "ANIMATION_SOUND")]
+    #[serde(rename(deserialize = "ANIMATION_SOUND"))]
     AnimationSound,
-    #[strum(serialize = "POPUP")]
+    #[serde(rename(deserialize = "POPUP"))]
     Popup,
-    #[strum(serialize = "POPUP_SOUND")]
-    PupupSound,
-    #[strum(serialize = "CUSTOM")]
+    #[serde(rename(deserialize = "POPUP_SOUND"))]
+    PopupSound,
+    #[serde(rename(deserialize = "CUSTOM"))]
     Custom,
-    #[strum(serialize = "MESSAGE")]
+    #[serde(rename(deserialize = "MESSAGE"))]
     Message,
 }
 
@@ -655,7 +657,7 @@ impl From<LineWebhookStickerResourceType> for CreateStickerResourceType {
                 CreateStickerResourceType::AnimationSound
             }
             LineWebhookStickerResourceType::Popup => CreateStickerResourceType::Popup,
-            LineWebhookStickerResourceType::PupupSound => CreateStickerResourceType::PupupSound,
+            LineWebhookStickerResourceType::PopupSound => CreateStickerResourceType::PopupSound,
             LineWebhookStickerResourceType::Custom => CreateStickerResourceType::Custom,
             LineWebhookStickerResourceType::Message => CreateStickerResourceType::Message,
         }
@@ -671,7 +673,7 @@ mod test {
      */
     #[test]
     fn test_line_webhook_follow_event() {
-        let destintion = "line_id".to_string();
+        let destination = "line_id".to_string();
         let json = r#"
         {
             "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
@@ -691,14 +693,14 @@ mod test {
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
         println!("line_webhook_event{:?}", line_webhook_event);
-        LineWebhookRequest::new(destintion, line_webhook_event);
+        LineWebhookRequest::new(destination, line_webhook_event);
     }
     /*
      * unfollow event
      */
     #[test]
     fn test_line_webhook_unfollow_event() {
-        let destintion = "line_id".to_string();
+        let destination = "line_id".to_string();
         let json = r#"
         {
             "type": "unfollow",
@@ -717,14 +719,14 @@ mod test {
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
         println!("line_webhook_event{:?}", line_webhook_event);
-        LineWebhookRequest::new(destintion, line_webhook_event);
+        LineWebhookRequest::new(destination, line_webhook_event);
     }
     /*
      * unfollow event
      */
     #[test]
     fn test_line_webhook_video_play_complete_event() {
-        let destintion = "line_id".to_string();
+        let destination = "line_id".to_string();
         let json = r#"
         {
             "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
@@ -747,6 +749,479 @@ mod test {
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
         println!("line_webhook_event{:?}", line_webhook_event);
-        LineWebhookRequest::new(destintion, line_webhook_event);
+        LineWebhookRequest::new(destination, line_webhook_event);
+    }
+    /*
+     * message event
+     */
+    #[test]
+    fn test_line_webhook_message_event() {
+        let destination = "line_id".to_string();
+        /*
+         * text
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U00000000000000000000000000000000"
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "id": "444573844083572737",
+                "type": "text",
+                "quoteToken": "q3Plxr4AgKd...",
+                "text": "@All @example Good Morning!! (love)",
+                "emojis": [
+                    {
+                        "index": 29,
+                        "length": 6,
+                        "productId": "5ac1bfd5040ab15980c9b435",
+                        "emojiId": "001"
+                    }
+                ],
+                "mention": {
+                    "mentionees": [
+                        {
+                            "index": 0,
+                            "length": 4,
+                            "type": "all"
+                        },
+                        {
+                            "index": 5,
+                            "length": 8,
+                            "userId": "U49585cd0d5...",
+                            "type": "user"
+                        }
+                    ]
+                }
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+
+        /*
+         * image 1
+         */
+        let json = r#"
+        {
+            "type": "message",
+            "message": {
+                "type": "image",
+                "id": "354718705033693859",
+                "quoteToken": "q3Plxr4AgKd...",
+                "contentProvider": {
+                    "type": "line"
+                },
+                "imageSet": {
+                    "id": "E005D41A7288F41B65593ED38FF6E9834B046AB36A37921A56BC236F13A91855",
+                    "index": 1,
+                    "total": 2
+                }
+            },
+            "timestamp": 1627356924513,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "replyToken": "7840b71058e24a5d91f9b5726c7512c9",
+            "mode": "active"
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * image 2
+         * ドキュメントを元に自作
+         */
+        let json = r#"
+        {
+            "type": "message",
+            "message": {
+                "type": "image",
+                "id": "354718705033693861",
+                "quoteToken": "yHAz4Ua2wx7...",
+                "contentProvider": {
+                    "type": "external",
+                    "originalContentUrl": "https://example.com",
+                    "previewImageUrl": "https://example.com"
+                },
+                "imageSet": {
+                    "id": "E005D41A7288F41B65593ED38FF6E9834B046AB36A37921A56BC236F13A91855",
+                    "index": 2,
+                    "total": 2
+                }
+            },
+            "timestamp": 1627356924722,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "replyToken": "fbf94e269485410da6b7e3a5e33283e8",
+            "mode": "active"
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * video
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "id": "325708",
+                "type": "video",
+                "quoteToken": "q3Plxr4AgKd...",
+                "duration": 60000,
+                "contentProvider": {
+                    "type": "external",
+                    "originalContentUrl": "https://example.com/original.mp4",
+                    "previewImageUrl": "https://example.com/preview.jpg"
+                }
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * audio
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "id": "325708",
+                "type": "audio",
+                "duration": 60000,
+                "contentProvider": {
+                    "type": "line"
+                }
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * file
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "id": "325708",
+                "type": "file",
+                "fileName": "file.txt",
+                "fileSize": 2138
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * location
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "id": "325708",
+                "type": "location",
+                "title": "my location",
+                "address": "日本、〒102-8282 東京都千代田区紀尾井町1番3号",
+                "latitude": 35.67966,
+                "longitude": 139.73669
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * sticker
+         * アニメーションスタンプの例
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "type": "sticker",
+                "id": "1501597916",
+                "quoteToken": "q3Plxr4AgKd...",
+                "stickerId": "52002738",
+                "packageId": "11537",
+                "stickerResourceType": "ANIMATION",
+                "keywords": [
+                    "cony",
+                    "sally",
+                    "Staring",
+                    "hi",
+                    "whatsup",
+                    "line",
+                    "howdy",
+                    "HEY",
+                    "Peeking",
+                    "wave",
+                    "peek",
+                    "Hello",
+                    "yo",
+                    "greetings"
+                ]
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * sticker
+         * メッセージスタンプの例
+         */
+        let json = r#"
+        {
+            "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+            "type": "message",
+            "mode": "active",
+            "timestamp": 1462629479859,
+            "source": {
+                "type": "user",
+                "userId": "U4af4980629..."
+            },
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "message": {
+                "type": "sticker",
+                "id": "123456789012345678",
+                "quoteToken": "q3Plxr4AgKd...",
+                "stickerId": "738839",
+                "packageId": "12287",
+                "stickerResourceType": "MESSAGE",
+                "keywords": [
+                    "Anticipation",
+                    "Sparkle",
+                    "Straight face",
+                    "Staring",
+                    "Thinking"
+                ],
+                "text": "今週末\n一緒に\n遊ぼうよ！"
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * postback
+         * 日時選択アクションのポストバックイベントの場合
+         */
+        let json = r#"
+        {
+            "replyToken": "b60d432864f44d079f6d8efe86cf404b",
+            "type": "postback",
+            "mode": "active",
+            "source": {
+                "userId": "U91eeaf62d...",
+                "type": "user"
+            },
+            "timestamp": 1513669370317,
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "postback": {
+                "data": "storeId=12345",
+                "params": {
+                    "datetime": "2017-12-25T01:00"
+                }
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination, line_webhook_event);
+    }
+    /*
+     * postback event
+     */
+    #[test]
+    fn test_line_webhook_postback_event() {
+        let destination = "line_id".to_string();
+        /*
+         * postback
+         * 日時選択アクションのポストバックイベントの場合
+         */
+        let json = r#"
+        {
+            "replyToken": "b60d432864f44d079f6d8efe86cf404b",
+            "type": "postback",
+            "mode": "active",
+            "source": {
+                "userId": "U91eeaf62d...",
+                "type": "user"
+            },
+            "timestamp": 1513669370317,
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "postback": {
+                "data": "storeId=12345",
+                "params": {
+                    "datetime": "2017-12-25T01:00"
+                }
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * postback
+         * リッチメニュー切替アクションのポストバックイベントの場合
+         */
+        let json = r#"
+        {
+            "replyToken": "b60d432864f44d079f6d8efe86cf404b",
+            "type": "postback",
+            "mode": "active",
+            "source": {
+                "userId": "U91eeaf62d...",
+                "type": "user"
+            },
+            "timestamp": 1619754620404,
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "postback": {
+                "data": "richmenu-changed-to-b",
+                "params": {
+                    "newRichMenuAliasId": "richmenu-alias-b",
+                    "status": "SUCCESS"
+                }
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        /*
+         * postback
+         * ボタンを押されたときのポストバックイベントの場合
+         */
+        let json = r#"
+        {
+            "replyToken": "b60d432864f44d079f6d8efe86cf404b",
+            "type": "postback",
+            "mode": "active",
+            "source": {
+                "userId": "U91eeaf62d...",
+                "type": "user"
+            },
+            "timestamp": 1619754620404,
+            "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+            "deliveryContext": {
+                "isRedelivery": false
+            },
+            "postback": {
+                "data": "richmenu-changed-to-b"
+            }
+        }
+        "#;
+        let line_webhook_event: LineWebhookEvent =
+            serde_json::from_str(json).expect("Failed to deserialize");
+        println!("line_webhook_event{:?}", line_webhook_event);
+        LineWebhookRequest::new(destination, line_webhook_event);
     }
 }

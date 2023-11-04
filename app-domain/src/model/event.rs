@@ -205,7 +205,7 @@ pub enum StickerResourceType {
     Sound,
     AnimationSound,
     Popup,
-    PupupSound,
+    PopupSound,
     Custom,
     Message,
 }
@@ -420,7 +420,7 @@ pub enum NewStickerResourceType {
     Sound,
     AnimationSound,
     Popup,
-    PupupSound,
+    PopupSound,
     Custom,
     Message,
 }
