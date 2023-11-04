@@ -1198,7 +1198,7 @@ mod test {
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * postback
-         * リッチメニュー切替アクションのポストバックイベントの場合
+         * ボタンを押されたときのポストバックイベントの場合
          */
         let json = r#"
         {
