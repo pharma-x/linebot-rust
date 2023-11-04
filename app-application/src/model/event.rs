@@ -217,7 +217,7 @@ pub enum CreateStickerResourceType {
     Sound,
     AnimationSound,
     Popup,
-    PupupSound,
+    PopupSound,
     Custom,
     Message,
 }
@@ -503,7 +503,7 @@ impl From<CreateStickerResourceType> for NewStickerResourceType {
             CreateStickerResourceType::Sound => NewStickerResourceType::Sound,
             CreateStickerResourceType::AnimationSound => NewStickerResourceType::AnimationSound,
             CreateStickerResourceType::Popup => NewStickerResourceType::Popup,
-            CreateStickerResourceType::PupupSound => NewStickerResourceType::PupupSound,
+            CreateStickerResourceType::PopupSound => NewStickerResourceType::PopupSound,
             CreateStickerResourceType::Custom => NewStickerResourceType::Custom,
             CreateStickerResourceType::Message => NewStickerResourceType::Message,
         }

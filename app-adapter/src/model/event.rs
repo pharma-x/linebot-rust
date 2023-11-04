@@ -288,7 +288,7 @@ impl From<StickerResourceTypeTable> for StickerResourceType {
             StickerResourceTypeTable::Sound => StickerResourceType::Sound,
             StickerResourceTypeTable::AnimationSound => StickerResourceType::AnimationSound,
             StickerResourceTypeTable::Popup => StickerResourceType::Popup,
-            StickerResourceTypeTable::PupupSound => StickerResourceType::PupupSound,
+            StickerResourceTypeTable::PopupSound => StickerResourceType::PopupSound,
             StickerResourceTypeTable::Custom => StickerResourceType::Custom,
             StickerResourceTypeTable::Message => StickerResourceType::Message,
         }
@@ -638,7 +638,7 @@ pub enum StickerResourceTypeTable {
     #[strum(serialize = "POPUP")]
     Popup,
     #[strum(serialize = "POPUP_SOUND")]
-    PupupSound,
+    PopupSound,
     #[strum(serialize = "CUSTOM")]
     Custom,
     #[strum(serialize = "MESSAGE")]
@@ -921,7 +921,7 @@ impl From<NewStickerResourceType> for StickerResourceTypeTable {
             NewStickerResourceType::Sound => StickerResourceTypeTable::Sound,
             NewStickerResourceType::AnimationSound => StickerResourceTypeTable::AnimationSound,
             NewStickerResourceType::Popup => StickerResourceTypeTable::Popup,
-            NewStickerResourceType::PupupSound => StickerResourceTypeTable::PupupSound,
+            NewStickerResourceType::PopupSound => StickerResourceTypeTable::PopupSound,
             NewStickerResourceType::Custom => StickerResourceTypeTable::Custom,
             NewStickerResourceType::Message => StickerResourceTypeTable::Message,
         }
