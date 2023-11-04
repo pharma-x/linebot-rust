@@ -1,11 +1,11 @@
-version: "3.8"
+version: '3.8'
 x-environment: &environment
-  MYSQL_USER: docker
-  MYSQL_PASSWORD: password
-  MYSQL_ROOT_PASSWORD: password
-  MYSQL_HOST: db
-  MYSQL_PORT: 3306
-  MYSQL_DATABASE: linebot-rust
+  MYSQL_USER: ${MYSQL_USER}
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  MYSQL_HOST: ${MYSQL_HOST}
+  MYSQL_PORT: ${MYSQL_PORT}
+  MYSQL_DATABASE: ${MYSQL_DATABASE}
   TZ: 'Asia/Tokyo'
 services:
   app:
@@ -19,7 +19,7 @@ services:
     tty: true
     environment:
       <<: *environment
-      DATABASE_URL: "mysql://docker:password@db:3306/linebot-rust"
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ../:/app
     ports:
@@ -36,7 +36,7 @@ services:
     image: linebot-rust-db
     container_name: linebot-rust-db
     ports:
-      - "3307:3306"
+      - '3307:3306'
     environment: *environment
     volumes:
       - ./mysql/db:/var/lib/mysql
