@@ -7,10 +7,14 @@ use domain::model::{
 
 #[derive(Deserialize)]
 pub struct ResponseLineAuth {
+    #[serde(rename(deserialize = "userId"))]
     pub user_id: String,
+    #[serde(rename(deserialize = "displayName"))]
     pub display_name: String,
     pub language: Option<String>,
+    #[serde(rename(deserialize = "pictureUrl"))]
     pub picture_url: Option<String>,
+    #[serde(rename(deserialize = "statusMessage"))]
     pub status_message: Option<String>,
 }
 

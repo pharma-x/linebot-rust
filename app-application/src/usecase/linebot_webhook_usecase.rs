@@ -25,10 +25,13 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .user_repository()
             .get_user(create_line_user_auth.clone().into())
             .await;
+
+        println!("res_user: {:?}", res_user);
+
         let user = match res_user {
             Ok(s) => s,
             Err(anyhow_err) => {
-                if let Some(RepositoryError::NotAuthFound(_)) =
+                if let Some(RepositoryError::NotFound(_, _)) =
                     anyhow_err.downcast_ref::<RepositoryError>()
                 {
                     let user_profile = self
@@ -56,6 +59,7 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .talk_room_repository()
             .get_talk_room(user.clone().id)
             .await;
+        println!("res_talk_room: {:?}", res_talk_room);
         let talk_room = match res_talk_room {
             Ok(s) => s,
             Err(anyhow_err) => {
@@ -65,7 +69,9 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
                     self.repositories
                         .talk_room_repository()
                         .create_talk_room((user, new_event.clone()).into())
-                        .await?
+                        .await?;
+
+                    return Ok(());
                 } else {
                     return Err(anyhow_err);
                 }

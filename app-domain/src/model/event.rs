@@ -145,10 +145,13 @@ pub struct ImageMessage {
 #[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum ContentProvider {
     Line,
-    External {
-        original_content_url: String,
-        preview_image_url: Option<String>,
-    },
+    External(ExternalContentProvider),
+}
+
+#[derive(new, Clone, Debug, PartialEq, Eq)]
+pub struct ExternalContentProvider {
+    original_content_url: String,
+    preview_image_url: Option<String>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
@@ -360,10 +363,13 @@ pub struct NewImageMessage {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewContentProvider {
     Line,
-    External {
-        original_content_url: String,
-        preview_image_url: Option<String>,
-    },
+    External(NewExternalContentProvider),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NewExternalContentProvider {
+    pub original_content_url: String,
+    pub preview_image_url: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

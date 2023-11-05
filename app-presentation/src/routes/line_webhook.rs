@@ -61,11 +61,14 @@ async fn process_line_events(
     for request in requests {
         let event = &request.event;
         match event {
-            LineWebhookEvent::Follow(_) => modules
-                .linebot_webhook_usecase()
-                .create_follow_event(request.into())
-                .await
-                .map_err(|err| anyhow::anyhow!("Unexpected error: {:?}", err))?,
+            LineWebhookEvent::Follow(_) => {
+                println!("LineWebhookRequest: {:?}", request.clone());
+                modules
+                    .linebot_webhook_usecase()
+                    .create_follow_event(request.into())
+                    .await
+                    .map_err(|err| anyhow::anyhow!("Unexpected error: {:?}", err))?
+            }
             LineWebhookEvent::Unfollow(e) => {
                 println!("Unfollow event: {:?}", e);
             }
@@ -125,7 +128,7 @@ mod test {
     use application::model::event::CreateUserEvent;
     use domain::{
         model::{
-            event::NewEvent,
+            event::{Event, NewEvent},
             line_user::LineUserProfile,
             primary_user_id::PrimaryUserId,
             talk_room::NewTalkRoom,
@@ -210,10 +213,11 @@ mod test {
         /*
          * talk_roomが存在するパターン
          */
+        let event = Event::from(EventTable::from(new_event.clone()));
         let talk_room = TalkRoomWrapper::from((
             TalkRoomTable::from(new_talk_room.clone()),
             TalkRoomCardTable::from(new_talk_room.clone()),
-            EventTable::from(new_event.clone()),
+            event.clone(),
         ))
         .0;
         // let new_talk_room = NewTalkRoom::from((talk_room.clone(), new_event)).clone();
@@ -231,7 +235,7 @@ mod test {
             // .with(predicate::eq(new_talk_room))
             .withf(|_| true)
             .once()
-            .returning(move |_| Ok(()));
+            .returning(move |_| Ok(event.clone()));
 
         /*
          * 最後にtest用のモジュールで処理が通れば成功
@@ -244,6 +248,54 @@ mod test {
             .create_follow_event(request.into())
             .await
             .map_err(|err| anyhow::anyhow!("Unexpected error: {:?}", err));
+
+        assert!(response.is_ok());
+    }
+
+    #[tokio::test]
+    #[cfg_attr(not(feature = "database-interaction-test"), ignore)]
+    async fn test_process_follow_event() {
+        dotenv().ok();
+        //logging
+        let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
+        env::set_var("RUST_LOG", log_level);
+        tracing_subscriber::fmt::init();
+
+        // 正しいline_idでなければ
+        let user_id = env::var("DEVELOPERS_LINE_ID")
+            .unwrap_or_else(|_| panic!("DEVELOPERS_LINE_ID must be set!"));
+        let json = format!(
+            r#"
+            {{
+                "destination": "xxxxxxxxxx",
+                "events": [
+                    {{
+                        "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+                        "type": "follow",
+                        "mode": "active",
+                        "timestamp": 1462629479859,
+                        "source": {{
+                            "type": "user",
+                            "userId": "{}"
+                            }},
+                        "webhookEventId": "01FZ74A0TDDPYRVKNK77XKC3ZR",
+                        "deliveryContext": {{
+                            "isRedelivery": false
+                        }}
+                    }}
+                ]
+            }}
+            "#,
+            user_id
+        );
+        let line_webhook_requests: LineWebhookRequests =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+        println!("line_webhook_requests:{:?}", line_webhook_requests);
+
+        let response =
+            process_line_events(line_webhook_requests.into(), Arc::new(Modules::new().await)).await;
+
+        println!("response:{:?}", response);
 
         assert!(response.is_ok());
     }

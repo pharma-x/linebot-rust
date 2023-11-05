@@ -5,11 +5,11 @@ use derive_new::new;
 use domain::model::{
     event::{
         NewAudioMessage, NewContentProvider, NewDeliveryContext, NewEmoji, NewEvent,
-        NewFileMessage, NewFollowEvent, NewImageMessage, NewImageSet, NewLocationMessage,
-        NewMessage, NewMessageEvent, NewPostback, NewPostbackDatetimeParams, NewPostbackEvent,
-        NewPostbackParams, NewPostbackRichMenuParams, NewStickerMessage, NewStickerResourceType,
-        NewTextMessage, NewUnfollowEvent, NewVideoMessage, NewVideoPlayComplete,
-        NewVideoPlayCompleteEvent,
+        NewExternalContentProvider, NewFileMessage, NewFollowEvent, NewImageMessage, NewImageSet,
+        NewLocationMessage, NewMessage, NewMessageEvent, NewPostback, NewPostbackDatetimeParams,
+        NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams, NewStickerMessage,
+        NewStickerResourceType, NewTextMessage, NewUnfollowEvent, NewVideoMessage,
+        NewVideoPlayComplete, NewVideoPlayCompleteEvent,
     },
     Id,
 };
@@ -157,10 +157,13 @@ pub struct CreateImageMessage {
 #[derive(new, Clone)]
 pub enum CreateContentProvider {
     Line,
-    External {
-        original_content_url: String,
-        preview_image_url: Option<String>,
-    },
+    External(CreateExternalContentProvider),
+}
+
+#[derive(new, Clone)]
+pub struct CreateExternalContentProvider {
+    pub original_content_url: String,
+    pub preview_image_url: Option<String>,
 }
 
 #[derive(new, Clone)]
@@ -245,7 +248,8 @@ impl From<CreateDeliveryContext> for NewDeliveryContext {
 impl From<CreateFollowEvent> for NewFollowEvent {
     fn from(s: CreateFollowEvent) -> Self {
         let id = Id::gen();
-        let created_at = Local.timestamp_opt(s.timestamp, 0).unwrap();
+        let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
+        println!("created_at: {:?}", created_at);
         Self {
             id,
             reply_token: s.reply_token,
@@ -260,7 +264,7 @@ impl From<CreateFollowEvent> for NewFollowEvent {
 impl From<CreateUnfollowEvent> for NewUnfollowEvent {
     fn from(s: CreateUnfollowEvent) -> Self {
         let id = Id::gen();
-        let created_at = Local.timestamp_opt(s.timestamp, 0).unwrap();
+        let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             delivery_context: NewDeliveryContext::from(s.delivery_context),
@@ -274,7 +278,7 @@ impl From<CreateUnfollowEvent> for NewUnfollowEvent {
 impl From<CreatePostbackEvent> for NewPostbackEvent {
     fn from(s: CreatePostbackEvent) -> Self {
         let id = Id::gen();
-        let created_at = Local.timestamp_opt(s.timestamp, 0).unwrap();
+        let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             reply_token: s.reply_token,
@@ -331,7 +335,7 @@ impl From<CreatePostbackRichMenuParams> for NewPostbackRichMenuParams {
 impl From<CreateVideoPlayCompleteEvent> for NewVideoPlayCompleteEvent {
     fn from(s: CreateVideoPlayCompleteEvent) -> Self {
         let id = Id::gen();
-        let created_at = Local.timestamp_opt(s.timestamp, 0).unwrap();
+        let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             reply_token: s.reply_token,
@@ -355,7 +359,7 @@ impl From<CreateVideoPlayComplete> for NewVideoPlayComplete {
 impl From<CreateMessageEvent> for NewMessageEvent {
     fn from(s: CreateMessageEvent) -> Self {
         let id = Id::gen();
-        let created_at = Local.timestamp_opt(s.timestamp, 0).unwrap();
+        let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             reply_token: s.reply_token,
@@ -417,13 +421,16 @@ impl From<CreateContentProvider> for NewContentProvider {
     fn from(s: CreateContentProvider) -> Self {
         match s {
             CreateContentProvider::Line => NewContentProvider::Line,
-            CreateContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            } => NewContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            },
+            CreateContentProvider::External(e) => NewContentProvider::External(e.into()),
+        }
+    }
+}
+
+impl From<CreateExternalContentProvider> for NewExternalContentProvider {
+    fn from(s: CreateExternalContentProvider) -> Self {
+        Self {
+            original_content_url: s.original_content_url,
+            preview_image_url: s.preview_image_url,
         }
     }
 }

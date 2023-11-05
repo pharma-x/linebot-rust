@@ -1,7 +1,6 @@
 pub mod event;
 pub mod line_user;
 pub mod line_user_auth;
-pub mod primary_user;
 pub mod talk_room;
 
 #[macro_export]

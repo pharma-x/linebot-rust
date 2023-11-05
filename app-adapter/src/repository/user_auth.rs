@@ -41,10 +41,8 @@ impl UserAuthRepository for HttpClientRepositoryImpl<UserAuthData> {
             .text()
             .await?;
 
-        let res_line_auth: ResponseLineAuth = serde_json::from_str(&body).expect(&format!(
-            "cannot convert ResponseLineAuth instance. body: {}",
-            body
-        ));
+        let res_line_auth: ResponseLineAuth = serde_json::from_str(body)
+            .unwrap_or_else(|_| panic!("cannot convert ResponseLineAuth instance. body: {}", body));
 
         Ok(res_line_auth.try_into()?)
     }
