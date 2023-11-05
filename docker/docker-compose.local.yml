@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 x-environment: &environment
   MYSQL_USER: docker
   MYSQL_PASSWORD: password
@@ -19,7 +19,6 @@ services:
     tty: true
     environment:
       <<: *environment
-      DATABASE_URL: "mysql://docker:password@db:3306/linebot-rust"
     volumes:
       - ../:/app
     ports:
@@ -36,7 +35,7 @@ services:
     image: linebot-rust-db
     container_name: linebot-rust-db
     ports:
-      - "3307:3306"
+      - '3307:3306'
     environment: *environment
     volumes:
       - ./mysql/db:/var/lib/mysql

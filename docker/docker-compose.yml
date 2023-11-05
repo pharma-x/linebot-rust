@@ -19,7 +19,6 @@ services:
     tty: true
     environment:
       <<: *environment
-      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ../:/app
     ports:

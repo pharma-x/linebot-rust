@@ -31,6 +31,12 @@ pub struct LineWebhookRequest {
     pub event: LineWebhookEvent,
 }
 
+impl LineWebhookRequest {
+    pub fn user_id(&self) -> &String {
+        self.event.user_id()
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Display)]
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
@@ -47,6 +53,18 @@ pub enum LineWebhookEvent {
     Message(LineWebhookMessageEvent),
 }
 
+impl LineWebhookEvent {
+    pub fn user_id(&self) -> &String {
+        match &self {
+            LineWebhookEvent::Follow(e) => e.user_id(),
+            LineWebhookEvent::Unfollow(e) => e.user_id(),
+            LineWebhookEvent::Postback(e) => e.user_id(),
+            LineWebhookEvent::VideoPlayComplete(e) => e.user_id(),
+            LineWebhookEvent::Message(e) => e.user_id(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
 pub struct LineWebhookFollowEvent {
@@ -55,11 +73,17 @@ pub struct LineWebhookFollowEvent {
     mode: String,
     #[cfg_attr(test, dummy(faker = "chrono::Local::now().timestamp()"))]
     timestamp: i64,
-    source: Option<LineWebhookSource>,
+    source: LineWebhookSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
+}
+
+impl LineWebhookFollowEvent {
+    pub fn user_id(&self) -> &String {
+        &self.source.user_id()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
@@ -67,11 +91,17 @@ pub struct LineWebhookFollowEvent {
 pub struct LineWebhookUnfollowEvent {
     mode: String,
     timestamp: i64,
-    source: Option<LineWebhookSource>,
+    source: LineWebhookSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
+}
+
+impl LineWebhookUnfollowEvent {
+    pub fn user_id(&self) -> &String {
+        &self.source.user_id()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
@@ -81,12 +111,18 @@ pub struct LineWebhookPostbackEvent {
     reply_token: String,
     mode: String,
     timestamp: i64,
-    source: Option<LineWebhookSource>,
+    source: LineWebhookSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
     postback: LineWebhookPostback,
+}
+
+impl LineWebhookPostbackEvent {
+    pub fn user_id(&self) -> &String {
+        &self.source.user_id()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -130,13 +166,19 @@ pub struct LineWebhookVideoPlayCompleteEvent {
     reply_token: String,
     mode: String,
     timestamp: i64,
-    source: Option<LineWebhookSource>,
+    source: LineWebhookSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
     #[serde(rename(deserialize = "videoPlayComplete"))]
     video_play_complete: Option<LineWebhookVideoPlayComplete>,
+}
+
+impl LineWebhookVideoPlayCompleteEvent {
+    pub fn user_id(&self) -> &String {
+        &self.source.user_id()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -153,12 +195,18 @@ pub struct LineWebhookMessageEvent {
     reply_token: String,
     mode: String,
     timestamp: i64,
-    source: Option<LineWebhookSource>,
+    source: LineWebhookSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
     delivery_context: LineDeliveryContext,
     message: LineWebhookMessage,
+}
+
+impl LineWebhookMessageEvent {
+    pub fn user_id(&self) -> &String {
+        &self.source.user_id()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Display)]
@@ -171,6 +219,16 @@ pub enum LineWebhookSource {
     Group(LineWebhookGroupSource),
     #[serde(rename(deserialize = "room"))]
     Room(LineWebhookRoomSource),
+}
+
+impl LineWebhookSource {
+    pub fn user_id(&self) -> &String {
+        match &self {
+            LineWebhookSource::User(s) => &s.user_id,
+            LineWebhookSource::Group(s) => &s.user_id,
+            LineWebhookSource::Room(s) => &s.user_id,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -386,7 +444,7 @@ impl From<LineWebhookRequests> for Vec<LineWebhookRequest> {
     fn from(r: LineWebhookRequests) -> Self {
         r.events
             .iter()
-            .map(|e| LineWebhookRequest {
+            .map(|e: &LineWebhookEvent| LineWebhookRequest {
                 destination: r.destination.clone(),
                 event: e.clone(),
             })
@@ -396,7 +454,7 @@ impl From<LineWebhookRequests> for Vec<LineWebhookRequest> {
 
 impl From<LineWebhookRequest> for CreateUserEvent {
     fn from(r: LineWebhookRequest) -> Self {
-        let event = r.event;
+        let event = r.event.clone();
         let create_event = match event {
             LineWebhookEvent::Follow(s) => CreateEvent::Follow(s.into()),
             LineWebhookEvent::Unfollow(s) => CreateEvent::Unfollow(s.into()),
@@ -406,7 +464,7 @@ impl From<LineWebhookRequest> for CreateUserEvent {
         };
         Self {
             create_line_user_auth: CreateLineUserAuth {
-                user_id: r.destination,
+                user_id: r.user_id().clone(),
             },
             create_event,
         }
@@ -718,7 +776,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination, line_webhook_event);
     }
     /*
@@ -748,7 +805,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination, line_webhook_event);
     }
     /*
@@ -807,7 +863,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
 
         /*
@@ -844,7 +899,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * image 2
@@ -883,7 +937,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * video
@@ -917,7 +970,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * audio
@@ -948,7 +1000,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * file
@@ -977,7 +1028,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * location
@@ -1008,7 +1058,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * sticker
@@ -1056,7 +1105,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * sticker
@@ -1126,7 +1174,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination, line_webhook_event);
     }
     /*
@@ -1163,7 +1210,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * postback
@@ -1194,7 +1240,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination.clone(), line_webhook_event);
         /*
          * postback
@@ -1221,7 +1266,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        println!("line_webhook_event{:?}", line_webhook_event);
         LineWebhookRequest::new(destination, line_webhook_event);
     }
 }

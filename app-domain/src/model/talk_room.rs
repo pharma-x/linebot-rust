@@ -98,7 +98,7 @@ impl From<(TalkRoom, NewEvent)> for NewTalkRoom {
     fn from(s: (TalkRoom, NewEvent)) -> Self {
         let talk_room = s.0;
         let new_event = s.1;
-        let event_created_at = new_event.created_at().clone();
+        let event_created_at = *new_event.created_at();
         let follow = new_event.follow();
         NewTalkRoom::new(
             talk_room.id,

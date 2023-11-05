@@ -13,7 +13,7 @@ use super::event::EventTable;
 
 #[derive(FromRow)]
 pub struct TalkRoomDbTable {
-    pub primary_user_id: i64,
+    pub primary_user_id: String,
     pub talk_room_id: String,
     pub created_at: DateTime<Local>,
 }
