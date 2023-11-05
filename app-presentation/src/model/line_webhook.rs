@@ -1,12 +1,12 @@
 use application::model::{
     event::{
         CreateAudioMessage, CreateContentProvider, CreateDeliveryContext, CreateEmoji, CreateEvent,
-        CreateFileMessage, CreateFollowEvent, CreateImageMessage, CreateImageSet,
-        CreateLocationMessage, CreateMessage, CreateMessageEvent, CreatePostback,
+        CreateExternalContentProvider, CreateFileMessage, CreateFollowEvent, CreateImageMessage,
+        CreateImageSet, CreateLocationMessage, CreateMessage, CreateMessageEvent, CreatePostback,
         CreatePostbackDatetimeParams, CreatePostbackEvent, CreatePostbackParams,
         CreatePostbackRichMenuParams, CreateStickerMessage, CreateStickerResourceType,
         CreateTextMessage, CreateUnfollowEvent, CreateUserEvent, CreateVideoMessage,
-        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent, CreateExternalContentProvider,
+        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent,
     },
     line_user_auth::CreateLineUserAuth,
 };
