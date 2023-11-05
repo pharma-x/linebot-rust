@@ -29,4 +29,3 @@ impl TryFrom<ResponseLineAuth> for LineUserProfile {
         })
     }
 }
-    
