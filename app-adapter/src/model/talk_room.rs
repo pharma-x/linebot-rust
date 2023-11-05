@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local};
+use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use strum_macros::Display;
@@ -9,52 +10,75 @@ use domain::model::{
     talk_room::{NewTalkRoom, TalkRoom},
 };
 
-use super::event::EventTable;
-
-#[derive(FromRow)]
+#[derive(FromRow, Debug)]
 pub struct TalkRoomDbTable {
+    pub document_id: String,
     pub primary_user_id: String,
-    pub talk_room_id: String,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct TalkRoomTable {
-    #[serde(rename(serialize = "documentId"))]
     pub document_id: String,
-    #[serde(rename(serialize = "primaryUserId"))]
     pub primary_user_id: String,
-    #[serde(rename(serialize = "createdAt"))]
     #[serde(with = "firestore::serialize_as_timestamp")]
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+// firestoreのfieldからはdocument_idを取り除く
+// impl Serialize for TalkRoomTable {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: serde::ser::Serializer,
+//     {
+//         let mut state = serializer.serialize_struct("TalkRoomTable", 2)?;
+//         state.serialize_field("primaryUserId", &self.primary_user_id)?;
+//         state.serialize_field("createdAt", &self.created_at)?;
+//         state.end()
+//     }
+// }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct TalkRoomCardTable {
-    #[serde(rename(serialize = "documentId"))]
     pub document_id: String,
-    #[serde(rename(serialize = "displayName"))]
     pub display_name: String,
     pub rsvp: bool,
     pub pinned: bool,
     pub follow: bool,
-    #[serde(rename(serialize = "latestMessage"))]
     pub latest_message: LatestMessageTable,
-    #[serde(rename(serialize = "latestMessagedAt"))]
     #[serde(with = "firestore::serialize_as_timestamp")]
     pub latest_messaged_at: DateTime<Local>,
-    #[serde(rename(serialize = "sortTime"))]
     #[serde(with = "firestore::serialize_as_timestamp")]
     pub sort_time: DateTime<Local>,
-    #[serde(rename(serialize = "createdAt"))]
     #[serde(with = "firestore::serialize_as_timestamp")]
     pub created_at: DateTime<Local>,
-    #[serde(rename(serialize = "updatedAt"))]
     #[serde(with = "firestore::serialize_as_timestamp")]
     pub updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+// firestoreのfieldからはdocument_idを取り除く
+// impl Serialize for TalkRoomCardTable {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: serde::ser::Serializer,
+//     {
+//         let mut state = serializer.serialize_struct("TalkRoomCardTable", 9)?; // 9 is the number of fields excluding document_id
+//         state.serialize_field("displayName", &self.display_name)?;
+//         state.serialize_field("rsvp", &self.rsvp)?;
+//         state.serialize_field("pinned", &self.pinned)?;
+//         state.serialize_field("follow", &self.follow)?;
+//         state.serialize_field("latestMessage", &self.latest_message)?;
+//         state.serialize_field("latestMessagedAt", &self.latest_messaged_at)?;
+//         state.serialize_field("sortTime", &self.sort_time)?;
+//         state.serialize_field("createdAt", &self.created_at)?;
+//         state.serialize_field("updatedAt", &self.updated_at)?;
+//         state.end()
+//     }
+// }
+
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum LatestMessageTable {
     Follow(TalkRoomFollowTable),
@@ -76,27 +100,27 @@ impl LatestMessageTable {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomFollowTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomUnfollowTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomPostbackTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomVideoPlayCompleteTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(tag = "messageType")] // JSONにmessageTypeというフィールドでタグ名を含む
 pub enum TalkRoomMessageTable {
     #[strum(serialize = "text")]
@@ -129,38 +153,38 @@ impl TalkRoomMessageTable {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomTextMessageTable {
     document_id: String,
     text: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomImageMessageTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomVideoMessageTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomAudioMessageTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomFileMessageTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomLocationMessageTable {
     document_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TalkRoomStickerMessageTable {
     document_id: String,
 }
@@ -210,11 +234,11 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
 
 pub struct TalkRoomWrapper(pub TalkRoom);
 
-impl From<(TalkRoomTable, TalkRoomCardTable, EventTable)> for TalkRoomWrapper {
-    fn from(s: (TalkRoomTable, TalkRoomCardTable, EventTable)) -> Self {
+impl From<(TalkRoomTable, TalkRoomCardTable, Event)> for TalkRoomWrapper {
+    fn from(s: (TalkRoomTable, TalkRoomCardTable, Event)) -> Self {
         let talk_room_table = s.0;
         let talk_room_card_table = s.1;
-        let event_table = s.2;
+        let event = s.2;
 
         TalkRoomWrapper(TalkRoom::new(
             talk_room_table.document_id.to_string().try_into().unwrap(),
@@ -223,7 +247,7 @@ impl From<(TalkRoomTable, TalkRoomCardTable, EventTable)> for TalkRoomWrapper {
             talk_room_card_table.rsvp,
             talk_room_card_table.pinned,
             talk_room_card_table.follow,
-            Event::from(event_table),
+            event,
             talk_room_card_table.latest_messaged_at,
             talk_room_card_table.sort_time,
             talk_room_card_table.created_at,

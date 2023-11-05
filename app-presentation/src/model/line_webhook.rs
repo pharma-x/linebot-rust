@@ -6,7 +6,7 @@ use application::model::{
         CreatePostbackDatetimeParams, CreatePostbackEvent, CreatePostbackParams,
         CreatePostbackRichMenuParams, CreateStickerMessage, CreateStickerResourceType,
         CreateTextMessage, CreateUnfollowEvent, CreateUserEvent, CreateVideoMessage,
-        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent,
+        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent, CreateExternalContentProvider,
     },
     line_user_auth::CreateLineUserAuth,
 };
@@ -351,12 +351,16 @@ enum LineWebhookContentProvider {
     #[serde(rename(deserialize = "line"))]
     Line,
     #[serde(rename(deserialize = "external"))]
-    External {
-        #[serde(rename(deserialize = "originalContentUrl"))]
-        original_content_url: String,
-        #[serde(rename(deserialize = "previewImageUrl"))]
-        preview_image_url: Option<String>,
-    },
+    External(LineWebhookExternalContentProvider),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(test, derive(Dummy))]
+struct LineWebhookExternalContentProvider {
+    #[serde(rename(deserialize = "originalContentUrl"))]
+    original_content_url: String,
+    #[serde(rename(deserialize = "previewImageUrl"))]
+    preview_image_url: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -629,13 +633,16 @@ impl From<LineWebhookContentProvider> for CreateContentProvider {
     fn from(value: LineWebhookContentProvider) -> Self {
         match value {
             LineWebhookContentProvider::Line => CreateContentProvider::Line,
-            LineWebhookContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            } => CreateContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            },
+            LineWebhookContentProvider::External(e) => CreateContentProvider::External(e.into()),
+        }
+    }
+}
+
+impl From<LineWebhookExternalContentProvider> for CreateExternalContentProvider {
+    fn from(s: LineWebhookExternalContentProvider) -> Self {
+        Self {
+            original_content_url: s.original_content_url,
+            preview_image_url: s.preview_image_url,
         }
     }
 }

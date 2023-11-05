@@ -5,21 +5,23 @@ use strum_macros::Display;
 
 use domain::model::{
     event::{
-        AudioMessage, ContentProvider, DeliveryContext, Emoji, Event, FileMessage, FollowEvent,
-        ImageMessage, ImageSet, LocationMessage, Message, MessageEvent, NewAudioMessage,
-        NewContentProvider, NewDeliveryContext, NewEmoji, NewEvent, NewFileMessage, NewFollowEvent,
-        NewImageMessage, NewImageSet, NewLocationMessage, NewMessage, NewMessageEvent,
-        NewPostbackDatetimeParams, NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams,
-        NewStickerMessage, NewStickerResourceType, NewTextMessage, NewUnfollowEvent,
-        NewVideoMessage, NewVideoPlayCompleteEvent, Postback, PostbackDatetimeParams,
-        PostbackEvent, PostbackParams, PostbackRichMenuParams, StickerMessage, StickerResourceType,
-        TextMessage, UnfollowEvent, VideoMessage, VideoPlayComplete, VideoPlayCompleteEvent,
+        AudioMessage, ContentProvider, DeliveryContext, Emoji, Event, ExternalContentProvider,
+        FileMessage, FollowEvent, ImageMessage, ImageSet, LocationMessage, Message, MessageEvent,
+        NewAudioMessage, NewContentProvider, NewDeliveryContext, NewEmoji, NewEvent,
+        NewExternalContentProvider, NewFileMessage, NewFollowEvent, NewImageMessage, NewImageSet,
+        NewLocationMessage, NewMessage, NewMessageEvent, NewPostbackDatetimeParams,
+        NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams, NewStickerMessage,
+        NewStickerResourceType, NewTextMessage, NewUnfollowEvent, NewVideoMessage,
+        NewVideoPlayCompleteEvent, Postback, PostbackDatetimeParams, PostbackEvent, PostbackParams,
+        PostbackRichMenuParams, StickerMessage, StickerResourceType, TextMessage, UnfollowEvent,
+        VideoMessage, VideoPlayComplete, VideoPlayCompleteEvent,
     },
     Id,
 };
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
 pub enum EventTable {
     Follow(FollowEventTable),
     Unfollow(UnfollowEventTable),
@@ -61,26 +63,18 @@ impl From<EventTable> for Event {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FollowEventTable {
-    #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
-    #[serde(rename(serialize = "webhookEventId"))]
     webhook_event_id: String,
-    #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
     mode: String,
-    #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
-    #[serde(rename(serialize = "sendingType"))]
     sending_type: SendingTypeTable,
-    #[serde(rename(serialize = "sendingMethod"))]
-    sending_method: SendingMethod,
-    #[serde(rename(serialize = "createdAt"))]
+    sending_method: SendingMethodTable,
     created_at: DateTime<Local>,
-    #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
 }
 
@@ -97,24 +91,17 @@ impl From<FollowEventTable> for FollowEvent {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UnfollowEventTable {
-    #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "webhookEventId"))]
     webhook_event_id: String,
-    #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
     mode: String,
-    #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
-    #[serde(rename(serialize = "sendingType"))]
     sending_type: SendingTypeTable,
-    #[serde(rename(serialize = "sendingMethod"))]
-    sending_method: SendingMethod,
-    #[serde(rename(serialize = "createdAt"))]
+    sending_method: SendingMethodTable,
     created_at: DateTime<Local>,
-    #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
 }
 
@@ -130,27 +117,19 @@ impl From<UnfollowEventTable> for UnfollowEvent {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MessageEventTable {
-    #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
-    #[serde(rename(serialize = "webhookEventId"))]
     webhook_event_id: String,
-    #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
     mode: String,
-    #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
-    #[serde(rename(serialize = "sendingType"))]
     sending_type: SendingTypeTable,
-    #[serde(rename(serialize = "sendingMethod"))]
-    sending_method: SendingMethod,
+    sending_method: SendingMethodTable,
     pub message: MessageTable,
-    #[serde(rename(serialize = "createdAt"))]
     created_at: DateTime<Local>,
-    #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
 }
 
@@ -295,31 +274,24 @@ impl From<StickerResourceTypeTable> for StickerResourceType {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct PostbackEventTable {
-    #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
-    #[serde(rename(serialize = "webhookEventId"))]
     webhook_event_id: String,
-    #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
     mode: String,
-    #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
-    #[serde(rename(serialize = "sendingType"))]
     sending_type: SendingTypeTable,
-    #[serde(rename(serialize = "sendingMethod"))]
-    sending_method: SendingMethod,
+    sending_method: SendingMethodTable,
     postback: PostbackTable,
-    #[serde(rename(serialize = "createdAt"))]
     created_at: DateTime<Local>,
-    #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct DeliveryContextTable {
     is_redelivery: bool,
 }
@@ -377,27 +349,19 @@ impl From<PostbackRichMenuParamsTable> for PostbackRichMenuParams {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoPlayCompleteEventTable {
-    #[serde(rename(serialize = "documentId"))]
     document_id: String,
-    #[serde(rename(serialize = "replyToken"))]
     reply_token: String,
-    #[serde(rename(serialize = "webhookEventId"))]
     webhook_event_id: String,
-    #[serde(rename(serialize = "DeliveryContext"))]
     delivery_context: DeliveryContextTable,
     mode: String,
-    #[serde(rename(serialize = "communicationType"))]
     communication_type: CommunicationTypeTable,
-    #[serde(rename(serialize = "sendingType"))]
     sending_type: SendingTypeTable,
-    #[serde(rename(serialize = "sendingMethod"))]
-    sending_method: SendingMethod,
+    sending_method: SendingMethodTable,
     video_play_complete: VideoPlayCompleteTable,
-    #[serde(rename(serialize = "createdAt"))]
     created_at: DateTime<Local>,
-    #[serde(rename(serialize = "updatedAt"))]
     updated_at: DateTime<Local>,
 }
 
@@ -423,32 +387,30 @@ impl From<VideoPlayCompleteTable> for VideoPlayComplete {
     }
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
 pub enum CommunicationTypeTable {
-    #[strum(serialize = "send")]
     Send,
-    #[strum(serialize = "receive")]
     Receive,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
 pub enum SendingTypeTable {
-    #[strum(serialize = "manual")]
     Manual,
-    #[strum(serialize = "bot")]
     Bot,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
-pub enum SendingMethod {
-    #[strum(serialize = "replay")]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendingMethodTable {
     Reply,
-    #[strum(serialize = "push")]
     Push,
 }
 
+// todo 以下は未使用。確認
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Sender {
+pub struct SenderTable {
     id: i64,
     name: String,
     picture_url: String,
@@ -456,25 +418,26 @@ pub struct Sender {
     sender_role: SenderRoleTable,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
 enum SenderRoleTable {
-    #[strum(serialize = "sender")]
     Sender,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PostbackTable {
     pub data: String,
     pub params: PostbackParamsTable,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum PostbackParamsTable {
     Datetime(PostbackDatetimeParamsTable),
     RichMenu(PostbackRichMenuParamsTable),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
 pub enum PostbackDatetimeParamsTable {
     #[serde(rename(serialize = "datetime"))]
     DateTime(String),
@@ -484,21 +447,22 @@ pub enum PostbackDatetimeParamsTable {
     Time(String),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct PostbackRichMenuParamsTable {
-    #[serde(rename(serialize = "newRichMenuAliasId"))]
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoPlayCompleteTable {
-    #[serde(rename(serialize = "trackingId"))]
     pub tracking_id: String,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(tag = "messageType")] // JSONにmessageTypeというフィールドでタグ名を含む
+#[serde(rename_all = "lowercase")]
 pub enum MessageTable {
     #[strum(serialize = "text")]
     Text(TextMessageTable),
@@ -516,94 +480,92 @@ pub enum MessageTable {
     Sticker(StickerMessageTable),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TextMessageTable {
     pub id: String,
     pub text: String,
     pub emojis: Vec<EmojiTable>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct EmojiTable {
     pub index: i32,
     pub length: i32,
-    #[serde(rename(serialize = "productId"))]
     pub product_id: String,
-    #[serde(rename(serialize = "emojiId"))]
     pub emoji_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ImageMessageTable {
     pub id: String,
-    #[serde(rename(serialize = "contentProvider"))]
     pub content_provider: ContentProviderTable,
-    #[serde(rename(serialize = "imageSet"))]
     pub image_set: Option<ImageSetTable>,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
 pub enum ContentProviderTable {
-    #[strum(serialize = "line")]
     Line,
-    #[strum(serialize = "external")]
-    External {
-        #[serde(rename(serialize = "originalContentUrl"))]
-        original_content_url: String,
-        #[serde(rename(serialize = "previewImageUrl"))]
-        preview_image_url: Option<String>,
-    },
+    External(ExternalContentProviderTable),
 }
 
 impl From<ContentProviderTable> for ContentProvider {
     fn from(s: ContentProviderTable) -> Self {
         match s {
             ContentProviderTable::Line => ContentProvider::Line,
-            ContentProviderTable::External {
-                original_content_url,
-                preview_image_url,
-            } => ContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            },
+            ContentProviderTable::External(t) => ContentProvider::External(t.into()),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalContentProviderTable {
+    original_content_url: String,
+    preview_image_url: Option<String>,
+}
+
+impl From<ExternalContentProviderTable> for ExternalContentProvider {
+    fn from(t: ExternalContentProviderTable) -> Self {
+        ExternalContentProvider::new(t.original_content_url, t.preview_image_url)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ImageSetTable {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoMessageTable {
     pub id: String,
     pub duration: i32,
-    #[serde(rename(serialize = "contentProvider"))]
     pub content_provider: ContentProviderTable,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct AudioMessageTable {
     pub id: String,
     pub duration: i32,
-    #[serde(rename(serialize = "contentProvider"))]
     pub content_provider: ContentProviderTable,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FileMessageTable {
     pub id: String,
-    #[serde(rename(serialize = "fileName"))]
     pub file_name: String,
-    #[serde(rename(serialize = "fileSize"))]
     pub file_size: i32,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LocationMessageTable {
     pub id: String,
     pub title: String,
@@ -612,36 +574,27 @@ pub struct LocationMessageTable {
     pub longitude: f64,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct StickerMessageTable {
     pub id: String,
-    #[serde(rename(serialize = "packageId"))]
     pub package_id: String,
-    #[serde(rename(serialize = "stickerId"))]
     pub sticker_id: String,
-    #[serde(rename(serialize = "stickerResourceType"))]
     pub sticker_resource_type: StickerResourceTypeTable,
     pub keywords: Option<Vec<String>>,
     pub text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Display, Clone)]
+#[derive(Serialize, Deserialize, Display, Clone, Debug)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum StickerResourceTypeTable {
-    #[strum(serialize = "STATIC")]
     Static,
-    #[strum(serialize = "ANIMATION")]
     Animation,
-    #[strum(serialize = "SOUND")]
     Sound,
-    #[strum(serialize = "ANIMATION_SOUND")]
     AnimationSound,
-    #[strum(serialize = "POPUP")]
     Popup,
-    #[strum(serialize = "POPUP_SOUND")]
     PopupSound,
-    #[strum(serialize = "CUSTOM")]
     Custom,
-    #[strum(serialize = "MESSAGE")]
     Message,
 }
 
@@ -667,7 +620,7 @@ impl From<NewFollowEvent> for FollowEventTable {
             mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethod::Reply,
+            sending_method: SendingMethodTable::Reply,
             created_at: e.created_at,
             updated_at: e.created_at,
         }
@@ -683,7 +636,7 @@ impl From<NewUnfollowEvent> for UnfollowEventTable {
             mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethod::Reply,
+            sending_method: SendingMethodTable::Reply,
             created_at: e.created_at,
             updated_at: e.created_at,
         }
@@ -700,7 +653,7 @@ impl From<NewMessageEvent> for MessageEventTable {
             mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethod::Reply,
+            sending_method: SendingMethodTable::Reply,
             message: e.message.into(),
             created_at: e.created_at,
             updated_at: e.created_at,
@@ -718,7 +671,7 @@ impl From<NewPostbackEvent> for PostbackEventTable {
             mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethod::Reply,
+            sending_method: SendingMethodTable::Reply,
             postback: PostbackTable {
                 data: e.postback.data,
                 params: match e.postback.params {
@@ -771,7 +724,7 @@ impl From<NewVideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
             mode: e.mode,
             communication_type: CommunicationTypeTable::Receive,
             sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethod::Reply,
+            sending_method: SendingMethodTable::Reply,
             video_play_complete: VideoPlayCompleteTable {
                 tracking_id: e.video_play_complete.tracking_id,
             },
@@ -828,16 +781,19 @@ impl From<NewImageMessage> for ImageMessageTable {
 }
 
 impl From<NewContentProvider> for ContentProviderTable {
-    fn from(value: NewContentProvider) -> Self {
-        match value {
+    fn from(s: NewContentProvider) -> Self {
+        match s {
             NewContentProvider::Line => ContentProviderTable::Line,
-            NewContentProvider::External {
-                original_content_url,
-                preview_image_url,
-            } => ContentProviderTable::External {
-                original_content_url,
-                preview_image_url,
-            },
+            NewContentProvider::External(e) => ContentProviderTable::External(e.into()),
+        }
+    }
+}
+
+impl From<NewExternalContentProvider> for ExternalContentProviderTable {
+    fn from(s: NewExternalContentProvider) -> Self {
+        ExternalContentProviderTable {
+            original_content_url: s.original_content_url,
+            preview_image_url: s.preview_image_url,
         }
     }
 }

@@ -1,7 +1,6 @@
-use std::any::type_name;
 use std::sync::Arc;
 
-use crate::model::{line_user::LineUserTable, primary_user::PrimaryUserTable};
+use crate::model::line_user::LineUserTable;
 use crate::repository::DatabaseRepositoryImpl;
 use anyhow::{anyhow, Ok};
 use async_trait::async_trait;
@@ -36,7 +35,7 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
         .fetch_one(&*pool)
         .await
         .map_err(|e| match e {
-            sqlx::Error::RowNotFound => anyhow!(RepositoryError::NotFound(type_name::<LineUserTable>().to_string(),line_id)),
+            sqlx::Error::RowNotFound => anyhow!(RepositoryError::NotFound("line_users".to_string(),line_id)),
             _ => anyhow!(RepositoryError::Unexpected(e.to_string())),
         })?;
 
@@ -45,7 +44,7 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
 
     async fn create_user(&self, source: UserProfile) -> anyhow::Result<User> {
         let res = match source {
-            UserProfile::Line(line_user) => self.create_line_user(line_user).await.unwrap(),
+            UserProfile::Line(line_user) => self.create_line_user(line_user).await?,
         };
 
         Ok(res)
@@ -64,22 +63,32 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
         .bind(primary_user_id.clone())
         .execute(&mut *tx)
         .await
-        .expect("Unable to insert a primary user");
-
+        .map_err(|_| {
+            anyhow!(RepositoryError::CouldNotInsert(
+                "primary_users".to_string(),
+                "id".to_string(),
+                primary_user_id.clone(),
+            ))
+        })?;
         sqlx::query(
             r#"
             insert into line_users(primary_user_id, line_id, display_name, picture_url, created_at, updated_at)
             values (?, ?, ?, ?, default, default)
             "#,
         )
-        .bind(primary_user_id)
+        .bind(primary_user_id.clone())
         .bind(source.auth_id.value())
         .bind(source.display_name)
         .bind(source.picture_url)
         .execute(&mut *tx)
         .await
-        .expect("Unable to insert a line user");
-
+        .map_err(|_| {
+            anyhow!(RepositoryError::CouldNotInsert(
+                "line_users".to_string(),
+                "primary_user_id".to_string(),
+                primary_user_id,
+            ))
+        })?;
         tx.commit().await.expect("Unable to commit transaction");
 
         let line_user_row = sqlx::query_as::<_, LineUserTable>(
@@ -89,7 +98,15 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
         )
         .fetch_one(&*pool)
         .await
-        .expect("Unable to fetch the line user");
+        .map_err(|e| match e {
+            sqlx::Error::RowNotFound => {
+                anyhow!(RepositoryError::NotFound(
+                    "line_users".to_string(),
+                    "LAST_INSERT_ID()".to_string()
+                ))
+            }
+            _ => anyhow!(RepositoryError::Unexpected(e.to_string())),
+        })?;
 
         Ok(line_user_row.try_into()?)
     }
