@@ -31,15 +31,6 @@ pub enum EventTable {
 }
 
 impl EventTable {
-    pub fn document_id(&self) -> &String {
-        match self {
-            EventTable::Follow(e) => &e.document_id,
-            EventTable::Unfollow(e) => &e.document_id,
-            EventTable::Message(e) => &e.document_id,
-            EventTable::Postback(e) => &e.document_id,
-            EventTable::VideoPlayComplete(e) => &e.document_id,
-        }
-    }
     pub fn created_at(&self) -> DateTime<Local> {
         match self {
             EventTable::Follow(e) => e.created_at,
@@ -49,16 +40,13 @@ impl EventTable {
             EventTable::VideoPlayComplete(e) => e.created_at,
         }
     }
-}
-
-impl From<EventTable> for Event {
-    fn from(s: EventTable) -> Self {
-        match s {
-            EventTable::Follow(f) => Event::Follow(f.into()),
-            EventTable::Unfollow(u) => Event::Unfollow(u.into()),
-            EventTable::Message(m) => Event::Message(m.into()),
-            EventTable::Postback(p) => Event::Postback(p.into()),
-            EventTable::VideoPlayComplete(v) => Event::VideoPlayComplete(v.into()),
+    pub fn into_event(&self, document_id: String) -> Event {
+        match &self {
+            EventTable::Follow(f) => Event::Follow(f.into_event(document_id)),
+            EventTable::Unfollow(u) => Event::Unfollow(u.into_event(document_id)),
+            EventTable::Message(m) => Event::Message(m.into_event(document_id)),
+            EventTable::Postback(p) => Event::Postback(p.into_event(document_id)),
+            EventTable::VideoPlayComplete(v) => Event::VideoPlayComplete(v.into_event(document_id)),
         }
     }
 }
@@ -66,7 +54,6 @@ impl From<EventTable> for Event {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct FollowEventTable {
-    document_id: String,
     reply_token: String,
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
@@ -78,15 +65,15 @@ pub struct FollowEventTable {
     updated_at: DateTime<Local>,
 }
 
-impl From<FollowEventTable> for FollowEvent {
-    fn from(e: FollowEventTable) -> Self {
+impl FollowEventTable {
+    pub fn into_event(&self, document_id: String) -> FollowEvent {
         FollowEvent {
-            id: Id::try_from(e.document_id).unwrap(),
-            reply_token: e.reply_token,
-            delivery_context: DeliveryContext::from(e.delivery_context),
-            mode: e.mode,
-            webhook_event_id: e.webhook_event_id,
-            created_at: e.created_at,
+            id: Id::try_from(document_id).unwrap(),
+            reply_token: self.reply_token.clone(),
+            delivery_context: DeliveryContext::from(self.delivery_context.clone()),
+            mode: self.mode.clone(),
+            webhook_event_id: self.webhook_event_id.clone(),
+            created_at: self.created_at,
         }
     }
 }
@@ -94,7 +81,6 @@ impl From<FollowEventTable> for FollowEvent {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UnfollowEventTable {
-    document_id: String,
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
     mode: String,
@@ -105,14 +91,14 @@ pub struct UnfollowEventTable {
     updated_at: DateTime<Local>,
 }
 
-impl From<UnfollowEventTable> for UnfollowEvent {
-    fn from(e: UnfollowEventTable) -> Self {
+impl UnfollowEventTable {
+    fn into_event(&self, document_id: String) -> UnfollowEvent {
         UnfollowEvent {
-            id: Id::try_from(e.document_id).unwrap(),
-            delivery_context: DeliveryContext::from(e.delivery_context),
-            mode: e.mode,
-            webhook_event_id: e.webhook_event_id,
-            created_at: e.created_at,
+            id: Id::try_from(document_id).unwrap(),
+            delivery_context: DeliveryContext::from(self.delivery_context.clone()),
+            mode: self.mode.clone(),
+            webhook_event_id: self.webhook_event_id.clone(),
+            created_at: self.created_at,
         }
     }
 }
@@ -120,7 +106,6 @@ impl From<UnfollowEventTable> for UnfollowEvent {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageEventTable {
-    document_id: String,
     reply_token: String,
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
@@ -133,16 +118,16 @@ pub struct MessageEventTable {
     updated_at: DateTime<Local>,
 }
 
-impl From<MessageEventTable> for MessageEvent {
-    fn from(e: MessageEventTable) -> Self {
+impl MessageEventTable {
+    fn into_event(&self, document_id: String) -> MessageEvent {
         MessageEvent {
-            id: Id::try_from(e.document_id).unwrap(),
-            reply_token: e.reply_token,
-            delivery_context: DeliveryContext::from(e.delivery_context),
-            mode: e.mode,
-            webhook_event_id: e.webhook_event_id,
-            message: e.message.into(),
-            created_at: e.created_at,
+            id: Id::try_from(document_id).unwrap(),
+            reply_token: self.reply_token.clone(),
+            delivery_context: DeliveryContext::from(self.delivery_context.clone()),
+            mode: self.mode.clone(),
+            webhook_event_id: self.webhook_event_id.clone(),
+            message: self.message.clone().into(),
+            created_at: self.created_at,
         }
     }
 }
@@ -277,7 +262,6 @@ impl From<StickerResourceTypeTable> for StickerResourceType {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PostbackEventTable {
-    document_id: String,
     reply_token: String,
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
@@ -304,16 +288,16 @@ impl From<DeliveryContextTable> for DeliveryContext {
     }
 }
 
-impl From<PostbackEventTable> for PostbackEvent {
-    fn from(e: PostbackEventTable) -> Self {
-        Self {
-            id: Id::try_from(e.document_id).unwrap(),
-            reply_token: e.reply_token,
-            delivery_context: DeliveryContext::from(e.delivery_context),
-            mode: e.mode,
-            webhook_event_id: e.webhook_event_id,
-            postback: e.postback.into(),
-            created_at: e.created_at,
+impl PostbackEventTable {
+    pub fn into_event(&self, document_id: String) -> PostbackEvent {
+        PostbackEvent {
+            id: Id::try_from(document_id).unwrap(),
+            reply_token: self.reply_token.clone(),
+            delivery_context: DeliveryContext::from(self.delivery_context.clone()),
+            mode: self.mode.clone(),
+            webhook_event_id: self.webhook_event_id.clone(),
+            postback: self.postback.clone().into(),
+            created_at: self.created_at,
         }
     }
 }
@@ -352,7 +336,6 @@ impl From<PostbackRichMenuParamsTable> for PostbackRichMenuParams {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct VideoPlayCompleteEventTable {
-    document_id: String,
     reply_token: String,
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
@@ -365,16 +348,16 @@ pub struct VideoPlayCompleteEventTable {
     updated_at: DateTime<Local>,
 }
 
-impl From<VideoPlayCompleteEventTable> for VideoPlayCompleteEvent {
-    fn from(e: VideoPlayCompleteEventTable) -> Self {
-        Self {
-            id: Id::try_from(e.document_id).unwrap(),
-            reply_token: e.reply_token,
-            delivery_context: DeliveryContext::from(e.delivery_context),
-            mode: e.mode,
-            webhook_event_id: e.webhook_event_id,
-            video_play_complete: e.video_play_complete.into(),
-            created_at: e.created_at,
+impl VideoPlayCompleteEventTable {
+    pub fn into_event(&self, document_id: String) -> VideoPlayCompleteEvent {
+        VideoPlayCompleteEvent {
+            id: Id::try_from(document_id).unwrap(),
+            reply_token: self.reply_token.clone(),
+            delivery_context: DeliveryContext::from(self.delivery_context.clone()),
+            mode: self.mode.clone(),
+            webhook_event_id: self.webhook_event_id.clone(),
+            video_play_complete: self.video_play_complete.clone().into(),
+            created_at: self.created_at,
         }
     }
 }
@@ -613,7 +596,6 @@ impl From<NewEvent> for EventTable {
 impl From<NewFollowEvent> for FollowEventTable {
     fn from(e: NewFollowEvent) -> Self {
         FollowEventTable {
-            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
@@ -630,7 +612,6 @@ impl From<NewFollowEvent> for FollowEventTable {
 impl From<NewUnfollowEvent> for UnfollowEventTable {
     fn from(e: NewUnfollowEvent) -> Self {
         UnfollowEventTable {
-            document_id: e.id.value.to_string(),
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
             mode: e.mode,
@@ -646,7 +627,6 @@ impl From<NewUnfollowEvent> for UnfollowEventTable {
 impl From<NewMessageEvent> for MessageEventTable {
     fn from(e: NewMessageEvent) -> Self {
         MessageEventTable {
-            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
@@ -664,7 +644,6 @@ impl From<NewMessageEvent> for MessageEventTable {
 impl From<NewPostbackEvent> for PostbackEventTable {
     fn from(e: NewPostbackEvent) -> Self {
         PostbackEventTable {
-            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
@@ -715,7 +694,6 @@ impl From<NewPostbackRichMenuParams> for PostbackRichMenuParamsTable {
 impl From<NewVideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
     fn from(e: NewVideoPlayCompleteEvent) -> Self {
         VideoPlayCompleteEventTable {
-            document_id: e.id.value.to_string(),
             reply_token: e.reply_token,
             webhook_event_id: e.webhook_event_id,
             delivery_context: DeliveryContextTable {
