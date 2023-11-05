@@ -223,6 +223,15 @@ pub enum NewEvent {
 }
 
 impl NewEvent {
+    pub fn id(&self) -> &Id<Event> {
+        match self {
+            NewEvent::Follow(e) => &e.id,
+            NewEvent::Unfollow(e) => &e.id,
+            NewEvent::Postback(e) => &e.id,
+            NewEvent::VideoPlayComplete(e) => &e.id,
+            NewEvent::Message(e) => &e.id,
+        }
+    }
     pub fn created_at(&self) -> &DateTime<Local> {
         match self {
             NewEvent::Follow(e) => &e.created_at,

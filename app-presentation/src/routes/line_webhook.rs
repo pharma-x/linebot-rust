@@ -128,7 +128,7 @@ mod test {
     use application::model::event::CreateUserEvent;
     use domain::{
         model::{
-            event::{Event, NewEvent},
+            event::NewEvent,
             line_user::LineUserProfile,
             primary_user_id::PrimaryUserId,
             talk_room::NewTalkRoom,
@@ -213,20 +213,22 @@ mod test {
         /*
          * talk_roomが存在するパターン
          */
-        let event = Event::from(EventTable::from(new_event.clone()));
+        let event =
+            EventTable::from(new_event.clone()).into_event(new_event.id().value.to_string());
         let talk_room = TalkRoomWrapper::from((
+            new_talk_room.id.clone(),
             TalkRoomTable::from(new_talk_room.clone()),
             TalkRoomCardTable::from(new_talk_room.clone()),
             event.clone(),
         ))
         .0;
+        let cloned_talk_room = talk_room.clone();
         // let new_talk_room = NewTalkRoom::from((talk_room.clone(), new_event)).clone();
         talk_room_repository
             .expect_get_talk_room()
             .with(predicate::eq(primary_user_id))
             .once()
             .returning(move |_| Ok(talk_room.clone()));
-
         /*
          * talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
          */
@@ -235,8 +237,7 @@ mod test {
             // .with(predicate::eq(new_talk_room))
             .withf(|_| true)
             .once()
-            .returning(move |_| Ok(event.clone()));
-
+            .returning(move |_| Ok(cloned_talk_room.clone()));
         /*
          * 最後にtest用のモジュールで処理が通れば成功
          */

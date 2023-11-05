@@ -51,7 +51,9 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
         };
 
         /*
-         * talk_roomを取得、なければ作成する
+         * talk_roomを取得し、
+         * あればtalk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+         * なければtalk_roomを作成し、talk_roomのサブコレクションevent作成する
          */
         let new_event = NewEvent::from(source.create_event);
         let res_talk_room = self
@@ -60,32 +62,28 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
             .get_talk_room(user.clone().id)
             .await;
         println!("res_talk_room: {:?}", res_talk_room);
-        let talk_room = match res_talk_room {
-            Ok(s) => s,
+        let updated_talk_room = match res_talk_room {
+            Ok(talk_room) => {
+                // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+                self.repositories
+                    .talk_room_repository()
+                    .create_event((talk_room, new_event.clone()).into())
+                    .await?
+            }
             Err(anyhow_err) => {
                 if let Some(RepositoryError::NotFound(_, _)) =
                     anyhow_err.downcast_ref::<RepositoryError>()
                 {
                     self.repositories
                         .talk_room_repository()
-                        .create_talk_room((user, new_event.clone()).into())
-                        .await?;
-
-                    return Ok(());
+                        .create_talk_room((user, new_event).into())
+                        .await?
                 } else {
                     return Err(anyhow_err);
                 }
             }
         };
-
-        /*
-         * talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
-         */
-        let new_talk_room = (talk_room, new_event).into();
-        self.repositories
-            .talk_room_repository()
-            .create_event(new_talk_room)
-            .await?;
+        println!("talk_room: {:?}", updated_talk_room);
 
         Ok(())
     }
