@@ -1,11 +1,13 @@
+use anyhow::anyhow;
+use async_trait::async_trait;
+use std::sync::Arc;
+
 use crate::model::event::EventTable;
 use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
 use crate::repository::{
     DbFirestoreRepositoryImpl, RepositoryError, EVENT_COLLECTION_NAME,
     TALK_ROOM_CARD_COLLECTION_NAME, TALK_ROOM_COLLECTION_NAME,
 };
-use anyhow::anyhow;
-use async_trait::async_trait;
 use domain::{
     model::{
         primary_user_id::PrimaryUserId,
@@ -13,8 +15,6 @@ use domain::{
     },
     repository::talk_room::TalkRoomRepository,
 };
-use firestore::*;
-use std::sync::Arc;
 
 #[async_trait]
 impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {

@@ -1,17 +1,17 @@
+use crate::gateway::HttpClientRepositoryImpl;
 use crate::model::line_user_auth::ResponseLineAuth;
-use crate::repository::HttpClientRepositoryImpl;
 use anyhow::Ok;
 use async_trait::async_trait;
+use domain::gateway::user_auth::UserAuthGateway;
 use domain::model::{
     line_user::LineUserProfile,
     user::UserProfile,
     user_auth::{LineUserAuthData, UserAuthData},
 };
-use domain::repository::user_auth::UserAuthRepository;
 use reqwest::header;
 
 #[async_trait]
-impl UserAuthRepository for HttpClientRepositoryImpl<UserAuthData> {
+impl UserAuthGateway for HttpClientRepositoryImpl<UserAuthData> {
     async fn get_user_profile(&self, source: UserAuthData) -> anyhow::Result<UserProfile> {
         let res = match source {
             UserAuthData::Line(d) => {
@@ -34,7 +34,7 @@ impl UserAuthRepository for HttpClientRepositoryImpl<UserAuthData> {
             ))
             .header(
                 header::AUTHORIZATION,
-                format!("Bearer {}", source.auth_token()),
+                format!("Bearer {}", source.auth_token.value()),
             )
             .send()
             .await?

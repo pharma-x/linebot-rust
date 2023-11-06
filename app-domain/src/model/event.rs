@@ -66,15 +66,6 @@ pub struct MessageEvent {
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub enum EventType {
-    Message,
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-}
-
-#[derive(new, Clone, Debug, PartialEq, Eq)]
 pub struct DeliveryContext {
     pub is_redelivery: bool,
 }

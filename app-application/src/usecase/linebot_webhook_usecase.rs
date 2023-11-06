@@ -1,33 +1,31 @@
 use crate::model::event::CreateUserEvent;
-use adapter::{module::RepositoriesModuleExt, repository::RepositoryError};
+use adapter::{module::AdaptersModuleExt, repository::RepositoryError};
 use derive_new::new;
 use domain::{
-    model::event::NewEvent,
-    repository::{
-        talk_room::TalkRoomRepository, user::UserRepository, user_auth::UserAuthRepository,
-    },
+    gateway::{send_message::SendMessageGateway, user_auth::UserAuthGateway},
+    model::{event::NewEvent, user_auth::UserAuthData},
+    repository::{talk_room::TalkRoomRepository, user::UserRepository},
 };
 use std::sync::Arc;
 
 #[derive(new)]
-pub struct LinebotWebhookUseCase<R: RepositoriesModuleExt> {
-    pub repositories: Arc<R>,
+pub struct LinebotWebhookUseCase<R: AdaptersModuleExt> {
+    pub adapters: Arc<R>,
 }
 
-impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
+impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
     pub async fn create_follow_event(&self, source: CreateUserEvent) -> anyhow::Result<()> {
         /*
          * userを取得、なければ作成する
          */
         let create_line_user_auth = source.clone().create_line_user_auth;
         let res_user = self
-            .repositories
+            .adapters
             .user_repository()
             .get_user(create_line_user_auth.clone().into())
             .await;
 
-        println!("res_user: {:?}", res_user);
-
+        let user_auth_data = UserAuthData::try_from(create_line_user_auth)?;
         let user = match res_user {
             Ok(s) => s,
             Err(anyhow_err) => {
@@ -35,11 +33,11 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
                     anyhow_err.downcast_ref::<RepositoryError>()
                 {
                     let user_profile = self
-                        .repositories
-                        .user_auth_repository()
-                        .get_user_profile(create_line_user_auth.try_into()?)
+                        .adapters
+                        .user_auth_gateway()
+                        .get_user_profile(user_auth_data.clone())
                         .await?;
-                    self.repositories
+                    self.adapters
                         .user_repository()
                         .create_user(user_profile)
                         .await?
@@ -57,15 +55,14 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
          */
         let new_event = NewEvent::from(source.create_event);
         let res_talk_room = self
-            .repositories
+            .adapters
             .talk_room_repository()
             .get_talk_room(user.clone().id)
             .await;
-        println!("res_talk_room: {:?}", res_talk_room);
-        let updated_talk_room = match res_talk_room {
+        let _updated_talk_room = match res_talk_room {
             Ok(talk_room) => {
                 // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
-                self.repositories
+                self.adapters
                     .talk_room_repository()
                     .create_event((talk_room, new_event.clone()).into())
                     .await?
@@ -74,17 +71,26 @@ impl<R: RepositoriesModuleExt> LinebotWebhookUseCase<R> {
                 if let Some(RepositoryError::NotFound(_, _)) =
                     anyhow_err.downcast_ref::<RepositoryError>()
                 {
-                    self.repositories
+                    self.adapters
                         .talk_room_repository()
-                        .create_talk_room((user, new_event).into())
+                        .create_talk_room((user, new_event.clone()).into())
                         .await?
                 } else {
                     return Err(anyhow_err);
                 }
             }
         };
-        println!("talk_room: {:?}", updated_talk_room);
 
+        // TODO: ここでメッセージを送る
+        let res_sent_messages = self
+            .adapters
+            .send_message_gateway()
+            .send_messages(user_auth_data, new_event)
+            .await;
+
+        println!("res_sent_messages{:?}", res_sent_messages);
+
+        panic!("panic!!");
         Ok(())
     }
 }

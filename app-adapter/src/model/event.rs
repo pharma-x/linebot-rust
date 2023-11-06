@@ -58,9 +58,8 @@ pub struct FollowEventTable {
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
     mode: String,
-    communication_type: CommunicationTypeTable,
-    sending_type: SendingTypeTable,
-    sending_method: SendingMethodTable,
+    communication_type: EventCommunicationTypeTable,
+    sending_type: EventSendingTypeTable,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
 }
@@ -84,9 +83,8 @@ pub struct UnfollowEventTable {
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
     mode: String,
-    communication_type: CommunicationTypeTable,
-    sending_type: SendingTypeTable,
-    sending_method: SendingMethodTable,
+    communication_type: EventCommunicationTypeTable,
+    sending_type: EventSendingTypeTable,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
 }
@@ -110,9 +108,8 @@ pub struct MessageEventTable {
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
     mode: String,
-    communication_type: CommunicationTypeTable,
-    sending_type: SendingTypeTable,
-    sending_method: SendingMethodTable,
+    communication_type: EventCommunicationTypeTable,
+    sending_type: EventSendingTypeTable,
     pub message: MessageTable,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
@@ -266,9 +263,8 @@ pub struct PostbackEventTable {
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
     mode: String,
-    communication_type: CommunicationTypeTable,
-    sending_type: SendingTypeTable,
-    sending_method: SendingMethodTable,
+    communication_type: EventCommunicationTypeTable,
+    sending_type: EventSendingTypeTable,
     postback: PostbackTable,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
@@ -340,9 +336,8 @@ pub struct VideoPlayCompleteEventTable {
     webhook_event_id: String,
     delivery_context: DeliveryContextTable,
     mode: String,
-    communication_type: CommunicationTypeTable,
-    sending_type: SendingTypeTable,
-    sending_method: SendingMethodTable,
+    communication_type: EventCommunicationTypeTable,
+    sending_type: EventSendingTypeTable,
     video_play_complete: VideoPlayCompleteTable,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
@@ -372,39 +367,15 @@ impl From<VideoPlayCompleteTable> for VideoPlayComplete {
 
 #[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
-pub enum CommunicationTypeTable {
-    Send,
+pub enum EventCommunicationTypeTable {
     Receive,
 }
 
 #[derive(Serialize, Deserialize, Display, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
-pub enum SendingTypeTable {
+pub enum EventSendingTypeTable {
     Manual,
     Bot,
-}
-
-#[derive(Serialize, Deserialize, Display, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum SendingMethodTable {
-    Reply,
-    Push,
-}
-
-// todo 以下は未使用。確認
-#[derive(Serialize, Deserialize, Clone)]
-pub struct SenderTable {
-    id: i64,
-    name: String,
-    picture_url: String,
-    email: String,
-    sender_role: SenderRoleTable,
-}
-
-#[derive(Serialize, Deserialize, Display, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
-enum SenderRoleTable {
-    Sender,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -600,9 +571,8 @@ impl From<NewFollowEvent> for FollowEventTable {
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
             mode: e.mode,
-            communication_type: CommunicationTypeTable::Receive,
-            sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethodTable::Reply,
+            communication_type: EventCommunicationTypeTable::Receive,
+            sending_type: EventSendingTypeTable::Bot,
             created_at: e.created_at,
             updated_at: e.created_at,
         }
@@ -615,9 +585,8 @@ impl From<NewUnfollowEvent> for UnfollowEventTable {
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
             mode: e.mode,
-            communication_type: CommunicationTypeTable::Receive,
-            sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethodTable::Reply,
+            communication_type: EventCommunicationTypeTable::Receive,
+            sending_type: EventSendingTypeTable::Bot,
             created_at: e.created_at,
             updated_at: e.created_at,
         }
@@ -631,9 +600,8 @@ impl From<NewMessageEvent> for MessageEventTable {
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
             mode: e.mode,
-            communication_type: CommunicationTypeTable::Receive,
-            sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethodTable::Reply,
+            communication_type: EventCommunicationTypeTable::Receive,
+            sending_type: EventSendingTypeTable::Bot,
             message: e.message.into(),
             created_at: e.created_at,
             updated_at: e.created_at,
@@ -648,9 +616,8 @@ impl From<NewPostbackEvent> for PostbackEventTable {
             webhook_event_id: e.webhook_event_id,
             delivery_context: e.delivery_context.into(),
             mode: e.mode,
-            communication_type: CommunicationTypeTable::Receive,
-            sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethodTable::Reply,
+            communication_type: EventCommunicationTypeTable::Receive,
+            sending_type: EventSendingTypeTable::Bot,
             postback: PostbackTable {
                 data: e.postback.data,
                 params: match e.postback.params {
@@ -700,9 +667,8 @@ impl From<NewVideoPlayCompleteEvent> for VideoPlayCompleteEventTable {
                 is_redelivery: e.delivery_context.is_redelivery,
             },
             mode: e.mode,
-            communication_type: CommunicationTypeTable::Receive,
-            sending_type: SendingTypeTable::Bot,
-            sending_method: SendingMethodTable::Reply,
+            communication_type: EventCommunicationTypeTable::Receive,
+            sending_type: EventSendingTypeTable::Bot,
             video_play_complete: VideoPlayCompleteTable {
                 tracking_id: e.video_play_complete.tracking_id,
             },
