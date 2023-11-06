@@ -48,6 +48,7 @@ impl LineAuthToken {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum UserAuthData {
     Line(LineUserAuthData),
 }
@@ -56,13 +57,4 @@ pub enum UserAuthData {
 pub struct LineUserAuthData {
     pub auth_id: AuthUserId,
     pub auth_token: AuthToken,
-}
-
-impl LineUserAuthData {
-    pub fn auth_id(&self) -> &String {
-        self.auth_id.value()
-    }
-    pub fn auth_token(&self) -> &String {
-        self.auth_token.value()
-    }
 }

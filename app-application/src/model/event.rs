@@ -77,15 +77,6 @@ pub struct CreateMessageEvent {
     pub timestamp: i64,
 }
 
-#[derive(new, Clone)]
-pub enum CreateEventType {
-    Message,
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-}
-
 #[derive(new, Debug, Clone)]
 pub struct CreateDeliveryContext {
     pub is_redelivery: bool,

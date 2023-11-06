@@ -7,7 +7,7 @@ use async_trait::async_trait;
 
 #[mockall::automock]
 #[async_trait]
-pub trait UserAuthRepository {
+pub trait UserAuthGateway {
     async fn get_user_profile(&self, source: UserAuthData) -> anyhow::Result<UserProfile>;
 
     async fn get_line_user_profile(
