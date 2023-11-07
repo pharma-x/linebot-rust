@@ -6,9 +6,9 @@ use domain::model::send_message::{
     NewSendImagemapActionArea, NewSendImagemapBaseSize, NewSendImagemapMessage,
     NewSendImagemapMessageAction, NewSendImagemapUriAction, NewSendImagemapVideo,
     NewSendImagemapVideoArea, NewSendImagemapVideoExternalLink, NewSendLocationMessage,
-    NewSendMessage, NewSendQuoteToken, NewSendStickerMessage, NewSendTemplateAction,
-    NewSendTemplateCameraAction, NewSendTemplateCameraRollAction, NewSendTemplateDatetime,
-    NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
+    NewSendMessage, NewSendMessages, NewSendQuoteToken, NewSendStickerMessage,
+    NewSendTemplateAction, NewSendTemplateCameraAction, NewSendTemplateCameraRollAction,
+    NewSendTemplateDatetime, NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
     NewSendTemplateLocationAction, NewSendTemplateMessage, NewSendTemplateMessageAction,
     NewSendTemplateMessageContent, NewSendTemplatePostbackAction,
     NewSendTemplateRichmenuswitchAction, NewSendTemplateUriAction, NewSendTemplateUriActionAltUrl,
@@ -22,7 +22,7 @@ use domain::model::send_message::{
     SendTemplateDatetime, SendTemplateDatetimeMode, SendTemplateDatetimepickerAction,
     SendTemplateLocationAction, SendTemplateMessage, SendTemplateMessageAction,
     SendTemplateMessageContent, SendTemplatePostbackAction, SendTemplateRichmenuswitchAction,
-    SendTemplateUriAction, SendTemplateUriActionAltUrl, SendTextMessage, SendVideoMessage, NewSendMessages,
+    SendTemplateUriAction, SendTemplateUriActionAltUrl, SendTextMessage, SendVideoMessage,
 };
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
@@ -70,7 +70,8 @@ impl From<NewSendMessages> for BotSendMessageTable {
             communication_type: BotSendCommunicationTypeTable::Send,
             sending_type: BotSendSendingTypeTable::Bot,
             sending_method: BotSendSendingMethodTable::Reply,
-            messages: s.messages
+            messages: s
+                .messages
                 .iter()
                 .map(|m| m.clone().into())
                 .collect::<Vec<SendMessageTable>>(),
