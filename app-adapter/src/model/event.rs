@@ -101,6 +101,7 @@ impl UnfollowEventTable {
     }
 }
 
+// todo messages
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageEventTable {
@@ -110,7 +111,7 @@ pub struct MessageEventTable {
     mode: String,
     communication_type: EventCommunicationTypeTable,
     sending_type: EventSendingTypeTable,
-    pub message: MessageTable,
+    pub messages: Vec<MessageTable>,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
 }
@@ -123,7 +124,7 @@ impl MessageEventTable {
             delivery_context: DeliveryContext::from(self.delivery_context.clone()),
             mode: self.mode.clone(),
             webhook_event_id: self.webhook_event_id.clone(),
-            message: self.message.clone().into(),
+            message: self.messages[0].clone().into(),
             created_at: self.created_at,
         }
     }
@@ -602,7 +603,7 @@ impl From<NewMessageEvent> for MessageEventTable {
             mode: e.mode,
             communication_type: EventCommunicationTypeTable::Receive,
             sending_type: EventSendingTypeTable::Bot,
-            message: e.message.into(),
+            messages: vec![e.message.into()],
             created_at: e.created_at,
             updated_at: e.created_at,
         }

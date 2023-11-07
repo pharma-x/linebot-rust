@@ -59,7 +59,7 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
             .talk_room_repository()
             .get_talk_room(user.clone().id)
             .await;
-        let _updated_talk_room = match res_talk_room {
+        let updated_talk_room = match res_talk_room {
             Ok(talk_room) => {
                 // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
                 self.adapters
@@ -82,15 +82,18 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
         };
 
         // TODO: ここでメッセージを送る
-        let res_sent_messages = self
+        let new_sent_messages = self
             .adapters
             .send_message_gateway()
             .send_messages(user_auth_data, new_event)
-            .await;
+            .await?;
 
-        println!("res_sent_messages{:?}", res_sent_messages);
+        // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+        self.adapters
+            .talk_room_repository()
+            .create_event((updated_talk_room, new_sent_messages.clone()).into())
+            .await?;
 
-        panic!("panic!!");
         Ok(())
     }
 }

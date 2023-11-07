@@ -1,8 +1,11 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
+use domain::model::talk_room::{LatestMessages, NewLatestMessages};
 use std::sync::Arc;
 
 use crate::model::event::EventTable;
+use crate::model::messages::MessagesTable;
+use crate::model::send_message::bot::BotSendMessageTable;
 use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
 use crate::repository::{
     DbFirestoreRepositoryImpl, RepositoryError, EVENT_COLLECTION_NAME,
@@ -75,7 +78,8 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
         println!("talk_room_card_table: {:?}", talk_room_card_table);
 
         let event_document_id = talk_room_card_table.latest_message.document_id();
-        let event_table: EventTable = firestore
+        // todo sendMessagのときは、EventTableではなくBotSendMessageTableを取得する必要がある
+        let messages_table: MessagesTable = firestore
             .fluent()
             .select()
             .by_id_in(EVENT_COLLECTION_NAME)
@@ -87,7 +91,15 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
                 EVENT_COLLECTION_NAME.to_string(),
                 event_document_id.to_string(),
             ))?;
-        println!("event_table: {:?}", event_table.clone());
+        println!("event_table: {:?}", messages_table.clone());
+
+        // todo latest_messageのtypeなどで分岐する形式に変更する
+        let latest_messages = match messages_table {
+            MessagesTable::Event(e) => {
+                LatestMessages::Event(e.into_event(event_document_id.to_string()))
+            }
+            MessagesTable::BotSendMessage(m) => LatestMessages::SendMessages(m.into()),
+        };
 
         Ok(TalkRoom::new(
             document_id.try_into()?,
@@ -96,7 +108,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             talk_room_card_table.rsvp,
             talk_room_card_table.pinned,
             talk_room_card_table.follow,
-            event_table.into_event(event_document_id.to_string()),
+            latest_messages,
             talk_room_card_table.latest_messaged_at,
             talk_room_card_table.sort_time,
             talk_room_card_table.created_at,
@@ -187,23 +199,44 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             .object(&talk_room_card_table)
             .execute()
             .await?;
+        let new_latest_messages = source.latest_messages;
         /*
          * イベントを作成する
          */
         let parent_path =
             firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &talk_room_document_id)?;
-        let new_event = source.latest_message;
-        let event_table = EventTable::from(new_event.clone());
-        let event_document_id = new_event.id().value.to_string();
-        firestore
-            .fluent()
-            .insert()
-            .into(EVENT_COLLECTION_NAME)
-            .document_id(&event_document_id)
-            .parent(&parent_path)
-            .object(&event_table)
-            .execute()
-            .await?;
+
+        // todo bot用とevent用を分ける
+        let last_messages = match new_latest_messages {
+            NewLatestMessages::Event(e) => {
+                let event_document_id = e.id().value.to_string();
+                let event_table = EventTable::from(e.clone());
+                firestore
+                    .fluent()
+                    .insert()
+                    .into(EVENT_COLLECTION_NAME)
+                    .document_id(&event_document_id)
+                    .parent(&parent_path)
+                    .object(&event_table)
+                    .execute()
+                    .await?;
+                LatestMessages::Event(event_table.into_event(event_document_id))
+            }
+            NewLatestMessages::SendMessages(m) => {
+                let id = m.id.value.to_string();
+                let send_message_table = BotSendMessageTable::from(m.clone());
+                firestore
+                    .fluent()
+                    .insert()
+                    .into(EVENT_COLLECTION_NAME)
+                    .document_id(&id)
+                    .parent(&parent_path)
+                    .object(&send_message_table)
+                    .execute()
+                    .await?;
+                LatestMessages::SendMessages(send_message_table.into())
+            }
+        };
 
         Ok(TalkRoom::new(
             talk_room_document_id.try_into()?,
@@ -212,7 +245,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             talk_room_card_table.rsvp,
             talk_room_card_table.pinned,
             talk_room_card_table.follow,
-            event_table.into_event(event_document_id),
+            last_messages,
             talk_room_card_table.latest_messaged_at,
             talk_room_card_table.sort_time,
             talk_room_card_table.created_at,

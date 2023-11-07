@@ -8,7 +8,7 @@ use domain::model::{
         NewSendImageSize, NewSendImagemapAction, NewSendImagemapActionArea,
         NewSendImagemapBaseSize, NewSendImagemapMessage, NewSendImagemapMessageAction,
         NewSendImagemapUriAction, NewSendImagemapVideo, NewSendImagemapVideoArea,
-        NewSendImagemapVideoExternalLink, NewSendLocationMessage, NewSendMessage,
+        NewSendImagemapVideoExternalLink, NewSendLocationMessage, NewSendMessage, NewSendMessages,
         NewSendQuoteToken, NewSendStickerMessage, NewSendTemplateAction,
         NewSendTemplateCameraAction, NewSendTemplateCameraRollAction, NewSendTemplateDatetime,
         NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
@@ -17,7 +17,9 @@ use domain::model::{
         NewSendTemplateRichmenuswitchAction, NewSendTemplateUriAction,
         NewSendTemplateUriActionAltUrl, NewSendTextMessage, NewSendVideoMessage,
     },
+    Id,
 };
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 
 pub mod bot;
@@ -73,15 +75,18 @@ impl BotSendMessageRequest {
         }
     }
 
-    pub fn into_messages(&self, sent_messages: SentMessages) -> Vec<NewSendMessage> {
+    pub fn into_messages(&self, sent_messages: SentMessages) -> NewSendMessages {
         // `zip` を使用して、`self.messages` と `sent_messages.sent_messages` の各要素を組み合わせます。
-        self.messages
+        let id = Id::gen();
+        let messages = self
+            .messages
             .iter()
             .zip(sent_messages.sent_messages.iter())
             .map(|(send_message_request, sent_message)| {
-                send_message_request.into(sent_message.id.clone())
+                send_message_request.into(sent_message.message_id.clone())
             })
-            .collect()
+            .collect();
+        NewSendMessages { id, messages }
     }
 }
 
@@ -101,16 +106,16 @@ pub enum SendMessageRequest {
 }
 
 impl SendMessageRequest {
-    pub fn into(&self, id: String) -> NewSendMessage {
+    pub fn into(&self, message_id: String) -> NewSendMessage {
         match self {
-            SendMessageRequest::Text(r) => NewSendMessage::Text(r.into(id)),
-            SendMessageRequest::Sticker(r) => NewSendMessage::Sticker(r.into(id)),
-            SendMessageRequest::Image(r) => NewSendMessage::Image(r.into(id)),
-            SendMessageRequest::Video(r) => NewSendMessage::Video(r.into(id)),
-            SendMessageRequest::Audio(r) => NewSendMessage::Audio(r.into(id)),
-            SendMessageRequest::Location(r) => NewSendMessage::Location(r.into(id)),
-            SendMessageRequest::Imagemap(r) => NewSendMessage::Imagemap(r.into(id)),
-            SendMessageRequest::Template(r) => NewSendMessage::Template(r.into(id)),
+            SendMessageRequest::Text(r) => NewSendMessage::Text(r.into(message_id)),
+            SendMessageRequest::Sticker(r) => NewSendMessage::Sticker(r.into(message_id)),
+            SendMessageRequest::Image(r) => NewSendMessage::Image(r.into(message_id)),
+            SendMessageRequest::Video(r) => NewSendMessage::Video(r.into(message_id)),
+            SendMessageRequest::Audio(r) => NewSendMessage::Audio(r.into(message_id)),
+            SendMessageRequest::Location(r) => NewSendMessage::Location(r.into(message_id)),
+            SendMessageRequest::Imagemap(r) => NewSendMessage::Imagemap(r.into(message_id)),
+            SendMessageRequest::Template(r) => NewSendMessage::Template(r.into(message_id)),
         }
     }
 }
@@ -124,10 +129,10 @@ pub struct SendTextMessageRequest {
 }
 
 impl SendTextMessageRequest {
-    pub fn into(&self, id: String) -> NewSendTextMessage {
+    pub fn into(&self, message_id: String) -> NewSendTextMessage {
         let created_at = Local::now();
         NewSendTextMessage {
-            id,
+            message_id,
             text: self.text.clone(),
             emojis: self.emojis.clone().map(|es| {
                 es.iter()
@@ -176,10 +181,10 @@ pub struct SendStickerMessageRequest {
 }
 
 impl SendStickerMessageRequest {
-    fn into(&self, id: String) -> NewSendStickerMessage {
+    fn into(&self, message_id: String) -> NewSendStickerMessage {
         let created_at = Local::now();
         NewSendStickerMessage {
-            id,
+            message_id,
             package_id: self.package_id.clone(),
             sticker_id: self.sticker_id.clone(),
             quote_token: self.clone().quote_token.map(|s| s.into()),
@@ -196,10 +201,10 @@ pub struct SendImageMessageRequest {
 }
 
 impl SendImageMessageRequest {
-    fn into(&self, id: String) -> NewSendImageMessage {
+    fn into(&self, message_id: String) -> NewSendImageMessage {
         let created_at = Local::now();
         NewSendImageMessage {
-            id,
+            message_id,
             original_content_url: self.original_content_url.clone(),
             preview_image_url: self.preview_image_url.clone(),
             created_at,
@@ -216,10 +221,10 @@ pub struct SendVideoMessageRequest {
 }
 
 impl SendVideoMessageRequest {
-    fn into(&self, id: String) -> NewSendVideoMessage {
+    fn into(&self, message_id: String) -> NewSendVideoMessage {
         let created_at = Local::now();
         NewSendVideoMessage {
-            id,
+            message_id,
             original_content_url: self.original_content_url.clone(),
             preview_image_url: self.preview_image_url.clone(),
             tracking_id: self.tracking_id.clone(),
@@ -236,10 +241,10 @@ pub struct SendAudioMessageRequest {
 }
 
 impl SendAudioMessageRequest {
-    fn into(&self, id: String) -> NewSendAudioMessage {
+    fn into(&self, message_id: String) -> NewSendAudioMessage {
         let created_at = Local::now();
         NewSendAudioMessage {
-            id,
+            message_id,
             original_content_url: self.original_content_url.clone(),
             duration: self.duration,
             created_at,
@@ -257,14 +262,16 @@ pub struct SendLocationMessageRequest {
 }
 
 impl SendLocationMessageRequest {
-    fn into(&self, id: String) -> NewSendLocationMessage {
+    fn into(&self, message_id: String) -> NewSendLocationMessage {
         let created_at = Local::now();
         NewSendLocationMessage {
-            id,
+            message_id,
             title: self.title.clone(),
             address: self.address.clone(),
-            latitude: self.latitude,
-            longitude: self.longitude,
+            latitude: Decimal::from_f64(self.latitude)
+                .unwrap_or_else(|| panic!("Failed to convert f64 {} to Decimal", self.latitude)),
+            longitude: Decimal::from_f64(self.longitude)
+                .unwrap_or_else(|| panic!("Failed to convert f64 {} to Decimal", self.longitude)),
             created_at,
         }
     }
@@ -281,10 +288,10 @@ pub struct SendImagemapMessageRequest {
 }
 
 impl SendImagemapMessageRequest {
-    fn into(&self, id: String) -> NewSendImagemapMessage {
+    fn into(&self, message_id: String) -> NewSendImagemapMessage {
         let created_at = Local::now();
         NewSendImagemapMessage {
-            id,
+            message_id,
             base_url: self.base_url.clone(),
             alt_text: self.alt_text.clone(),
             base_size: self.base_size.clone().into(),
@@ -451,10 +458,10 @@ pub struct SendTemplateMessageRequest {
 }
 
 impl SendTemplateMessageRequest {
-    fn into(&self, id: String) -> NewSendTemplateMessage {
+    fn into(&self, message_id: String) -> NewSendTemplateMessage {
         let created_at = Local::now();
         NewSendTemplateMessage {
-            id,
+            message_id,
             alt_text: self.alt_text.clone(),
             template: self.template.clone().into(),
             created_at,
@@ -868,9 +875,10 @@ impl From<SendTemplateRichmenuswitchActionRequest> for NewSendTemplateRichmenusw
 * Response
 */
 #[derive(Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct SentMessage {
-    pub id: String,
+    #[serde(rename(deserialize = "id"))]
+    pub message_id: String,
+    #[serde(rename(deserialize = "quoteToken"))]
     pub quote_token: Option<SendQuoteTokenRequest>,
 }
 

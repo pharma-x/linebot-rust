@@ -1,13 +1,12 @@
 use chrono::{DateTime, Local};
-use domain::model::Id;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use strum_macros::Display;
 
 use domain::model::{
-    event::{Event, NewEvent, NewMessage, NewMessageEvent},
-    primary_user_id::PrimaryUserId,
-    talk_room::{NewTalkRoom, TalkRoom},
+    event::{NewEvent, NewMessage, NewMessageEvent},
+    send_message::NewSendMessage,
+    talk_room::{NewLatestMessages, NewTalkRoom},
 };
 
 #[derive(FromRow, Debug)]
@@ -101,6 +100,8 @@ pub enum TalkRoomMessageTable {
     File(TalkRoomFileMessageTable),
     Location(TalkRoomLocationMessageTable),
     Sticker(TalkRoomStickerMessageTable),
+    Imagemap(TalkRoomImagemapMessageTable),
+    Template(TalkRoomTemplateMessageTable),
 }
 
 impl TalkRoomMessageTable {
@@ -113,6 +114,8 @@ impl TalkRoomMessageTable {
             TalkRoomMessageTable::File(e) => &e.document_id,
             TalkRoomMessageTable::Location(e) => &e.document_id,
             TalkRoomMessageTable::Sticker(e) => &e.document_id,
+            TalkRoomMessageTable::Imagemap(e) => &e.document_id,
+            TalkRoomMessageTable::Template(e) => &e.document_id,
         }
     }
 }
@@ -160,6 +163,18 @@ pub struct TalkRoomStickerMessageTable {
     document_id: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TalkRoomImagemapMessageTable {
+    document_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TalkRoomTemplateMessageTable {
+    document_id: String,
+}
+
 impl From<NewTalkRoom> for TalkRoomTable {
     fn from(s: NewTalkRoom) -> Self {
         TalkRoomTable {
@@ -176,23 +191,7 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
             rsvp: s.rsvp,
             pinned: s.pinned,
             follow: s.follow,
-            latest_message: match s.latest_message {
-                NewEvent::Follow(e) => LatestMessageTable::Follow(TalkRoomFollowTable {
-                    document_id: e.id.value.to_string(),
-                }),
-                NewEvent::Unfollow(e) => LatestMessageTable::Unfollow(TalkRoomUnfollowTable {
-                    document_id: e.id.value.to_string(),
-                }),
-                NewEvent::Postback(e) => LatestMessageTable::Postback(TalkRoomPostbackTable {
-                    document_id: e.id.value.to_string(),
-                }),
-                NewEvent::VideoPlayComplete(e) => {
-                    LatestMessageTable::VideoPlayComplete(TalkRoomVideoPlayCompleteTable {
-                        document_id: e.id.value.to_string(),
-                    })
-                }
-                NewEvent::Message(e) => LatestMessageTable::Message(e.into()),
-            },
+            latest_message: s.latest_messages.into(),
             latest_messaged_at: s.latest_messaged_at,
             sort_time: s.sort_time,
             created_at: s.created_at,
@@ -201,28 +200,36 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
     }
 }
 
-pub struct TalkRoomWrapper(pub TalkRoom);
+impl From<NewLatestMessages> for LatestMessageTable {
+    fn from(s: NewLatestMessages) -> Self {
+        match s {
+            NewLatestMessages::Event(e) => e.into(),
+            NewLatestMessages::SendMessages(m) => {
+                LatestMessageTable::from(m.messages.last().unwrap().clone(), m.id.value.to_string())
+            }
+        }
+    }
+}
 
-impl From<(Id<TalkRoom>, TalkRoomTable, TalkRoomCardTable, Event)> for TalkRoomWrapper {
-    fn from(s: (Id<TalkRoom>, TalkRoomTable, TalkRoomCardTable, Event)) -> Self {
-        let document_id = s.0;
-        let talk_room_table = s.1;
-        let talk_room_card_table = s.2;
-        let event = s.3;
-
-        TalkRoomWrapper(TalkRoom::new(
-            document_id,
-            PrimaryUserId::new(talk_room_table.primary_user_id),
-            talk_room_card_table.display_name,
-            talk_room_card_table.rsvp,
-            talk_room_card_table.pinned,
-            talk_room_card_table.follow,
-            event,
-            talk_room_card_table.latest_messaged_at,
-            talk_room_card_table.sort_time,
-            talk_room_card_table.created_at,
-            talk_room_card_table.updated_at,
-        ))
+impl From<NewEvent> for LatestMessageTable {
+    fn from(s: NewEvent) -> Self {
+        match s {
+            NewEvent::Follow(e) => LatestMessageTable::Follow(TalkRoomFollowTable {
+                document_id: e.id.value.to_string(),
+            }),
+            NewEvent::Unfollow(e) => LatestMessageTable::Unfollow(TalkRoomUnfollowTable {
+                document_id: e.id.value.to_string(),
+            }),
+            NewEvent::Postback(e) => LatestMessageTable::Postback(TalkRoomPostbackTable {
+                document_id: e.id.value.to_string(),
+            }),
+            NewEvent::VideoPlayComplete(e) => {
+                LatestMessageTable::VideoPlayComplete(TalkRoomVideoPlayCompleteTable {
+                    document_id: e.id.value.to_string(),
+                })
+            }
+            NewEvent::Message(e) => LatestMessageTable::Message(e.into()),
+        }
     }
 }
 
@@ -252,6 +259,44 @@ impl From<NewMessageEvent> for TalkRoomMessageTable {
             }
             NewMessage::Sticker(_) => {
                 TalkRoomMessageTable::Sticker(TalkRoomStickerMessageTable { document_id })
+            }
+        }
+    }
+}
+
+impl LatestMessageTable {
+    fn from(message: NewSendMessage, document_id: String) -> Self {
+        LatestMessageTable::Message(TalkRoomMessageTable::from(message, document_id))
+    }
+}
+
+impl TalkRoomMessageTable {
+    fn from(message: NewSendMessage, document_id: String) -> Self {
+        match message {
+            NewSendMessage::Text(m) => TalkRoomMessageTable::Text(TalkRoomTextMessageTable {
+                document_id,
+                text: m.text,
+            }),
+            NewSendMessage::Sticker(_) => {
+                TalkRoomMessageTable::Sticker(TalkRoomStickerMessageTable { document_id })
+            }
+            NewSendMessage::Image(_) => {
+                TalkRoomMessageTable::Image(TalkRoomImageMessageTable { document_id })
+            }
+            NewSendMessage::Video(_) => {
+                TalkRoomMessageTable::Video(TalkRoomVideoMessageTable { document_id })
+            }
+            NewSendMessage::Audio(_) => {
+                TalkRoomMessageTable::Audio(TalkRoomAudioMessageTable { document_id })
+            }
+            NewSendMessage::Location(_) => {
+                TalkRoomMessageTable::Location(TalkRoomLocationMessageTable { document_id })
+            }
+            NewSendMessage::Imagemap(_) => {
+                TalkRoomMessageTable::Imagemap(TalkRoomImagemapMessageTable { document_id })
+            }
+            NewSendMessage::Template(_) => {
+                TalkRoomMessageTable::Template(TalkRoomTemplateMessageTable { document_id })
             }
         }
     }

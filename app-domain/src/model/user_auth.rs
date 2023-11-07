@@ -24,7 +24,7 @@ impl LineId {
     }
 }
 
-#[derive(new, Debug, Clone)]
+#[derive(new, Debug, Clone, PartialEq, Eq)]
 pub enum AuthToken {
     Line(LineAuthToken),
 }
@@ -37,7 +37,7 @@ impl AuthToken {
     }
 }
 
-#[derive(new, Debug, Clone)]
+#[derive(new, Debug, Clone, PartialEq, Eq)]
 pub struct LineAuthToken {
     pub value: String,
 }
@@ -48,12 +48,12 @@ impl LineAuthToken {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserAuthData {
     Line(LineUserAuthData),
 }
 
-#[derive(new, Debug, Clone)]
+#[derive(new, Debug, Clone, PartialEq, Eq)]
 pub struct LineUserAuthData {
     pub auth_id: AuthUserId,
     pub auth_token: AuthToken,
