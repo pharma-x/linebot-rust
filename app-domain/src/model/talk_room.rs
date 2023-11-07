@@ -2,8 +2,9 @@ use chrono::{DateTime, Local};
 use derive_new::new;
 
 use crate::model::{
-    event::{Event, Message, NewEvent, NewMessage},
+    event::{Event, NewEvent},
     primary_user_id::PrimaryUserId,
+    send_message::{NewSendMessages, SendMessage},
     user::User,
     Id,
 };
@@ -16,11 +17,17 @@ pub struct TalkRoom {
     pub rsvp: bool,
     pub pinned: bool,
     pub follow: bool,
-    pub latest_message: Event,
+    pub latest_messages: LatestMessages,
     pub latest_messaged_at: DateTime<Local>,
     pub sort_time: DateTime<Local>,
     pub created_at: DateTime<Local>,
     pub updated_at: DateTime<Local>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LatestMessages {
+    Event(Event),
+    SendMessages(Vec<SendMessage>),
 }
 
 // talkRoomのupdate時にも使う
@@ -32,38 +39,18 @@ pub struct NewTalkRoom {
     pub rsvp: bool,
     pub pinned: bool,
     pub follow: bool,
-    pub latest_message: NewEvent,
+    pub latest_messages: NewLatestMessages,
     pub latest_messaged_at: DateTime<Local>,
     pub sort_time: DateTime<Local>,
     pub created_at: DateTime<Local>,
     pub updated_at: DateTime<Local>,
 }
 
-#[derive(Clone)]
-pub enum LatestMessage {
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-    Message(Message),
-}
-
-#[derive(Clone)]
-pub enum NewLatestMessage {
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-    Message(NewMessage),
-}
-
-#[derive(Clone)]
-pub enum UpdateLatestMessage {
-    Follow,
-    Unfollow,
-    Postback,
-    VideoPlayComplete,
-    Message(Message),
+// talkRoomのupdate時にも使う
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewLatestMessages {
+    Event(NewEvent),
+    SendMessages(NewSendMessages),
 }
 
 impl From<(User, NewEvent)> for NewTalkRoom {
@@ -85,7 +72,7 @@ impl From<(User, NewEvent)> for NewTalkRoom {
             false,
             false,
             follow,
-            new_event,
+            NewLatestMessages::Event(new_event),
             event_created_at,
             event_created_at,
             event_created_at,
@@ -107,11 +94,33 @@ impl From<(TalkRoom, NewEvent)> for NewTalkRoom {
             talk_room.rsvp,
             talk_room.pinned,
             follow,
-            new_event,
+            NewLatestMessages::Event(new_event),
             event_created_at,
             talk_room.sort_time,
             talk_room.created_at,
             event_created_at,
+        )
+    }
+}
+
+impl From<(TalkRoom, NewSendMessages)> for NewTalkRoom {
+    fn from(s: (TalkRoom, NewSendMessages)) -> Self {
+        let talk_room = s.0;
+        let new_send_messages = s.1;
+        // send_messagesはすべてのsend_messageのcreated_atが同じ
+        let send_messages_created_at = *new_send_messages.messages[0].created_at();
+        NewTalkRoom::new(
+            talk_room.id,
+            talk_room.primary_user_id,
+            talk_room.display_name,
+            talk_room.rsvp,
+            talk_room.pinned,
+            talk_room.follow,
+            NewLatestMessages::SendMessages(new_send_messages),
+            send_messages_created_at,
+            talk_room.sort_time,
+            talk_room.created_at,
+            send_messages_created_at,
         )
     }
 }

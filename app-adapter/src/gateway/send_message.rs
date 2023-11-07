@@ -11,7 +11,7 @@ use domain::{
     gateway::send_message::SendMessageGateway,
     model::{
         event::NewEvent,
-        send_message::{NewSendMessage, SendMessage},
+        send_message::{NewSendMessages, SendMessage},
         user_auth::{AuthToken, UserAuthData},
     },
 };
@@ -22,7 +22,7 @@ impl SendMessageGateway for HttpClientRepositoryImpl<SendMessage> {
         &self,
         user_auth_data: UserAuthData,
         event: NewEvent,
-    ) -> anyhow::Result<Vec<NewSendMessage>> {
+    ) -> anyhow::Result<NewSendMessages> {
         let messages = match user_auth_data {
             UserAuthData::Line(line_user_auth) => {
                 println!("send_messages:{:?}", &event);
@@ -41,7 +41,7 @@ impl HttpClientRepositoryImpl<SendMessage> {
         &self,
         auth_token: AuthToken,
         bot_message_request: BotSendMessageRequest,
-    ) -> anyhow::Result<Vec<NewSendMessage>> {
+    ) -> anyhow::Result<NewSendMessages> {
         let auth_token_str = auth_token.value();
         let body = self
             .client
@@ -54,12 +54,12 @@ impl HttpClientRepositoryImpl<SendMessage> {
             .text()
             .await?;
 
-        println!("body: {}", &body);
+        println!("send_line_bot_messages body: {}", &body);
         // todo エラーを作成
-        let send_messages: SentMessages = serde_json::from_str(&body)
+        let sent_messages: SentMessages = serde_json::from_str(&body)
             .map_err(|e| anyhow!(RepositoryError::Unexpected(e.to_string())))?;
 
-        let new_messages = bot_message_request.into_messages(send_messages);
+        let new_messages = bot_message_request.into_messages(sent_messages);
         Ok(new_messages)
     }
 }

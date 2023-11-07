@@ -1,10 +1,10 @@
 use chrono::{DateTime, Local};
-use serde::{Deserialize, Serialize};
+use rust_decimal::Decimal;
+
+use crate::model::Id;
 
 // TODO Flex Messageの実装
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendMessage {
     Text(SendTextMessage),
     Sticker(SendStickerMessage),
@@ -16,73 +16,72 @@ pub enum SendMessage {
     Template(SendTemplateMessage),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTextMessage {
+    pub message_id: String,
     pub text: String,
     pub emojis: Option<Vec<SendEmoji>>,
     pub quote_token: Option<SendQuoteToken>,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendEmoji {
     pub index: u32,
     pub product_id: String,
     pub emoji_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendQuoteToken(pub String);
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendStickerMessage {
+    pub message_id: String,
     pub package_id: String,
     pub sticker_id: String,
     pub quote_token: Option<SendQuoteToken>,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImageMessage {
+    pub message_id: String,
     pub original_content_url: String,
     pub preview_image_url: String,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendVideoMessage {
+    pub message_id: String,
     pub original_content_url: String,
     pub preview_image_url: String,
     pub tracking_id: Option<String>,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendAudioMessage {
+    pub message_id: String,
     pub original_content_url: String,
     pub duration: u32,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendLocationMessage {
+    pub message_id: String,
     pub title: String,
     pub address: String,
-    pub latitude: f64,
-    pub longitude: f64,
+    pub latitude: Decimal,
+    pub longitude: Decimal,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapMessage {
+    pub message_id: String,
     pub base_url: String,
     pub alt_text: String,
     pub base_size: SendImagemapBaseSize,
@@ -91,15 +90,13 @@ pub struct SendImagemapMessage {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapBaseSize {
     pub width: u32,
     pub height: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapVideo {
     pub original_content_url: String,
     pub preview_image_url: String,
@@ -107,8 +104,7 @@ pub struct SendImagemapVideo {
     pub external_link: SendImagemapVideoExternalLink,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapVideoArea {
     pub x: u32,
     pub y: u32,
@@ -116,38 +112,33 @@ pub struct SendImagemapVideoArea {
     pub height: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapVideoExternalLink {
     pub link_uri: String,
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendImagemapAction {
     Uri(SendImagemapUriAction),
     Message(SendImagemapMessageAction),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapUriAction {
     pub label: String,
     pub link_uri: String,
     pub area: SendImagemapActionArea,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapMessageAction {
     pub label: String,
     pub text: String,
     pub area: SendImagemapActionArea,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImagemapActionArea {
     pub x: u32,
     pub y: u32,
@@ -155,17 +146,15 @@ pub struct SendImagemapActionArea {
     pub height: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateMessage {
+    pub message_id: String,
     pub alt_text: String,
     pub template: SendTemplateMessageContent,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendTemplateMessageContent {
     Buttons(SendButtonsTemplate),
     Confirm(SendConfirmTemplate),
@@ -173,8 +162,7 @@ pub enum SendTemplateMessageContent {
     ImageCarousel(SendImageCarouselTemplate),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendButtonsTemplate {
     pub thumbnail_image_url: Option<String>,
     pub image_aspect_ratio: Option<SendImageAspectRatio>,
@@ -186,35 +174,32 @@ pub struct SendButtonsTemplate {
     pub actions: Vec<SendTemplateAction>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendImageAspectRatio {
     Rectangle,
     Square,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendImageSize {
     Cover,
     Contain,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendConfirmTemplate {
     pub text: String,
     pub actions: Vec<SendTemplateAction>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendCarouselTemplate {
     pub columns: Vec<SendCarouselColumn>,
     pub image_aspect_ratio: Option<SendImageAspectRatio>,
     pub image_size: Option<SendImageSize>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendCarouselColumn {
     pub thumbnail_image_url: Option<String>,
     pub image_background_color: Option<String>,
@@ -224,21 +209,18 @@ pub struct SendCarouselColumn {
     pub actions: Vec<SendTemplateAction>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImageCarouselTemplate {
     pub columns: Vec<SendImageCarouselColumn>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendImageCarouselColumn {
     pub image_url: String,
     pub action: SendTemplateAction,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendTemplateAction {
     Postback(SendTemplatePostbackAction),
     Message(SendTemplateMessageAction),
@@ -250,8 +232,7 @@ pub enum SendTemplateAction {
     Richmenuswitch(SendTemplateRichmenuswitchAction),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplatePostbackAction {
     pub label: String,
     pub data: String,
@@ -260,29 +241,25 @@ pub struct SendTemplatePostbackAction {
     pub fill_in_text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateMessageAction {
     pub label: String,
     pub text: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateUriAction {
     pub label: String,
     pub uri: String,
     pub alt_url: Option<SendTemplateUriActionAltUrl>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateUriActionAltUrl {
     pub desktop: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateDatetimepickerAction {
     pub label: String,
     pub data: String,
@@ -292,49 +269,50 @@ pub struct SendTemplateDatetimepickerAction {
     pub min: Option<SendTemplateDatetime>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendTemplateDatetimeMode {
     Date(String),
     Time(String),
     Datetime(String),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendTemplateDatetime {
     Date(String),
     Time(String),
     Datetime(String),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateCameraAction {
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateCameraRollAction {
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateLocationAction {
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendTemplateRichmenuswitchAction {
     pub label: Option<String>,
     pub rich_menu_alias_id: String,
     pub data: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NewSendMessages {
+    pub id: Id<SendMessage>,
+    pub messages: Vec<NewSendMessage>,
+}
+
 // TODO Flex Messageの実装
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendMessage {
     Text(NewSendTextMessage),
     Sticker(NewSendStickerMessage),
@@ -346,80 +324,87 @@ pub enum NewSendMessage {
     Template(NewSendTemplateMessage),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+impl NewSendMessage {
+    pub fn created_at(&self) -> &DateTime<Local> {
+        match self {
+            NewSendMessage::Text(s) => &s.created_at,
+            NewSendMessage::Sticker(s) => &s.created_at,
+            NewSendMessage::Image(s) => &s.created_at,
+            NewSendMessage::Video(s) => &s.created_at,
+            NewSendMessage::Audio(s) => &s.created_at,
+            NewSendMessage::Location(s) => &s.created_at,
+            NewSendMessage::Imagemap(s) => &s.created_at,
+            NewSendMessage::Template(s) => &s.created_at,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTextMessage {
-    pub id: String,
+    pub message_id: String,
     pub text: String,
     pub emojis: Option<Vec<NewSendEmoji>>,
     pub quote_token: Option<NewSendQuoteToken>,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendEmoji {
     pub index: u32,
     pub product_id: String,
     pub emoji_id: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendQuoteToken(pub String);
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendStickerMessage {
-    pub id: String,
+    pub message_id: String,
     pub package_id: String,
     pub sticker_id: String,
     pub quote_token: Option<NewSendQuoteToken>,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImageMessage {
-    pub id: String,
+    pub message_id: String,
     pub original_content_url: String,
     pub preview_image_url: String,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendVideoMessage {
-    pub id: String,
+    pub message_id: String,
     pub original_content_url: String,
     pub preview_image_url: String,
     pub tracking_id: Option<String>,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendAudioMessage {
-    pub id: String,
+    pub message_id: String,
     pub original_content_url: String,
     pub duration: u32,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendLocationMessage {
-    pub id: String,
+    pub message_id: String,
     pub title: String,
     pub address: String,
-    pub latitude: f64,
-    pub longitude: f64,
+    pub latitude: Decimal,
+    pub longitude: Decimal,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapMessage {
-    pub id: String,
+    pub message_id: String,
     pub base_url: String,
     pub alt_text: String,
     pub base_size: NewSendImagemapBaseSize,
@@ -428,15 +413,13 @@ pub struct NewSendImagemapMessage {
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapBaseSize {
     pub width: u32,
     pub height: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapVideo {
     pub original_content_url: String,
     pub preview_image_url: String,
@@ -444,8 +427,7 @@ pub struct NewSendImagemapVideo {
     pub external_link: NewSendImagemapVideoExternalLink,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapVideoArea {
     pub x: u32,
     pub y: u32,
@@ -453,38 +435,33 @@ pub struct NewSendImagemapVideoArea {
     pub height: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapVideoExternalLink {
     pub link_uri: String,
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendImagemapAction {
     Uri(NewSendImagemapUriAction),
     Message(NewSendImagemapMessageAction),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapUriAction {
     pub label: String,
     pub link_uri: String,
     pub area: NewSendImagemapActionArea,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapMessageAction {
     pub label: String,
     pub text: String,
     pub area: NewSendImagemapActionArea,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImagemapActionArea {
     pub x: u32,
     pub y: u32,
@@ -492,18 +469,15 @@ pub struct NewSendImagemapActionArea {
     pub height: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateMessage {
-    pub id: String,
+    pub message_id: String,
     pub alt_text: String,
     pub template: NewSendTemplateMessageContent,
     pub created_at: DateTime<Local>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendTemplateMessageContent {
     Buttons(NewSendButtonsTemplate),
     Confirm(NewSendConfirmTemplate),
@@ -511,8 +485,7 @@ pub enum NewSendTemplateMessageContent {
     ImageCarousel(NewSendImageCarouselTemplate),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendButtonsTemplate {
     pub thumbnail_image_url: Option<String>,
     pub image_aspect_ratio: Option<NewSendImageAspectRatio>,
@@ -524,35 +497,32 @@ pub struct NewSendButtonsTemplate {
     pub actions: Vec<NewSendTemplateAction>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendImageAspectRatio {
     Rectangle,
     Square,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendImageSize {
     Cover,
     Contain,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendConfirmTemplate {
     pub text: String,
     pub actions: Vec<NewSendTemplateAction>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendCarouselTemplate {
     pub columns: Vec<NewSendCarouselColumn>,
     pub image_aspect_ratio: Option<NewSendImageAspectRatio>,
     pub image_size: Option<NewSendImageSize>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendCarouselColumn {
     pub thumbnail_image_url: Option<String>,
     pub image_background_color: Option<String>,
@@ -562,21 +532,18 @@ pub struct NewSendCarouselColumn {
     pub actions: Vec<NewSendTemplateAction>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImageCarouselTemplate {
     pub columns: Vec<NewSendImageCarouselColumn>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendImageCarouselColumn {
     pub image_url: String,
     pub action: NewSendTemplateAction,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendTemplateAction {
     Postback(NewSendTemplatePostbackAction),
     Message(NewSendTemplateMessageAction),
@@ -588,8 +555,7 @@ pub enum NewSendTemplateAction {
     Richmenuswitch(NewSendTemplateRichmenuswitchAction),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplatePostbackAction {
     pub label: String,
     pub data: String,
@@ -598,29 +564,25 @@ pub struct NewSendTemplatePostbackAction {
     pub fill_in_text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateMessageAction {
     pub label: String,
     pub text: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateUriAction {
     pub label: String,
     pub uri: String,
     pub alt_url: Option<NewSendTemplateUriActionAltUrl>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateUriActionAltUrl {
     pub desktop: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateDatetimepickerAction {
     pub label: String,
     pub data: String,
@@ -630,39 +592,36 @@ pub struct NewSendTemplateDatetimepickerAction {
     pub min: Option<NewSendTemplateDatetime>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendTemplateDatetimeMode {
     Date(String),
     Time(String),
     Datetime(String),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendTemplateDatetime {
     Date(String),
     Time(String),
     Datetime(String),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateCameraAction {
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateCameraRollAction {
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateLocationAction {
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendTemplateRichmenuswitchAction {
     pub label: Option<String>,
     pub rich_menu_alias_id: String,

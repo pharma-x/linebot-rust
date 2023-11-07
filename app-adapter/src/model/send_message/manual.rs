@@ -12,7 +12,7 @@ pub struct ManualSendMessageTable {
     sending_type: ManualSendSendingTypeTable,
     sending_method: ManualSendSendingMethodTable,
     sender: ManualSendSenderTable,
-    pub message: Vec<SendMessageRequest>,
+    pub messages: Vec<SendMessageRequest>,
     created_at: DateTime<Local>,
     updated_at: DateTime<Local>,
 }

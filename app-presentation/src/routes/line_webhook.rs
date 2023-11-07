@@ -123,18 +123,19 @@ mod test {
     use super::*;
     use adapter::model::{
         event::EventTable,
-        talk_room::{TalkRoomCardTable, TalkRoomTable, TalkRoomWrapper},
+        talk_room::{TalkRoomCardTable, TalkRoomTable},
     };
     use application::model::event::CreateUserEvent;
     use domain::{
-        gateway::user_auth::MockUserAuthGateway,
+        gateway::{send_message::MockSendMessageGateway, user_auth::MockUserAuthGateway},
         model::{
             event::NewEvent,
             line_user::LineUserProfile,
             primary_user_id::PrimaryUserId,
-            talk_room::NewTalkRoom,
+            send_message::NewSendMessage,
+            talk_room::{LatestMessages, NewTalkRoom, TalkRoom},
             user::{User, UserProfile},
-            user_auth::AuthUserId,
+            user_auth::{AuthUserId, UserAuthData},
         },
         repository::{talk_room::MockTalkRoomRepository, user::MockUserRepository},
     };
@@ -181,6 +182,7 @@ mod test {
     //     let user_auth_gateway = MockUserAuthGateway::new();
     //     let mut user_repository = MockUserRepository::new();
     //     let mut talk_room_repository = MockTalkRoomRepository::new();
+    //     let mut send_message_gateway = MockSendMessageGateway::new();
 
     //     let destintion = "line_id".to_string();
     //     let line_webhook_event = LineWebhookEvent::Follow(Faker.fake::<LineWebhookFollowEvent>());
@@ -188,6 +190,7 @@ mod test {
 
     //     let create_user_event = CreateUserEvent::from(request.clone());
     //     let create_line_user_auth = create_user_event.create_line_user_auth;
+    //     let user_auth_data = UserAuthData::try_from(create_line_user_auth.clone())?;
     //     /*
     //      * ユーザーが存在するパターン
     //      */
@@ -214,13 +217,19 @@ mod test {
     //      */
     //     let event =
     //         EventTable::from(new_event.clone()).into_event(new_event.id().value.to_string());
-    //     let talk_room = TalkRoomWrapper::from((
-    //         new_talk_room.id.clone(),
-    //         TalkRoomTable::from(new_talk_room.clone()),
-    //         TalkRoomCardTable::from(new_talk_room.clone()),
-    //         event.clone(),
-    //     ))
-    //     .0;
+    //     let talk_room = TalkRoom::new(
+    //         new_talk_room.id,
+    //         new_talk_room.primary_user_id,
+    //         new_talk_room.display_name,
+    //         new_talk_room.rsvp,
+    //         new_talk_room.pinned,
+    //         new_talk_room.follow,
+    //         LatestMessages::Event(event),
+    //         new_talk_room.latest_messaged_at,
+    //         new_talk_room.sort_time,
+    //         new_talk_room.created_at,
+    //         new_talk_room.updated_at,
+    //     );
     //     let cloned_talk_room = talk_room.clone();
     //     // let new_talk_room = NewTalkRoom::from((talk_room.clone(), new_event)).clone();
     //     talk_room_repository
@@ -237,11 +246,23 @@ mod test {
     //         .withf(|_| true)
     //         .once()
     //         .returning(move |_| Ok(cloned_talk_room.clone()));
+    //     let new_sent_messages = vec![Faker.fake::<NewSendMessage>()];
+    //     send_message_gateway
+    //         .expect_send_messages()
+    //         .with(predicate::eq(user_auth_data), predicate::eq(new_event))
+    //         .once()
+    //         .returning(move |_| Ok(new_sent_messages.clone()));
     //     /*
     //      * 最後にtest用のモジュールで処理が通れば成功
     //      */
     //     let modules = Arc::new(
-    //         TestModules::new(user_auth_gateway, user_repository, talk_room_repository).await,
+    //         TestModules::new(
+    //             user_auth_gateway,
+    //             user_repository,
+    //             talk_room_repository,
+    //             send_message_gateway,
+    //         )
+    //         .await,
     //     );
     //     let response = modules
     //         .linebot_webhook_usecase()
