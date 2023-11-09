@@ -6,120 +6,120 @@ use crate::model::Id;
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
 pub enum Event {
-    Follow(FollowEvent),
-    Unfollow(UnfollowEvent),
-    Postback(PostbackEvent),
-    VideoPlayComplete(VideoPlayCompleteEvent),
-    Message(MessageEvent),
+    Follow(EventFollow),
+    Unfollow(EventUnfollow),
+    Postback(EventPostback),
+    VideoPlayComplete(EventVideoPlayComplete),
+    Message(EventMessage),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FollowEvent {
+pub struct EventFollow {
     pub id: Id<Event>,
     pub reply_token: String,
-    pub delivery_context: DeliveryContext,
+    pub delivery_context: EventDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct UnfollowEvent {
+pub struct EventUnfollow {
     pub id: Id<Event>,
-    pub delivery_context: DeliveryContext,
+    pub delivery_context: EventDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct PostbackEvent {
-    pub id: Id<Event>,
-    pub reply_token: String,
-    pub delivery_context: DeliveryContext,
-    pub postback: Postback,
-    pub mode: String,
-    pub webhook_event_id: String,
-    pub created_at: DateTime<Local>,
-}
-
-#[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct VideoPlayCompleteEvent {
+pub struct EventPostback {
     pub id: Id<Event>,
     pub reply_token: String,
-    pub delivery_context: DeliveryContext,
-    pub video_play_complete: VideoPlayComplete,
+    pub delivery_context: EventDeliveryContext,
+    pub postback: EventPostbackContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct MessageEvent {
+pub struct EventVideoPlayComplete {
     pub id: Id<Event>,
     pub reply_token: String,
-    pub delivery_context: DeliveryContext,
-    pub message: Message,
+    pub delivery_context: EventDeliveryContext,
+    pub video_play_complete: EventVideoPlayCompleteContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct DeliveryContext {
+pub struct EventMessage {
+    pub id: Id<Event>,
+    pub reply_token: String,
+    pub delivery_context: EventDeliveryContext,
+    pub message: EventMessageContent,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub created_at: DateTime<Local>,
+}
+
+#[derive(new, Clone, Debug, PartialEq, Eq)]
+pub struct EventDeliveryContext {
     pub is_redelivery: bool,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct Postback {
+pub struct EventPostbackContent {
     pub data: String,
-    pub params: PostbackParams,
+    pub params: EventPostbackParams,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub enum PostbackParams {
-    Datetime(PostbackDatetimeParams),
-    RichMenu(PostbackRichMenuParams),
+pub enum EventPostbackParams {
+    Datetime(EventPostbackParamsDatetime),
+    RichMenu(EventPostbackParamsRichMenu),
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub enum PostbackDatetimeParams {
+pub enum EventPostbackParamsDatetime {
     DateTime(String),
     Date(String),
     Time(String),
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct PostbackRichMenuParams {
+pub struct EventPostbackParamsRichMenu {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct VideoPlayComplete {
+pub struct EventVideoPlayCompleteContent {
     pub tracking_id: String,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub enum Message {
-    Text(TextMessage),
-    Image(ImageMessage),
-    Video(VideoMessage),
-    Audio(AudioMessage),
-    File(FileMessage),
-    Location(LocationMessage),
-    Sticker(StickerMessage),
+pub enum EventMessageContent {
+    Text(EventMessageContentText),
+    Image(EventMessageContentImage),
+    Video(EventMessageContentVideo),
+    Audio(EventMessageContentAudio),
+    File(EventMessageContentFile),
+    Location(EventMessageContentLocation),
+    Sticker(EventMessageContentSticker),
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct TextMessage {
+pub struct EventMessageContentText {
     pub id: String,
     pub text: String,
-    pub emojis: Vec<Emoji>,
+    pub emojis: Vec<EventEmoji>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct Emoji {
+pub struct EventEmoji {
     pub index: i32,
     pub length: i32,
     pub product_id: String,
@@ -127,54 +127,54 @@ pub struct Emoji {
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct ImageMessage {
+pub struct EventMessageContentImage {
     pub id: String,
-    pub content_provider: ContentProvider,
-    pub image_set: Option<ImageSet>,
+    pub content_provider: EventContentProvider,
+    pub image_set: Option<EventImageSet>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub enum ContentProvider {
+pub enum EventContentProvider {
     Line,
-    External(ExternalContentProvider),
+    External(EventContentProviderExternal),
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct ExternalContentProvider {
+pub struct EventContentProviderExternal {
     original_content_url: String,
     preview_image_url: Option<String>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct ImageSet {
+pub struct EventImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct VideoMessage {
+pub struct EventMessageContentVideo {
     pub id: String,
     pub duration: i32,
-    pub content_provider: ContentProvider,
+    pub content_provider: EventContentProvider,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct AudioMessage {
+pub struct EventMessageContentAudio {
     pub id: String,
     pub duration: i32,
-    pub content_provider: ContentProvider,
+    pub content_provider: EventContentProvider,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct FileMessage {
+pub struct EventMessageContentFile {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct LocationMessage {
+pub struct EventMessageContentLocation {
     pub id: String,
     pub title: String,
     pub address: String,
@@ -183,17 +183,17 @@ pub struct LocationMessage {
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub struct StickerMessage {
+pub struct EventMessageContentSticker {
     pub id: String,
     pub package_id: String,
     pub sticker_id: String,
-    pub sticker_resource_type: StickerResourceType,
+    pub sticker_resource_type: EventStickerResourceType,
     pub keywords: Option<Vec<String>>,
     pub text: Option<String>,
 }
 
 #[derive(new, Clone, Debug, PartialEq, Eq)]
-pub enum StickerResourceType {
+pub enum EventStickerResourceType {
     Static,
     Animation,
     Sound,
@@ -206,11 +206,11 @@ pub enum StickerResourceType {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewEvent {
-    Follow(NewFollowEvent),
-    Unfollow(NewUnfollowEvent),
-    Postback(NewPostbackEvent),
-    VideoPlayComplete(NewVideoPlayCompleteEvent),
-    Message(NewMessageEvent),
+    Follow(NewEventFollow),
+    Unfollow(NewEventUnfollow),
+    Postback(NewEventPostback),
+    VideoPlayComplete(NewEventVideoPlayComplete),
+    Message(NewEventMessage),
 }
 
 impl NewEvent {
@@ -241,112 +241,112 @@ impl NewEvent {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewFollowEvent {
+pub struct NewEventFollow {
     pub id: Id<Event>,
     pub reply_token: String,
-    pub delivery_context: NewDeliveryContext,
+    pub delivery_context: NewEventDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewUnfollowEvent {
+pub struct NewEventUnfollow {
     pub id: Id<Event>,
-    pub delivery_context: NewDeliveryContext,
+    pub delivery_context: NewEventDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewPostbackEvent {
-    pub id: Id<Event>,
-    pub reply_token: String,
-    pub delivery_context: NewDeliveryContext,
-    pub postback: NewPostback,
-    pub mode: String,
-    pub webhook_event_id: String,
-    pub created_at: DateTime<Local>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewVideoPlayCompleteEvent {
+pub struct NewEventPostback {
     pub id: Id<Event>,
     pub reply_token: String,
-    pub delivery_context: NewDeliveryContext,
-    pub video_play_complete: NewVideoPlayComplete,
+    pub delivery_context: NewEventDeliveryContext,
+    pub postback: NewEventPostbackContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewMessageEvent {
+pub struct NewEventVideoPlayComplete {
     pub id: Id<Event>,
     pub reply_token: String,
-    pub delivery_context: NewDeliveryContext,
-    pub message: NewMessage,
+    pub delivery_context: NewEventDeliveryContext,
+    pub video_play_complete: NewEventVideoPlayCompleteContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub created_at: DateTime<Local>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewDeliveryContext {
+pub struct NewEventMessage {
+    pub id: Id<Event>,
+    pub reply_token: String,
+    pub delivery_context: NewEventDeliveryContext,
+    pub message: NewEventMessageContent,
+    pub mode: String,
+    pub webhook_event_id: String,
+    pub created_at: DateTime<Local>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NewEventDeliveryContext {
     pub is_redelivery: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewPostback {
+pub struct NewEventPostbackContent {
     pub data: String,
-    pub params: NewPostbackParams,
+    pub params: NewEventPostbackParams,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NewPostbackParams {
-    Datetime(NewPostbackDatetimeParams),
-    RichMenu(NewPostbackRichMenuParams),
+pub enum NewEventPostbackParams {
+    Datetime(NewEventPostbackParamsDatetime),
+    RichMenu(NewEventPostbackParamsRichMenu),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NewPostbackDatetimeParams {
+pub enum NewEventPostbackParamsDatetime {
     DateTime(String),
     Date(String),
     Time(String),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewPostbackRichMenuParams {
+pub struct NewEventPostbackParamsRichMenu {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewVideoPlayComplete {
+pub struct NewEventVideoPlayCompleteContent {
     pub tracking_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NewMessage {
-    Text(NewTextMessage),
-    Image(NewImageMessage),
-    Video(NewVideoMessage),
-    Audio(NewAudioMessage),
-    File(NewFileMessage),
-    Location(NewLocationMessage),
-    Sticker(NewStickerMessage),
+pub enum NewEventMessageContent {
+    Text(NewEventMessageContentText),
+    Image(NewEventMessageContentImage),
+    Video(NewEventMessageContentVideo),
+    Audio(NewEventMessageContentAudio),
+    File(NewEventMessageContentFile),
+    Location(NewEventMessageContentLocation),
+    Sticker(NewEventMessageContentSticker),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewTextMessage {
+pub struct NewEventMessageContentText {
     pub id: String,
     pub text: String,
-    pub emojis: Vec<NewEmoji>,
+    pub emojis: Vec<NewEventEmoji>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewEmoji {
+pub struct NewEventEmoji {
     pub index: i32,
     pub length: i32,
     pub product_id: String,
@@ -354,54 +354,54 @@ pub struct NewEmoji {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewImageMessage {
+pub struct NewEventMessageContentImage {
     pub id: String,
-    pub content_provider: NewContentProvider,
-    pub image_set: Option<NewImageSet>,
+    pub content_provider: NewEventContentProvider,
+    pub image_set: Option<NewEventImageSet>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NewContentProvider {
+pub enum NewEventContentProvider {
     Line,
-    External(NewExternalContentProvider),
+    External(NewEventContentProviderExternal),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewExternalContentProvider {
+pub struct NewEventContentProviderExternal {
     pub original_content_url: String,
     pub preview_image_url: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewImageSet {
+pub struct NewEventImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewVideoMessage {
+pub struct NewEventMessageContentVideo {
     pub id: String,
     pub duration: i32,
-    pub content_provider: NewContentProvider,
+    pub content_provider: NewEventContentProvider,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewAudioMessage {
+pub struct NewEventMessageContentAudio {
     pub id: String,
     pub duration: i32,
-    pub content_provider: NewContentProvider,
+    pub content_provider: NewEventContentProvider,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewFileMessage {
+pub struct NewEventMessageContentFile {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewLocationMessage {
+pub struct NewEventMessageContentLocation {
     pub id: String,
     pub title: String,
     pub address: String,
@@ -410,17 +410,17 @@ pub struct NewLocationMessage {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewStickerMessage {
+pub struct NewEventMessageContentSticker {
     pub id: String,
     pub package_id: String,
     pub sticker_id: String,
-    pub sticker_resource_type: NewStickerResourceType,
+    pub sticker_resource_type: NewEventStickerResourceType,
     pub keywords: Option<Vec<String>>,
     pub text: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NewStickerResourceType {
+pub enum NewEventStickerResourceType {
     Static,
     Animation,
     Sound,

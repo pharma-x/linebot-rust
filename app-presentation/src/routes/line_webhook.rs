@@ -1,5 +1,7 @@
 use crate::context::errors::SignatureVerificationError;
-use crate::model::line_webhook::{LineWebhookEvent, LineWebhookRequest, LineWebhookRequests};
+use crate::model::line_webhook::{
+    LineWebhookEvent, LineWebhookEventRequest, LineWebhookEventRequests,
+};
 use crate::module::{Modules, ModulesExt};
 use axum::{
     body::Bytes,
@@ -42,11 +44,11 @@ pub async fn line_webhook_handler(
         return Err(StatusCode::UNAUTHORIZED);
     }
     // バイト列からpayloadをパースする
-    let payload: LineWebhookRequests = serde_json::from_slice(&body_bytes).map_err(|err| {
+    let payload: LineWebhookEventRequests = serde_json::from_slice(&body_bytes).map_err(|err| {
         error!("Failed to parse JSON: {}", err);
         StatusCode::BAD_REQUEST
     })?;
-    let requests: Vec<LineWebhookRequest> = payload.into();
+    let requests: Vec<LineWebhookEventRequest> = payload.into();
 
     // すぐにstatus code 200で返すために、非同期で処理を行う
     tokio::spawn(process_line_events(requests, modules));
@@ -55,14 +57,14 @@ pub async fn line_webhook_handler(
 }
 
 async fn process_line_events(
-    requests: Vec<LineWebhookRequest>,
+    requests: Vec<LineWebhookEventRequest>,
     modules: Arc<Modules>,
 ) -> anyhow::Result<()> {
     for request in requests {
         let event = &request.event;
         match event {
             LineWebhookEvent::Follow(_) => {
-                println!("LineWebhookRequest: {:?}", request.clone());
+                println!("LineWebhookEventRequest: {:?}", request.clone());
                 modules
                     .linebot_webhook_usecase()
                     .create_follow_event(request.into())
@@ -118,22 +120,21 @@ fn verify_line_webhook_signature(
 
 #[cfg(test)]
 mod test {
-    use crate::{model::line_webhook::LineWebhookFollowEvent, module::test::TestModules};
+    use crate::{model::line_webhook::LineWebhookEventFollow, module::test::TestModules};
 
     use super::*;
     use adapter::model::{
-        event::EventTable,
+        message::event::EventTable,
         talk_room::{TalkRoomCardTable, TalkRoomTable},
     };
     use application::model::event::CreateUserEvent;
     use domain::{
         gateway::{send_message::MockSendMessageGateway, user_auth::MockUserAuthGateway},
         model::{
-            event::NewEvent,
             line_user::LineUserProfile,
+            message::{event::NewEvent, send_message::NewSendMessage, Messages},
             primary_user_id::PrimaryUserId,
-            send_message::NewSendMessage,
-            talk_room::{LatestMessages, NewTalkRoom, TalkRoom},
+            talk_room::{NewTalkRoom, TalkRoom},
             user::{User, UserProfile},
             user_auth::{AuthUserId, UserAuthData},
         },
@@ -185,8 +186,8 @@ mod test {
     //     let mut send_message_gateway = MockSendMessageGateway::new();
 
     //     let destintion = "line_id".to_string();
-    //     let line_webhook_event = LineWebhookEvent::Follow(Faker.fake::<LineWebhookFollowEvent>());
-    //     let request = LineWebhookRequest::new(destintion, line_webhook_event);
+    //     let line_webhook_event = LineWebhookEvent::Follow(Faker.fake::<LineWebhookEventFollow>());
+    //     let request = LineWebhookEventRequest::new(destintion, line_webhook_event);
 
     //     let create_user_event = CreateUserEvent::from(request.clone());
     //     let create_line_user_auth = create_user_event.create_line_user_auth;
@@ -224,7 +225,7 @@ mod test {
     //         new_talk_room.rsvp,
     //         new_talk_room.pinned,
     //         new_talk_room.follow,
-    //         LatestMessages::Event(event),
+    //         Messages::Event(event),
     //         new_talk_room.latest_messaged_at,
     //         new_talk_room.sort_time,
     //         new_talk_room.created_at,
@@ -309,7 +310,7 @@ mod test {
             "#,
             user_id
         );
-        let line_webhook_requests: LineWebhookRequests =
+        let line_webhook_requests: LineWebhookEventRequests =
             serde_json::from_str(&json).expect("Failed to deserialize");
         println!("line_webhook_requests:{:?}", line_webhook_requests);
 

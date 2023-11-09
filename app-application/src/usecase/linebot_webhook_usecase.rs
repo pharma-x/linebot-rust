@@ -3,7 +3,7 @@ use adapter::{module::AdaptersModuleExt, repository::RepositoryError};
 use derive_new::new;
 use domain::{
     gateway::{send_message::SendMessageGateway, user_auth::UserAuthGateway},
-    model::{event::NewEvent, user_auth::UserAuthData},
+    model::{message::event::NewEvent, user_auth::UserAuthData},
     repository::{talk_room::TalkRoomRepository, user::UserRepository},
 };
 use std::sync::Arc;

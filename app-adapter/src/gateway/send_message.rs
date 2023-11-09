@@ -4,14 +4,18 @@ use reqwest::header;
 
 use crate::{
     gateway::HttpClientRepositoryImpl,
-    model::send_message::{BotSendMessageRequest, SentMessages},
+    model::message::send_message::{
+        bot::request::BotSendMessageRequest, request::SentMessagesResponse,
+    },
     repository::RepositoryError,
 };
 use domain::{
     gateway::send_message::SendMessageGateway,
     model::{
-        event::NewEvent,
-        send_message::{NewSendMessages, SendMessage},
+        message::{
+            event::NewEvent,
+            send_message::{NewSendMessages, SendMessage},
+        },
         user_auth::{AuthToken, UserAuthData},
     },
 };
@@ -56,7 +60,7 @@ impl HttpClientRepositoryImpl<SendMessage> {
 
         println!("send_line_bot_messages body: {}", &body);
         // todo エラーを作成
-        let sent_messages: SentMessages = serde_json::from_str(&body)
+        let sent_messages: SentMessagesResponse = serde_json::from_str(&body)
             .map_err(|e| anyhow!(RepositoryError::Unexpected(e.to_string())))?;
 
         let new_messages = bot_message_request.into_messages(sent_messages);

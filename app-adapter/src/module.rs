@@ -2,7 +2,7 @@ use crate::gateway::HttpClientRepositoryImpl;
 use crate::persistance::{firestore::Firestore, mysql::Db};
 use crate::repository::{DatabaseRepositoryImpl, DbFirestoreRepositoryImpl};
 use domain::gateway::{send_message::SendMessageGateway, user_auth::UserAuthGateway};
-use domain::model::send_message::SendMessage;
+use domain::model::message::send_message::SendMessage;
 use domain::model::{talk_room::TalkRoom, user::User, user_auth::UserAuthData};
 use domain::repository::{talk_room::TalkRoomRepository, user::UserRepository};
 use reqwest::Client;

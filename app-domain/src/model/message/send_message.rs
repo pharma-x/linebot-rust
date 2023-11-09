@@ -3,10 +3,16 @@ use rust_decimal::Decimal;
 
 use crate::model::Id;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SendMessages {
+    pub id: Id<SendMessage>,
+    pub messages: Vec<SendMessage>,
+}
+
 // TODO Flex Messageの実装
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendMessage {
-    Text(SendTextMessage),
+    Text(SendMessageText),
     Sticker(SendStickerMessage),
     Image(SendImageMessage),
     Video(SendVideoMessage),
@@ -17,7 +23,7 @@ pub enum SendMessage {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SendTextMessage {
+pub struct SendMessageText {
     pub message_id: String,
     pub text: String,
     pub emojis: Option<Vec<SendEmoji>>,
@@ -314,7 +320,7 @@ pub struct NewSendMessages {
 // TODO Flex Messageの実装
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendMessage {
-    Text(NewSendTextMessage),
+    Text(NewSendMessageText),
     Sticker(NewSendStickerMessage),
     Image(NewSendImageMessage),
     Video(NewSendVideoMessage),
@@ -340,7 +346,7 @@ impl NewSendMessage {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewSendTextMessage {
+pub struct NewSendMessageText {
     pub message_id: String,
     pub text: String,
     pub emojis: Option<Vec<NewSendEmoji>>,

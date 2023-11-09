@@ -1,143 +1,86 @@
 use chrono::{DateTime, Local};
-use domain::model::send_message::{
+use rust_decimal::{prelude::{FromPrimitive, ToPrimitive}, Decimal};
+use serde::{Deserialize, Serialize};
+
+use domain::model::message::send_message::{
     NewSendAudioMessage, NewSendButtonsTemplate, NewSendCarouselColumn, NewSendCarouselTemplate,
     NewSendConfirmTemplate, NewSendEmoji, NewSendImageAspectRatio, NewSendImageCarouselColumn,
     NewSendImageCarouselTemplate, NewSendImageMessage, NewSendImageSize, NewSendImagemapAction,
     NewSendImagemapActionArea, NewSendImagemapBaseSize, NewSendImagemapMessage,
     NewSendImagemapMessageAction, NewSendImagemapUriAction, NewSendImagemapVideo,
     NewSendImagemapVideoArea, NewSendImagemapVideoExternalLink, NewSendLocationMessage,
-    NewSendMessage, NewSendMessages, NewSendQuoteToken, NewSendStickerMessage,
+    NewSendMessage, NewSendMessageText, NewSendQuoteToken, NewSendStickerMessage,
     NewSendTemplateAction, NewSendTemplateCameraAction, NewSendTemplateCameraRollAction,
     NewSendTemplateDatetime, NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
     NewSendTemplateLocationAction, NewSendTemplateMessage, NewSendTemplateMessageAction,
     NewSendTemplateMessageContent, NewSendTemplatePostbackAction,
     NewSendTemplateRichmenuswitchAction, NewSendTemplateUriAction, NewSendTemplateUriActionAltUrl,
-    NewSendTextMessage, NewSendVideoMessage, SendAudioMessage, SendButtonsTemplate,
-    SendCarouselColumn, SendCarouselTemplate, SendConfirmTemplate, SendEmoji, SendImageAspectRatio,
+    NewSendVideoMessage, SendAudioMessage, SendButtonsTemplate, SendCarouselColumn,
+    SendCarouselTemplate, SendConfirmTemplate, SendEmoji, SendImageAspectRatio,
     SendImageCarouselColumn, SendImageCarouselTemplate, SendImageMessage, SendImageSize,
     SendImagemapAction, SendImagemapActionArea, SendImagemapBaseSize, SendImagemapMessage,
     SendImagemapMessageAction, SendImagemapUriAction, SendImagemapVideo, SendImagemapVideoArea,
-    SendImagemapVideoExternalLink, SendLocationMessage, SendMessage, SendQuoteToken,
-    SendStickerMessage, SendTemplateAction, SendTemplateCameraAction, SendTemplateCameraRollAction,
-    SendTemplateDatetime, SendTemplateDatetimeMode, SendTemplateDatetimepickerAction,
-    SendTemplateLocationAction, SendTemplateMessage, SendTemplateMessageAction,
-    SendTemplateMessageContent, SendTemplatePostbackAction, SendTemplateRichmenuswitchAction,
-    SendTemplateUriAction, SendTemplateUriActionAltUrl, SendTextMessage, SendVideoMessage,
+    SendImagemapVideoExternalLink, SendLocationMessage, SendMessage, SendMessageText,
+    SendQuoteToken, SendStickerMessage, SendTemplateAction, SendTemplateCameraAction,
+    SendTemplateCameraRollAction, SendTemplateDatetime, SendTemplateDatetimeMode,
+    SendTemplateDatetimepickerAction, SendTemplateLocationAction, SendTemplateMessage,
+    SendTemplateMessageAction, SendTemplateMessageContent, SendTemplatePostbackAction,
+    SendTemplateRichmenuswitchAction, SendTemplateUriAction, SendTemplateUriActionAltUrl,
+    SendVideoMessage,
 };
-use rust_decimal::{
-    prelude::{FromPrimitive, ToPrimitive},
-    Decimal,
-};
-use serde::{Deserialize, Serialize};
 
-// TODO Flex Messageの実装
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-#[serde(rename_all = "lowercase")]
-pub struct BotSendMessageTable {
-    communication_type: BotSendCommunicationTypeTable,
-    sending_type: BotSendSendingTypeTable,
-    sending_method: BotSendSendingMethodTable,
-    pub messages: Vec<SendMessageTable>,
-    created_at: DateTime<Local>,
-    updated_at: DateTime<Local>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum BotSendCommunicationTypeTable {
-    Send,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum BotSendSendingTypeTable {
-    Bot,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum BotSendSendingMethodTable {
-    Reply,
-    // Botでの返信でもreplyTokenを使わずにpushで送ることができる
-    Push,
-}
-
-impl From<NewSendMessages> for BotSendMessageTable {
-    fn from(s: NewSendMessages) -> Self {
-        let created_at = *s.messages[0].created_at();
-        BotSendMessageTable {
-            communication_type: BotSendCommunicationTypeTable::Send,
-            sending_type: BotSendSendingTypeTable::Bot,
-            sending_method: BotSendSendingMethodTable::Reply,
-            messages: s
-                .messages
-                .iter()
-                .map(|m| m.clone().into())
-                .collect::<Vec<SendMessageTable>>(),
-            created_at,
-            updated_at: created_at,
-        }
-    }
-}
-
-impl From<BotSendMessageTable> for Vec<SendMessage> {
-    fn from(s: BotSendMessageTable) -> Self {
-        s.messages
-            .iter()
-            .map(|m| m.clone().into())
-            .collect::<Vec<SendMessage>>()
-    }
+pub fn message_type() -> String {
+    "message".to_string()
 }
 
 // TODO Flex Messageの実装
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
-pub enum SendMessageTable {
-    Text(SendTextMessageTable),
-    Sticker(SendStickerMessageTable),
-    Image(SendImageMessageTable),
-    Video(SendVideoMessageTable),
-    Audio(SendAudioMessageTable),
-    Location(SendLocationMessageTable),
-    Imagemap(SendImagemapMessageTable),
-    Template(SendTemplateMessageTable),
+pub enum SendMessageContentTable {
+    Text(SendMessageContentTextTable),
+    Sticker(SendMessageContentStickerTable),
+    Image(SendMessageContentImageTable),
+    Video(SendMessageContentVideoTable),
+    Audio(SendMessageContentAudioTable),
+    Location(SendMessageContentLocationTable),
+    Imagemap(SendMessageContentImagemapTable),
+    Template(SendMessageContentTemplateTable),
 }
 
-impl From<NewSendMessage> for SendMessageTable {
+impl From<NewSendMessage> for SendMessageContentTable {
     fn from(s: NewSendMessage) -> Self {
         match s {
-            NewSendMessage::Text(r) => SendMessageTable::Text(r.into()),
-            NewSendMessage::Sticker(r) => SendMessageTable::Sticker(r.into()),
-            NewSendMessage::Image(r) => SendMessageTable::Image(r.into()),
-            NewSendMessage::Video(r) => SendMessageTable::Video(r.into()),
-            NewSendMessage::Audio(r) => SendMessageTable::Audio(r.into()),
-            NewSendMessage::Location(r) => SendMessageTable::Location(r.into()),
-            NewSendMessage::Imagemap(r) => SendMessageTable::Imagemap(r.into()),
-            NewSendMessage::Template(r) => SendMessageTable::Template(r.into()),
+            NewSendMessage::Text(r) => SendMessageContentTable::Text(r.into()),
+            NewSendMessage::Sticker(r) => SendMessageContentTable::Sticker(r.into()),
+            NewSendMessage::Image(r) => SendMessageContentTable::Image(r.into()),
+            NewSendMessage::Video(r) => SendMessageContentTable::Video(r.into()),
+            NewSendMessage::Audio(r) => SendMessageContentTable::Audio(r.into()),
+            NewSendMessage::Location(r) => SendMessageContentTable::Location(r.into()),
+            NewSendMessage::Imagemap(r) => SendMessageContentTable::Imagemap(r.into()),
+            NewSendMessage::Template(r) => SendMessageContentTable::Template(r.into()),
         }
     }
 }
 
-impl From<SendMessageTable> for SendMessage {
-    fn from(s: SendMessageTable) -> Self {
+impl From<SendMessageContentTable> for SendMessage {
+    fn from(s: SendMessageContentTable) -> Self {
         match s {
-            SendMessageTable::Text(r) => SendMessage::Text(r.into()),
-            SendMessageTable::Sticker(r) => SendMessage::Sticker(r.into()),
-            SendMessageTable::Image(r) => SendMessage::Image(r.into()),
-            SendMessageTable::Video(r) => SendMessage::Video(r.into()),
-            SendMessageTable::Audio(r) => SendMessage::Audio(r.into()),
-            SendMessageTable::Location(r) => SendMessage::Location(r.into()),
-            SendMessageTable::Imagemap(r) => SendMessage::Imagemap(r.into()),
-            SendMessageTable::Template(r) => SendMessage::Template(r.into()),
+            SendMessageContentTable::Text(r) => SendMessage::Text(r.into()),
+            SendMessageContentTable::Sticker(r) => SendMessage::Sticker(r.into()),
+            SendMessageContentTable::Image(r) => SendMessage::Image(r.into()),
+            SendMessageContentTable::Video(r) => SendMessage::Video(r.into()),
+            SendMessageContentTable::Audio(r) => SendMessage::Audio(r.into()),
+            SendMessageContentTable::Location(r) => SendMessage::Location(r.into()),
+            SendMessageContentTable::Imagemap(r) => SendMessage::Imagemap(r.into()),
+            SendMessageContentTable::Template(r) => SendMessage::Template(r.into()),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendTextMessageTable {
+pub struct SendMessageContentTextTable {
     pub id: String,
     pub text: String,
     pub emojis: Option<Vec<SendEmojiTable>>,
@@ -146,8 +89,8 @@ pub struct SendTextMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendTextMessage> for SendTextMessageTable {
-    fn from(s: NewSendTextMessage) -> Self {
+impl From<NewSendMessageText> for SendMessageContentTextTable {
+    fn from(s: NewSendMessageText) -> Self {
         Self {
             id: s.message_id,
             text: s.text,
@@ -163,9 +106,9 @@ impl From<NewSendTextMessage> for SendTextMessageTable {
     }
 }
 
-impl From<SendTextMessageTable> for SendTextMessage {
-    fn from(s: SendTextMessageTable) -> Self {
-        SendTextMessage {
+impl From<SendMessageContentTextTable> for SendMessageText {
+    fn from(s: SendMessageContentTextTable) -> Self {
+        SendMessageText {
             message_id: s.id,
             text: s.text,
             emojis: s.emojis.map(|es| {
@@ -224,7 +167,7 @@ impl From<SendQuoteTokenTable> for SendQuoteToken {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendStickerMessageTable {
+pub struct SendMessageContentStickerTable {
     pub id: String,
     pub package_id: String,
     pub sticker_id: String,
@@ -233,7 +176,7 @@ pub struct SendStickerMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendStickerMessage> for SendStickerMessageTable {
+impl From<NewSendStickerMessage> for SendMessageContentStickerTable {
     fn from(s: NewSendStickerMessage) -> Self {
         Self {
             id: s.message_id,
@@ -246,8 +189,8 @@ impl From<NewSendStickerMessage> for SendStickerMessageTable {
     }
 }
 
-impl From<SendStickerMessageTable> for SendStickerMessage {
-    fn from(s: SendStickerMessageTable) -> Self {
+impl From<SendMessageContentStickerTable> for SendStickerMessage {
+    fn from(s: SendMessageContentStickerTable) -> Self {
         SendStickerMessage {
             message_id: s.id,
             package_id: s.package_id,
@@ -260,7 +203,7 @@ impl From<SendStickerMessageTable> for SendStickerMessage {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendImageMessageTable {
+pub struct SendMessageContentImageTable {
     pub id: String,
     pub original_content_url: String,
     pub preview_image_url: String,
@@ -268,7 +211,7 @@ pub struct SendImageMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendImageMessage> for SendImageMessageTable {
+impl From<NewSendImageMessage> for SendMessageContentImageTable {
     fn from(s: NewSendImageMessage) -> Self {
         Self {
             id: s.message_id,
@@ -280,8 +223,8 @@ impl From<NewSendImageMessage> for SendImageMessageTable {
     }
 }
 
-impl From<SendImageMessageTable> for SendImageMessage {
-    fn from(s: SendImageMessageTable) -> Self {
+impl From<SendMessageContentImageTable> for SendImageMessage {
+    fn from(s: SendMessageContentImageTable) -> Self {
         SendImageMessage {
             message_id: s.id,
             original_content_url: s.original_content_url,
@@ -293,7 +236,7 @@ impl From<SendImageMessageTable> for SendImageMessage {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendVideoMessageTable {
+pub struct SendMessageContentVideoTable {
     pub id: String,
     pub original_content_url: String,
     pub preview_image_url: String,
@@ -302,7 +245,7 @@ pub struct SendVideoMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendVideoMessage> for SendVideoMessageTable {
+impl From<NewSendVideoMessage> for SendMessageContentVideoTable {
     fn from(s: NewSendVideoMessage) -> Self {
         Self {
             id: s.message_id,
@@ -315,8 +258,8 @@ impl From<NewSendVideoMessage> for SendVideoMessageTable {
     }
 }
 
-impl From<SendVideoMessageTable> for SendVideoMessage {
-    fn from(s: SendVideoMessageTable) -> Self {
+impl From<SendMessageContentVideoTable> for SendVideoMessage {
+    fn from(s: SendMessageContentVideoTable) -> Self {
         SendVideoMessage {
             message_id: s.id,
             original_content_url: s.original_content_url,
@@ -329,7 +272,7 @@ impl From<SendVideoMessageTable> for SendVideoMessage {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendAudioMessageTable {
+pub struct SendMessageContentAudioTable {
     pub id: String,
     pub original_content_url: String,
     pub duration: u32,
@@ -337,7 +280,7 @@ pub struct SendAudioMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendAudioMessage> for SendAudioMessageTable {
+impl From<NewSendAudioMessage> for SendMessageContentAudioTable {
     fn from(s: NewSendAudioMessage) -> Self {
         Self {
             id: s.message_id,
@@ -349,8 +292,8 @@ impl From<NewSendAudioMessage> for SendAudioMessageTable {
     }
 }
 
-impl From<SendAudioMessageTable> for SendAudioMessage {
-    fn from(s: SendAudioMessageTable) -> Self {
+impl From<SendMessageContentAudioTable> for SendAudioMessage {
+    fn from(s: SendMessageContentAudioTable) -> Self {
         SendAudioMessage {
             message_id: s.id,
             original_content_url: s.original_content_url,
@@ -362,7 +305,7 @@ impl From<SendAudioMessageTable> for SendAudioMessage {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendLocationMessageTable {
+pub struct SendMessageContentLocationTable {
     pub id: String,
     pub title: String,
     pub address: String,
@@ -372,7 +315,7 @@ pub struct SendLocationMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendLocationMessage> for SendLocationMessageTable {
+impl From<NewSendLocationMessage> for SendMessageContentLocationTable {
     fn from(s: NewSendLocationMessage) -> Self {
         Self {
             id: s.message_id,
@@ -392,8 +335,8 @@ impl From<NewSendLocationMessage> for SendLocationMessageTable {
     }
 }
 
-impl From<SendLocationMessageTable> for SendLocationMessage {
-    fn from(s: SendLocationMessageTable) -> Self {
+impl From<SendMessageContentLocationTable> for SendLocationMessage {
+    fn from(s: SendMessageContentLocationTable) -> Self {
         SendLocationMessage {
             message_id: s.id,
             title: s.title,
@@ -409,7 +352,7 @@ impl From<SendLocationMessageTable> for SendLocationMessage {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendImagemapMessageTable {
+pub struct SendMessageContentImagemapTable {
     pub id: String,
     pub base_url: String,
     pub alt_text: String,
@@ -420,7 +363,7 @@ pub struct SendImagemapMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendImagemapMessage> for SendImagemapMessageTable {
+impl From<NewSendImagemapMessage> for SendMessageContentImagemapTable {
     fn from(s: NewSendImagemapMessage) -> Self {
         Self {
             id: s.message_id,
@@ -439,8 +382,8 @@ impl From<NewSendImagemapMessage> for SendImagemapMessageTable {
     }
 }
 
-impl From<SendImagemapMessageTable> for SendImagemapMessage {
-    fn from(s: SendImagemapMessageTable) -> Self {
+impl From<SendMessageContentImagemapTable> for SendImagemapMessage {
+    fn from(s: SendMessageContentImagemapTable) -> Self {
         Self {
             message_id: s.id,
             base_url: s.base_url,
@@ -683,7 +626,7 @@ impl From<SendImagemapActionAreaTable> for SendImagemapActionArea {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendTemplateMessageTable {
+pub struct SendMessageContentTemplateTable {
     pub id: String,
     pub alt_text: String,
     pub template: SendTemplateMessageContentTable,
@@ -691,7 +634,7 @@ pub struct SendTemplateMessageTable {
     pub updated_at: DateTime<Local>,
 }
 
-impl From<NewSendTemplateMessage> for SendTemplateMessageTable {
+impl From<NewSendTemplateMessage> for SendMessageContentTemplateTable {
     fn from(s: NewSendTemplateMessage) -> Self {
         Self {
             id: s.message_id,
@@ -703,8 +646,8 @@ impl From<NewSendTemplateMessage> for SendTemplateMessageTable {
     }
 }
 
-impl From<SendTemplateMessageTable> for SendTemplateMessage {
-    fn from(s: SendTemplateMessageTable) -> Self {
+impl From<SendMessageContentTemplateTable> for SendTemplateMessage {
+    fn from(s: SendMessageContentTemplateTable) -> Self {
         Self {
             message_id: s.id,
             alt_text: s.alt_text,
