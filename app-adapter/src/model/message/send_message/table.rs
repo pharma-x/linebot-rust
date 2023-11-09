@@ -1,5 +1,8 @@
 use chrono::{DateTime, Local};
-use rust_decimal::{prelude::{FromPrimitive, ToPrimitive}, Decimal};
+use rust_decimal::{
+    prelude::{FromPrimitive, ToPrimitive},
+    Decimal,
+};
 use serde::{Deserialize, Serialize};
 
 use domain::model::message::send_message::{
