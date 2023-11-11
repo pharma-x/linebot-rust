@@ -6,7 +6,36 @@ use crate::model::Id;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SendMessages {
     pub id: Id<SendMessage>,
+    pub sending_type: SendSendingType,
+    pub sending_method: SendSendingMethod,
+    pub sender: Option<SendSender>,
     pub messages: Vec<SendMessage>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SendSendingType {
+    Bot,
+    Manual,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SendSendingMethod {
+    Reply,
+    Push,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SendSender {
+    pub id: i64,
+    pub name: String,
+    pub picture_url: String,
+    pub email: String,
+    pub sender_role: SendSenderRole,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SendSenderRole {
+    Sender,
 }
 
 // TODO Flex Messageの実装
@@ -314,10 +343,40 @@ pub struct SendTemplateRichmenuswitchAction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendMessages {
     pub id: Id<SendMessage>,
+    pub sending_type: NewSendSendingType,
+    pub sending_method: NewSendSendingMethod,
+    pub sender: Option<NewSendSender>,
     pub messages: Vec<NewSendMessage>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewSendSendingType {
+    Bot,
+    Manual,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewSendSendingMethod {
+    Reply,
+    Push,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NewSendSender {
+    pub id: i64,
+    pub name: String,
+    pub picture_url: String,
+    pub email: String,
+    pub sender_role: NewSendSenderRole,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewSendSenderRole {
+    Sender,
+}
+
 // TODO Flex Messageの実装
+// todo botかmanaulが分かるような形式に変更する必要があるかも？
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendMessage {
     Text(NewSendMessageText),

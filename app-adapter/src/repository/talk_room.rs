@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::model::message::event::EventTable;
-use crate::model::message::send_message::bot::table::BotSendMessageTable;
+use crate::model::message::send_message::SendMessageTable;
 use crate::model::message::MessagesTable;
 use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
 use crate::repository::{
@@ -78,10 +78,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
         println!("talk_room_card_table: {:?}", talk_room_card_table);
 
         let message_document_id = talk_room_card_table.latest_message.document_id();
-        // todo sendMessagのときは、EventTableではなくBotSendMessageTableを取得する必要がある
         let messages_table: MessagesTable = firestore
             .fluent()
             .select()
+            // todo EVENT COLLECTIOON NAMEという呼び名を変更する
             .by_id_in(EVENT_COLLECTION_NAME)
             .parent(&firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &document_id)?)
             .obj()
@@ -91,9 +91,9 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
                 EVENT_COLLECTION_NAME.to_string(),
                 message_document_id.to_string(),
             ))?;
-        println!("event_table: {:?}", messages_table.clone());
+        println!("messages_table: {:?}", messages_table.clone());
 
-        // todo latest_messageのtypeなどで分岐する形式に変更する
+        // todo latest_messageのtypeなどで分岐する形式に変更する→このままでOK、むしろMessageTableからmessageに変換するコードを記述する
         let latest_messages = match messages_table {
             MessagesTable::Event(e) => Messages::Event(e.into_event(message_document_id)),
             MessagesTable::SendMessage(m) => {
@@ -222,9 +222,10 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
                     .await?;
                 Messages::Event(event_table.into_event(&document_id))
             }
+            // todo manualのときの処理
             NewMessages::SendMessages(m) => {
                 let document_id = m.id.value.to_string();
-                let send_message_table = BotSendMessageTable::from(m.clone());
+                let send_message_table = SendMessageTable::from(m.clone());
                 firestore
                     .fluent()
                     .insert()

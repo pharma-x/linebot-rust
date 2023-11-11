@@ -12,9 +12,10 @@ use domain::model::message::send_message::{
     NewSendImagemapActionArea, NewSendImagemapBaseSize, NewSendImagemapMessage,
     NewSendImagemapMessageAction, NewSendImagemapUriAction, NewSendImagemapVideo,
     NewSendImagemapVideoArea, NewSendImagemapVideoExternalLink, NewSendLocationMessage,
-    NewSendMessage, NewSendMessageText, NewSendQuoteToken, NewSendStickerMessage,
-    NewSendTemplateAction, NewSendTemplateCameraAction, NewSendTemplateCameraRollAction,
-    NewSendTemplateDatetime, NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
+    NewSendMessage, NewSendMessageText, NewSendQuoteToken, NewSendSender, NewSendSenderRole,
+    NewSendSendingMethod, NewSendStickerMessage, NewSendTemplateAction,
+    NewSendTemplateCameraAction, NewSendTemplateCameraRollAction, NewSendTemplateDatetime,
+    NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
     NewSendTemplateLocationAction, NewSendTemplateMessage, NewSendTemplateMessageAction,
     NewSendTemplateMessageContent, NewSendTemplatePostbackAction,
     NewSendTemplateRichmenuswitchAction, NewSendTemplateUriAction, NewSendTemplateUriActionAltUrl,
@@ -23,17 +24,259 @@ use domain::model::message::send_message::{
     SendImageCarouselColumn, SendImageCarouselTemplate, SendImageMessage, SendImageSize,
     SendImagemapAction, SendImagemapActionArea, SendImagemapBaseSize, SendImagemapMessage,
     SendImagemapMessageAction, SendImagemapUriAction, SendImagemapVideo, SendImagemapVideoArea,
-    SendImagemapVideoExternalLink, SendLocationMessage, SendMessage, SendMessageText,
-    SendQuoteToken, SendStickerMessage, SendTemplateAction, SendTemplateCameraAction,
-    SendTemplateCameraRollAction, SendTemplateDatetime, SendTemplateDatetimeMode,
-    SendTemplateDatetimepickerAction, SendTemplateLocationAction, SendTemplateMessage,
-    SendTemplateMessageAction, SendTemplateMessageContent, SendTemplatePostbackAction,
-    SendTemplateRichmenuswitchAction, SendTemplateUriAction, SendTemplateUriActionAltUrl,
-    SendVideoMessage,
+    SendImagemapVideoExternalLink, SendLocationMessage, SendMessage, SendMessageText, SendMessages,
+    SendQuoteToken, SendSender, SendSenderRole, SendSendingMethod, SendSendingType,
+    SendStickerMessage, SendTemplateAction, SendTemplateCameraAction, SendTemplateCameraRollAction,
+    SendTemplateDatetime, SendTemplateDatetimeMode, SendTemplateDatetimepickerAction,
+    SendTemplateLocationAction, SendTemplateMessage, SendTemplateMessageAction,
+    SendTemplateMessageContent, SendTemplatePostbackAction, SendTemplateRichmenuswitchAction,
+    SendTemplateUriAction, SendTemplateUriActionAltUrl, SendVideoMessage,
 };
 
-pub fn message_type() -> String {
+/*
+ * Bot
+ */
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct BotSendMessageTable {
+    // typeはmessageという値のみを取る
+    #[serde(rename = "type")]
+    #[serde(default = "bot_send_message_type")]
+    message_type: String,
+    #[serde(default = "bot_send_communication_type")]
+    communication_type: SendCommunicationTypeTable,
+    #[serde(default = "bot_send_sending_type")]
+    sending_type: SendSendingTypeTable,
+    sending_method: SendSendingMethodTable,
+    pub messages: Vec<SendMessageContentTable>,
+    created_at: DateTime<Local>,
+    updated_at: DateTime<Local>,
+}
+
+pub fn bot_send_message_type() -> String {
     "message".to_string()
+}
+
+impl BotSendMessageTable {
+    pub fn new(
+        sending_method: SendSendingMethodTable,
+        messages: Vec<SendMessageContentTable>,
+        created_at: DateTime<Local>,
+        updated_at: DateTime<Local>,
+    ) -> Self {
+        Self {
+            message_type: bot_send_message_type(),
+            communication_type: bot_send_communication_type(),
+            sending_type: bot_send_sending_type(),
+            sending_method,
+            messages,
+            created_at,
+            updated_at,
+        }
+    }
+}
+
+fn bot_send_communication_type() -> SendCommunicationTypeTable {
+    SendCommunicationTypeTable::Send
+}
+
+fn bot_send_sending_type() -> SendSendingTypeTable {
+    SendSendingTypeTable::Bot
+}
+
+impl BotSendMessageTable {
+    pub fn into_messages(&self, document_id: &String) -> SendMessages {
+        SendMessages {
+            id: document_id
+                .to_string()
+                .try_into()
+                .unwrap_or_else(|_| panic!("Failed to convert String {} to UUID", document_id)),
+            sending_type: self.sending_type.clone().into(),
+            sending_method: self.sending_method.clone().into(),
+            sender: None,
+            messages: self
+                .messages
+                .iter()
+                .map(|m| m.clone().into())
+                .collect::<Vec<SendMessage>>(),
+        }
+    }
+}
+
+/*
+ * Manual
+ */
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ManualSendMessageTable {
+    // typeはmessageという値のみを取る
+    #[serde(rename = "type")]
+    #[serde(default = "manual_send_message_type")]
+    message_type: String,
+    #[serde(default = "manual_send_communication_type")]
+    communication_type: SendCommunicationTypeTable,
+    #[serde(default = "manual_send_sending_type")]
+    sending_type: SendSendingTypeTable,
+    sending_method: SendSendingMethodTable,
+    sender: SendSenderTable,
+    pub messages: Vec<SendMessageContentTable>,
+    created_at: DateTime<Local>,
+    updated_at: DateTime<Local>,
+}
+
+impl ManualSendMessageTable {
+    pub fn new(
+        sending_method: SendSendingMethodTable,
+        sender: SendSenderTable,
+        messages: Vec<SendMessageContentTable>,
+        created_at: DateTime<Local>,
+        updated_at: DateTime<Local>,
+    ) -> Self {
+        Self {
+            message_type: manual_send_message_type(),
+            communication_type: manual_send_communication_type(),
+            sending_type: manual_send_sending_type(),
+            sending_method,
+            sender,
+            messages,
+            created_at,
+            updated_at,
+        }
+    }
+}
+
+pub fn manual_send_message_type() -> String {
+    "message".to_string()
+}
+
+fn manual_send_communication_type() -> SendCommunicationTypeTable {
+    SendCommunicationTypeTable::Send
+}
+
+fn manual_send_sending_type() -> SendSendingTypeTable {
+    SendSendingTypeTable::Manual
+}
+
+impl ManualSendMessageTable {
+    pub fn into_messages(&self, document_id: &String) -> SendMessages {
+        SendMessages {
+            id: document_id
+                .to_string()
+                .try_into()
+                .unwrap_or_else(|_| panic!("Failed to convert String {} to UUID", document_id)),
+            sending_type: self.sending_type.clone().into(),
+            sending_method: self.sending_method.clone().into(),
+            sender: Some(self.sender.clone().into()),
+            messages: self
+                .messages
+                .iter()
+                .map(|m| m.clone().into())
+                .collect::<Vec<SendMessage>>(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendCommunicationTypeTable {
+    Send,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendSendingTypeTable {
+    Manual,
+    Bot,
+}
+
+impl From<SendSendingTypeTable> for SendSendingType {
+    fn from(s: SendSendingTypeTable) -> Self {
+        match s {
+            SendSendingTypeTable::Manual => SendSendingType::Manual,
+            SendSendingTypeTable::Bot => SendSendingType::Bot,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendSendingMethodTable {
+    Reply,
+    Push,
+}
+
+impl From<NewSendSendingMethod> for SendSendingMethodTable {
+    fn from(s: NewSendSendingMethod) -> Self {
+        match s {
+            NewSendSendingMethod::Reply => SendSendingMethodTable::Reply,
+            NewSendSendingMethod::Push => SendSendingMethodTable::Push,
+        }
+    }
+}
+
+impl From<SendSendingMethodTable> for SendSendingMethod {
+    fn from(s: SendSendingMethodTable) -> Self {
+        match s {
+            SendSendingMethodTable::Reply => SendSendingMethod::Reply,
+            SendSendingMethodTable::Push => SendSendingMethod::Push,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SendSenderTable {
+    id: i64,
+    name: String,
+    picture_url: String,
+    email: String,
+    sender_role: SendSenderRoleTable,
+}
+
+impl From<NewSendSender> for SendSenderTable {
+    fn from(s: NewSendSender) -> Self {
+        Self {
+            id: s.id,
+            name: s.name,
+            picture_url: s.picture_url,
+            email: s.email,
+            sender_role: s.sender_role.into(),
+        }
+    }
+}
+
+impl From<SendSenderTable> for SendSender {
+    fn from(s: SendSenderTable) -> Self {
+        Self {
+            id: s.id,
+            name: s.name,
+            picture_url: s.picture_url,
+            email: s.email,
+            sender_role: s.sender_role.into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendSenderRoleTable {
+    Sender,
+}
+
+impl From<NewSendSenderRole> for SendSenderRoleTable {
+    fn from(s: NewSendSenderRole) -> Self {
+        match s {
+            NewSendSenderRole::Sender => SendSenderRoleTable::Sender,
+        }
+    }
+}
+
+impl From<SendSenderRoleTable> for SendSenderRole {
+    fn from(s: SendSenderRoleTable) -> Self {
+        match s {
+            SendSenderRoleTable::Sender => SendSenderRole::Sender,
+        }
+    }
 }
 
 // TODO Flex Messageの実装

@@ -1,22 +1,293 @@
 use chrono::Local;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-use domain::model::message::send_message::{
-    NewSendAudioMessage, NewSendButtonsTemplate, NewSendCarouselColumn, NewSendCarouselTemplate,
-    NewSendConfirmTemplate, NewSendEmoji, NewSendImageAspectRatio, NewSendImageCarouselColumn,
-    NewSendImageCarouselTemplate, NewSendImageMessage, NewSendImageSize, NewSendImagemapAction,
-    NewSendImagemapActionArea, NewSendImagemapBaseSize, NewSendImagemapMessage,
-    NewSendImagemapMessageAction, NewSendImagemapUriAction, NewSendImagemapVideo,
-    NewSendImagemapVideoArea, NewSendImagemapVideoExternalLink, NewSendLocationMessage,
-    NewSendMessage, NewSendMessageText, NewSendQuoteToken, NewSendStickerMessage,
-    NewSendTemplateAction, NewSendTemplateCameraAction, NewSendTemplateCameraRollAction,
-    NewSendTemplateDatetime, NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
-    NewSendTemplateLocationAction, NewSendTemplateMessage, NewSendTemplateMessageAction,
-    NewSendTemplateMessageContent, NewSendTemplatePostbackAction,
-    NewSendTemplateRichmenuswitchAction, NewSendTemplateUriAction, NewSendTemplateUriActionAltUrl,
-    NewSendVideoMessage,
+use domain::model::{
+    message::{
+        event::NewEvent,
+        send_message::{
+            NewSendAudioMessage, NewSendButtonsTemplate, NewSendCarouselColumn,
+            NewSendCarouselTemplate, NewSendConfirmTemplate, NewSendEmoji, NewSendImageAspectRatio,
+            NewSendImageCarouselColumn, NewSendImageCarouselTemplate, NewSendImageMessage,
+            NewSendImageSize, NewSendImagemapAction, NewSendImagemapActionArea,
+            NewSendImagemapBaseSize, NewSendImagemapMessage, NewSendImagemapMessageAction,
+            NewSendImagemapUriAction, NewSendImagemapVideo, NewSendImagemapVideoArea,
+            NewSendImagemapVideoExternalLink, NewSendLocationMessage, NewSendMessage,
+            NewSendMessageText, NewSendMessages, NewSendQuoteToken, NewSendSender,
+            NewSendSendingMethod, NewSendSendingType, NewSendStickerMessage, NewSendTemplateAction,
+            NewSendTemplateCameraAction, NewSendTemplateCameraRollAction, NewSendTemplateDatetime,
+            NewSendTemplateDatetimeMode, NewSendTemplateDatetimepickerAction,
+            NewSendTemplateLocationAction, NewSendTemplateMessage, NewSendTemplateMessageAction,
+            NewSendTemplateMessageContent, NewSendTemplatePostbackAction,
+            NewSendTemplateRichmenuswitchAction, NewSendTemplateUriAction,
+            NewSendTemplateUriActionAltUrl, NewSendVideoMessage,
+        },
+    },
+    Id,
 };
+
+pub enum CreateSendMessage {
+    Bot(CreateBotSendMessage),
+    Manual(CreateManualSendMessage),
+}
+
+impl CreateSendMessage {
+    pub fn into_chunked_requests(&self, to: String) -> Vec<SendMessageRequest> {
+        match self {
+            CreateSendMessage::Bot(r) => r.into_chunked_requests(to),
+            CreateSendMessage::Manual(r) => r.into_chunked_requests(to),
+        }
+    }
+    pub fn from_event(event: NewEvent) -> Self {
+        match event {
+            NewEvent::Follow(e) => {
+                let messages: Vec<SendMessageContentRequest> = vec![
+                    SendMessageContentRequest::Text(SendMessageContentTextRequest {
+                        text: "友達登録ありがとうございます！".to_string(),
+                        emojis: None,
+                        quote_token: None,
+                    }),
+                    SendMessageContentRequest::Text(SendMessageContentTextRequest {
+                        text: "こんにちは！PharmaXです！！".to_string(),
+                        emojis: None,
+                        quote_token: None,
+                    }),
+                ];
+                print!("from_event messages:{:?}", &messages);
+                CreateSendMessage::Bot(CreateBotSendMessage {
+                    reply_token: e.reply_token.to_string(),
+                    sending_method: SendSendingMethodRequest::Reply,
+                    messages,
+                })
+            }
+            _ => {
+                let messages = vec![SendMessageContentRequest::Text(
+                    SendMessageContentTextRequest {
+                        text: "".to_string(),
+                        emojis: None,
+                        quote_token: None,
+                    },
+                )];
+                CreateSendMessage::Bot(CreateBotSendMessage {
+                    reply_token: "".to_string(),
+                    sending_method: SendSendingMethodRequest::Reply,
+                    messages,
+                })
+            }
+        }
+    }
+}
+/*
+ * Bot
+ */
+// BotSendMessageRequest は、Botメッセージなのでreplayかpushかは決まっていない
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+// todo Requestではない名前を考えたい
+pub struct CreateBotSendMessage {
+    reply_token: String,
+    sending_method: SendSendingMethodRequest,
+    messages: Vec<SendMessageContentRequest>,
+}
+
+impl CreateBotSendMessage {
+    pub fn into_chunked_requests(&self, to: String) -> Vec<SendMessageRequest> {
+        let chunked_message_contents: Vec<_> = self
+            .messages
+            .chunks(5)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+        match self.sending_method {
+            SendSendingMethodRequest::Reply => {
+                let reply_request = SendMessageRequest::Reply(ReplySendMessageRequest {
+                    reply_token: self.reply_token.clone(),
+                    sending_type: SendSendingTypeRequest::Bot,
+                    messages: chunked_message_contents
+                        .first()
+                        .unwrap_or_else(|| panic!("Failed to get chunked_message_contents.first()"))
+                        .to_vec(),
+                });
+                let push_requests = chunked_message_contents[1..]
+                    .iter()
+                    .map(|chunk| {
+                        SendMessageRequest::Push(PushSendMessageRequest::new(
+                            to.clone(),
+                            SendSendingTypeRequest::Bot,
+                            chunk.to_vec(),
+                        ))
+                    })
+                    .collect::<Vec<SendMessageRequest>>();
+                [vec![reply_request], push_requests].concat()
+            }
+            SendSendingMethodRequest::Push => chunked_message_contents
+                .iter()
+                .map(|chunk| {
+                    SendMessageRequest::Push(PushSendMessageRequest::new(
+                        to.clone(),
+                        SendSendingTypeRequest::Bot,
+                        chunk.to_vec(),
+                    ))
+                })
+                .collect::<Vec<SendMessageRequest>>(),
+        }
+    }
+}
+
+/*
+ * Manual
+ */
+// ManualSendMessageRequest は、手動で送信するメッセージなのでpushと決まっている
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CreateManualSendMessage {
+    to: String,
+    sending_method: SendSendingMethodRequest,
+    messages: Vec<SendMessageContentRequest>,
+}
+
+impl CreateManualSendMessage {
+    pub fn into_chunked_requests(&self, to: String) -> Vec<SendMessageRequest> {
+        let chunked_message_contents: Vec<_> = self
+            .messages
+            .chunks(5)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+        chunked_message_contents
+            .iter()
+            .map(|chunk| {
+                SendMessageRequest::Push(PushSendMessageRequest::new(
+                    to.clone(),
+                    SendSendingTypeRequest::Bot,
+                    chunk.to_vec(),
+                ))
+            })
+            .collect::<Vec<SendMessageRequest>>()
+    }
+}
+
+/*
+ * 共通
+ */
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum SendMessageRequest {
+    Reply(ReplySendMessageRequest),
+    Push(PushSendMessageRequest),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ReplySendMessageRequest {
+    pub reply_token: String,
+    #[serde(default = "replay_send_sending_type")]
+    pub sending_type: SendSendingTypeRequest,
+    pub messages: Vec<SendMessageContentRequest>,
+}
+
+impl ReplySendMessageRequest {
+    pub fn into_messages(
+        &self,
+        sender: Option<NewSendSender>,
+        sent_messages: SentMessagesResponse,
+    ) -> NewSendMessages {
+        let id = Id::gen();
+        let sending_type = self.sending_type.clone().into();
+        let sending_method = NewSendSendingMethod::Reply;
+        let messages = self
+            .messages
+            .iter()
+            .zip(sent_messages.sent_messages.iter())
+            .map(|(send_message_request, sent_message)| {
+                send_message_request.into(sent_message.message_id.clone())
+            })
+            .collect();
+        NewSendMessages {
+            id,
+            sending_type,
+            sending_method,
+            sender,
+            messages,
+        }
+    }
+}
+
+pub fn replay_send_sending_type() -> SendSendingTypeRequest {
+    SendSendingTypeRequest::Bot
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct PushSendMessageRequest {
+    pub to: String,
+    pub retry_key: String,
+    pub sending_type: SendSendingTypeRequest,
+    pub messages: Vec<SendMessageContentRequest>,
+}
+
+impl PushSendMessageRequest {
+    pub fn new(
+        to: String,
+        sending_type: SendSendingTypeRequest,
+        messages: Vec<SendMessageContentRequest>,
+    ) -> Self {
+        Self {
+            to,
+            retry_key: Uuid::new_v4().to_string(),
+            sending_type,
+            messages,
+        }
+    }
+}
+
+impl PushSendMessageRequest {
+    pub fn into_messages(
+        &self,
+        sender: Option<NewSendSender>,
+        sent_messages: SentMessagesResponse,
+    ) -> NewSendMessages {
+        let id = Id::gen();
+        let sending_type = self.sending_type.clone().into();
+        let sending_method = NewSendSendingMethod::Push;
+        let messages = self
+            .messages
+            .iter()
+            .zip(sent_messages.sent_messages.iter())
+            .map(|(send_message_request, sent_message)| {
+                send_message_request.into(sent_message.message_id.clone())
+            })
+            .collect();
+        NewSendMessages {
+            id,
+            sending_type,
+            sending_method,
+            sender,
+            messages,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendSendingTypeRequest {
+    Manual,
+    Bot,
+}
+
+impl From<SendSendingTypeRequest> for NewSendSendingType {
+    fn from(s: SendSendingTypeRequest) -> Self {
+        match s {
+            SendSendingTypeRequest::Manual => Self::Manual,
+            SendSendingTypeRequest::Bot => Self::Bot,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SendSendingMethodRequest {
+    Reply,
+    Push,
+}
 
 // TODO Flex Messageの実装
 #[derive(Serialize, Deserialize, Clone, Debug)]
