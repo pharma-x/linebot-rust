@@ -55,7 +55,7 @@ impl CreateSendMessage {
                         quote_token: None,
                     }),
                 ];
-                print!("from_event messages:{:?}", &messages);
+                println!("from_event messages:{:?}", &messages);
                 CreateSendMessage::Bot(CreateBotSendMessage {
                     reply_token: e.reply_token.to_string(),
                     sending_method: SendSendingMethodRequest::Reply,
@@ -174,6 +174,19 @@ impl CreateManualSendMessage {
 pub enum SendMessageRequest {
     Reply(ReplySendMessageRequest),
     Push(PushSendMessageRequest),
+}
+
+impl SendMessageRequest {
+    pub fn into_messages(
+        &self,
+        sender: Option<NewSendSender>,
+        sent_messages: SentMessagesResponse,
+    ) -> NewSendMessages {
+        match self {
+            SendMessageRequest::Reply(r) => r.into_messages(sender, sent_messages),
+            SendMessageRequest::Push(r) => r.into_messages(sender, sent_messages),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

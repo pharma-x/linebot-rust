@@ -14,10 +14,12 @@ pub enum MessagesTable {
 }
 
 impl MessagesTable {
-    pub fn into_messages(&self, id: &String) -> Messages {
+    pub fn into_messages(&self, document_id: &String) -> Messages {
         match self {
-            MessagesTable::Event(table) => Messages::Event(table.into_event(id)),
-            MessagesTable::SendMessage(table) => Messages::SendMessages(table.into_messages(id)),
+            MessagesTable::Event(table) => Messages::Event(table.into_event(document_id)),
+            MessagesTable::SendMessage(table) => {
+                Messages::SendMessages(table.into_messages(document_id))
+            }
         }
     }
 }

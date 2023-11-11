@@ -56,8 +56,8 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
 
         /*
          * talk_roomを取得し、
-         * あればtalk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
-         * なければtalk_roomを作成し、talk_roomのサブコレクションevent作成する
+         * あればtalk_roomをupdateし、talk_roomのサブコレクションにmessagesを追加する
+         * なければtalk_roomを作成し、talk_roomのサブコレクションmessagesを追加する
          */
         let new_event = NewEvent::from(source.create_event);
         let res_talk_room = self
@@ -67,7 +67,7 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
             .await;
         let updated_talk_room = match res_talk_room {
             Ok(talk_room) => {
-                // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
+                // talk_roomをupdateし、talk_roomのサブコレクションにmessagesを追加する
                 self.adapters
                     .talk_room_repository()
                     .create_messages((talk_room, new_event.clone()).into())
@@ -86,20 +86,23 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
                 }
             }
         };
-
-        let new_sent_messages_vec = self
+        /*
+         * メッセージを作成し、送信し、保存する
+         * この時点ではtalk_roomはあることが保証されているので、talk_roomをupdateし、talk_roomのサブコレクションにmessagesを追加する
+         */
+        let new_send_messages_vec = self
             .adapters
             .send_message_gateway()
             .send_messages(UserAuthData::Line(line_user_auth_data), None, new_event)
             .await?;
 
-        // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
-        let works: Vec<_> = new_sent_messages_vec
+        // talk_roomをupdateし、talk_roomのサブコレクションにmessagesを追加する
+        let works: Vec<_> = new_send_messages_vec
             .into_iter()
-            .map(|new_sent_messages| {
+            .map(|new_send_messages| {
                 self.adapters
                     .talk_room_repository()
-                    .create_messages((updated_talk_room.clone(), new_sent_messages.clone()).into())
+                    .create_messages((updated_talk_room.clone(), new_send_messages.clone()).into())
             })
             .collect();
 

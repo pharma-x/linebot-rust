@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
-use firestore::FirestoreDb;
 use std::sync::Arc;
 
 use crate::model::message::event::EventTable;

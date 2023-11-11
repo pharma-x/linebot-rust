@@ -77,7 +77,7 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
             "#,
         )
         .bind(primary_user_id.clone())
-        .bind(source.auth_id.value())
+        .bind(source.auth_id.0)
         .bind(source.display_name)
         .bind(source.picture_url)
         .execute(&mut *tx)

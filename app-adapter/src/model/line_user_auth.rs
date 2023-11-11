@@ -1,9 +1,6 @@
 use serde::Deserialize;
 
-use domain::model::{
-    line_user::LineUserProfile,
-    user_auth::{AuthUserId, LineId},
-};
+use domain::model::{line_user::LineUserProfile, user_auth::LineId};
 
 #[derive(Deserialize)]
 pub struct ResponseLineAuth {
@@ -23,7 +20,7 @@ impl TryFrom<ResponseLineAuth> for LineUserProfile {
     type Error = anyhow::Error;
     fn try_from(s: ResponseLineAuth) -> anyhow::Result<Self> {
         Ok(LineUserProfile {
-            auth_id: AuthUserId::Line(LineId::new(s.user_id)),
+            auth_id: LineId::new(s.user_id),
             display_name: s.display_name,
             picture_url: s.picture_url.unwrap_or("".to_string()),
         })

@@ -3,7 +3,7 @@ use domain::model::{
     line_user::LineUserProfile,
     primary_user_id::PrimaryUserId,
     user::{User, UserProfile},
-    user_auth::{AuthUserId, LineId},
+    user_auth::LineId,
 };
 use sqlx::FromRow;
 
@@ -23,7 +23,7 @@ impl TryFrom<LineUserTable> for User {
         Ok(User {
             id: PrimaryUserId::new(l.primary_user_id),
             user_profile: UserProfile::Line(LineUserProfile {
-                auth_id: AuthUserId::Line(LineId::new(l.line_id)),
+                auth_id: LineId::new(l.line_id),
                 display_name: l.display_name,
                 picture_url: l.picture_url,
             }),

@@ -14,14 +14,14 @@ pub enum UserProfile {
 }
 
 impl UserProfile {
-    pub fn auth_id(&self) -> Option<&AuthUserId> {
+    pub fn auth_id(&self) -> Option<AuthUserId> {
         match self {
-            UserProfile::Line(line) => Some(&line.auth_id),
+            UserProfile::Line(user_profile) => Some(AuthUserId::Line(user_profile.auth_id.clone())),
         }
     }
     pub fn display_name(&self) -> Option<&String> {
         match self {
-            UserProfile::Line(line) => Some(&line.display_name),
+            UserProfile::Line(user_profile) => Some(&user_profile.display_name),
         }
     }
 }
