@@ -8,7 +8,7 @@ pub mod user;
 
 const TALK_ROOM_COLLECTION_NAME: &str = "talkRooms";
 const TALK_ROOM_CARD_COLLECTION_NAME: &str = "talkRoomCards";
-const EVENT_COLLECTION_NAME: &str = "messages";
+const MESSAGE_COLLECTION_NAME: &str = "messages";
 
 #[derive(new)]
 pub struct DatabaseRepositoryImpl<T> {

@@ -3,6 +3,7 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::gateway::LINE_MESSAGE_NUMBER_LIMIT;
 use domain::model::{
     message::{
         event::NewEvent,
@@ -84,7 +85,6 @@ impl CreateSendMessage {
 // BotSendMessageRequest は、Botメッセージなのでreplayかpushかは決まっていない
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-// todo Requestではない名前を考えたい
 pub struct CreateBotSendMessage {
     reply_token: String,
     sending_method: SendSendingMethodRequest,
@@ -93,11 +93,8 @@ pub struct CreateBotSendMessage {
 
 impl CreateBotSendMessage {
     pub fn into_chunked_requests(&self, to: String) -> Vec<SendMessageRequest> {
-        let chunked_message_contents: Vec<_> = self
-            .messages
-            .chunks(5)
-            .map(|chunk| chunk.to_vec())
-            .collect();
+        let chunked_message_contents: Vec<Vec<SendMessageContentRequest>> =
+            chunk_request(self.messages.clone());
         match self.sending_method {
             SendSendingMethodRequest::Reply => {
                 let reply_request = SendMessageRequest::Reply(ReplySendMessageRequest {
@@ -133,6 +130,13 @@ impl CreateBotSendMessage {
         }
     }
 }
+fn chunk_request(messages: Vec<SendMessageContentRequest>) -> Vec<Vec<SendMessageContentRequest>> {
+    let chunked_message_contents: Vec<_> = messages
+        .chunks(LINE_MESSAGE_NUMBER_LIMIT)
+        .map(|chunk| chunk.to_vec())
+        .collect();
+    chunked_message_contents
+}
 
 /*
  * Manual
@@ -147,11 +151,8 @@ pub struct CreateManualSendMessage {
 
 impl CreateManualSendMessage {
     pub fn into_chunked_requests(&self, to: String) -> Vec<SendMessageRequest> {
-        let chunked_message_contents: Vec<_> = self
-            .messages
-            .chunks(5)
-            .map(|chunk| chunk.to_vec())
-            .collect();
+        let chunked_message_contents: Vec<Vec<SendMessageContentRequest>> =
+            chunk_request(self.messages.clone());
         chunked_message_contents
             .iter()
             .map(|chunk| {
