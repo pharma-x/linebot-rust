@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
-use futures::future;
 use reqwest::header;
 
 use crate::{
@@ -35,9 +34,8 @@ impl SendMessageGateway for HttpClientRepositoryImpl<SendMessage> {
                  * lineのメッセージを作成する
                  */
                 // todo 作成は上のレイヤーでする
-                let bot_message = CreateSendMessage::from_event(event);
-
-                let requests = bot_message.into_chunked_requests(line_user_auth.auth_id.0);
+                let create_message = CreateSendMessage::from_event(event);
+                let requests = create_message.into_chunked_requests(line_user_auth.auth_id.0);
                 self.send_line_messages(line_user_auth.auth_token, sender, requests)
                     .await?
             }
