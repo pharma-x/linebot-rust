@@ -87,7 +87,6 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
             }
         };
 
-        // TODO: ここでメッセージを送る
         let new_sent_messages_vec = self
             .adapters
             .send_message_gateway()

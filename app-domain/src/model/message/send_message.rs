@@ -376,7 +376,6 @@ pub enum NewSendSenderRole {
 }
 
 // TODO Flex Messageの実装
-// todo botかmanaulが分かるような形式に変更する必要があるかも？
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendMessage {
     Text(NewSendMessageText),
