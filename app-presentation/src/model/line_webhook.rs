@@ -1,12 +1,14 @@
 use application::model::{
     event::{
-        CreateAudioMessage, CreateContentProvider, CreateDeliveryContext, CreateEmoji, CreateEvent,
-        CreateExternalContentProvider, CreateFileMessage, CreateFollowEvent, CreateImageMessage,
-        CreateImageSet, CreateLocationMessage, CreateMessage, CreateMessageEvent, CreatePostback,
-        CreatePostbackDatetimeParams, CreatePostbackEvent, CreatePostbackParams,
-        CreatePostbackRichMenuParams, CreateStickerMessage, CreateStickerResourceType,
-        CreateTextMessage, CreateUnfollowEvent, CreateUserEvent, CreateVideoMessage,
-        CreateVideoPlayComplete, CreateVideoPlayCompleteEvent,
+        CreateEvent, CreateEventContentProvider, CreateEventContentProviderExternal,
+        CreateEventDeliveryContext, CreateEventEmoji, CreateEventFollow, CreateEventImageSet,
+        CreateEventMessage, CreateEventMessageContent, CreateEventMessageContentAudio,
+        CreateEventMessageContentFile, CreateEventMessageContentImage,
+        CreateEventMessageContentLocation, CreateEventMessageContentSticker,
+        CreateEventMessageContentText, CreateEventMessageContentVideo, CreateEventPostback,
+        CreateEventPostbackContent, CreateEventPostbackParams, CreateEventPostbackParamsDatetime,
+        CreateEventPostbackParamsRichMenu, CreateEventStickerResourceType, CreateEventUnfollow,
+        CreateEventVideoPlayComplete, CreateEventVideoPlayCompleteContent, CreateUserEvent,
     },
     line_user_auth::CreateLineUserAuth,
 };
@@ -20,18 +22,18 @@ use validator::Validate;
 use fake::Dummy;
 
 #[derive(new, Serialize, Deserialize, Debug, Validate, Clone)]
-pub struct LineWebhookRequests {
+pub struct LineWebhookEventRequests {
     pub destination: String,
     pub events: Vec<LineWebhookEvent>,
 }
 
 #[derive(new, Debug, Validate, Clone)]
-pub struct LineWebhookRequest {
+pub struct LineWebhookEventRequest {
     pub destination: String,
     pub event: LineWebhookEvent,
 }
 
-impl LineWebhookRequest {
+impl LineWebhookEventRequest {
     pub fn user_id(&self) -> &String {
         self.event.user_id()
     }
@@ -42,15 +44,15 @@ impl LineWebhookRequest {
 #[serde(tag = "type")]
 pub enum LineWebhookEvent {
     #[serde(rename(deserialize = "follow"))]
-    Follow(LineWebhookFollowEvent),
+    Follow(LineWebhookEventFollow),
     #[serde(rename(deserialize = "unfollow"))]
-    Unfollow(LineWebhookUnfollowEvent),
+    Unfollow(LineWebhookEventUnfollow),
     #[serde(rename(deserialize = "postback"))]
-    Postback(LineWebhookPostbackEvent),
+    Postback(LineWebhookEventPostback),
     #[serde(rename(deserialize = "videoPlayComplete"))]
-    VideoPlayComplete(LineWebhookVideoPlayCompleteEvent),
+    VideoPlayComplete(LineWebhookEventVideoPlayComplete),
     #[serde(rename(deserialize = "message"))]
-    Message(LineWebhookMessageEvent),
+    Message(LineWebhookEventMessage),
 }
 
 impl LineWebhookEvent {
@@ -67,20 +69,20 @@ impl LineWebhookEvent {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookFollowEvent {
+pub struct LineWebhookEventFollow {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
     #[cfg_attr(test, dummy(faker = "chrono::Local::now().timestamp()"))]
     timestamp: i64,
-    source: LineWebhookSource,
+    source: LineWebhookEventSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
-    delivery_context: LineDeliveryContext,
+    delivery_context: LineWebhookEventDeliveryContext,
 }
 
-impl LineWebhookFollowEvent {
+impl LineWebhookEventFollow {
     pub fn user_id(&self) -> &String {
         &self.source.user_id()
     }
@@ -88,17 +90,17 @@ impl LineWebhookFollowEvent {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookUnfollowEvent {
+pub struct LineWebhookEventUnfollow {
     mode: String,
     timestamp: i64,
-    source: LineWebhookSource,
+    source: LineWebhookEventSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
-    delivery_context: LineDeliveryContext,
+    delivery_context: LineWebhookEventDeliveryContext,
 }
 
-impl LineWebhookUnfollowEvent {
+impl LineWebhookEventUnfollow {
     pub fn user_id(&self) -> &String {
         &self.source.user_id()
     }
@@ -106,20 +108,20 @@ impl LineWebhookUnfollowEvent {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookPostbackEvent {
+pub struct LineWebhookEventPostback {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
     timestamp: i64,
-    source: LineWebhookSource,
+    source: LineWebhookEventSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
-    delivery_context: LineDeliveryContext,
-    postback: LineWebhookPostback,
+    delivery_context: LineWebhookEventDeliveryContext,
+    postback: LineWebhookEventPostbackContent,
 }
 
-impl LineWebhookPostbackEvent {
+impl LineWebhookEventPostback {
     pub fn user_id(&self) -> &String {
         &self.source.user_id()
     }
@@ -127,22 +129,22 @@ impl LineWebhookPostbackEvent {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookPostback {
+struct LineWebhookEventPostbackContent {
     data: String,
-    params: Option<LineWebhookPostbackParams>,
+    params: Option<LineWebhookEventPostbackParams>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
 #[serde(untagged)] // JSONにタグ名を含まない
-enum LineWebhookPostbackParams {
-    Datetime(LineWebhookPostbackDatetimeParams),
-    RichMenu(LineWebhookPostbackRichMenuParams),
+enum LineWebhookEventPostbackParams {
+    Datetime(LineWebhookEventPostbackParamsDatetime),
+    RichMenu(LineWebhookEventPostbackParamsRichMenu),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-enum LineWebhookPostbackDatetimeParams {
+enum LineWebhookEventPostbackParamsDatetime {
     #[serde(rename(deserialize = "datetime"))]
     DateTime(String),
     #[serde(rename(deserialize = "date"))]
@@ -153,7 +155,7 @@ enum LineWebhookPostbackDatetimeParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookPostbackRichMenuParams {
+struct LineWebhookEventPostbackParamsRichMenu {
     #[serde(rename(deserialize = "newRichMenuAliasId"))]
     new_rich_menu_alias_id: String,
     status: String,
@@ -161,21 +163,21 @@ struct LineWebhookPostbackRichMenuParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookVideoPlayCompleteEvent {
+pub struct LineWebhookEventVideoPlayComplete {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
     timestamp: i64,
-    source: LineWebhookSource,
+    source: LineWebhookEventSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
-    delivery_context: LineDeliveryContext,
+    delivery_context: LineWebhookEventDeliveryContext,
     #[serde(rename(deserialize = "videoPlayComplete"))]
-    video_play_complete: Option<LineWebhookVideoPlayComplete>,
+    video_play_complete: Option<LineWebhookVideoPlayCompleteContent>,
 }
 
-impl LineWebhookVideoPlayCompleteEvent {
+impl LineWebhookEventVideoPlayComplete {
     pub fn user_id(&self) -> &String {
         &self.source.user_id()
     }
@@ -183,27 +185,27 @@ impl LineWebhookVideoPlayCompleteEvent {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookVideoPlayComplete {
+struct LineWebhookVideoPlayCompleteContent {
     #[serde(rename(deserialize = "trackingId"))]
     tracking_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Validate)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookMessageEvent {
+pub struct LineWebhookEventMessage {
     #[serde(rename(deserialize = "replyToken"))]
     reply_token: String,
     mode: String,
     timestamp: i64,
-    source: LineWebhookSource,
+    source: LineWebhookEventSource,
     #[serde(rename(deserialize = "webhookEventId"))]
     webhook_event_id: String,
     #[serde(rename(deserialize = "deliveryContext"))]
-    delivery_context: LineDeliveryContext,
-    message: LineWebhookMessage,
+    delivery_context: LineWebhookEventDeliveryContext,
+    message: LineWebhookEventMessageContent,
 }
 
-impl LineWebhookMessageEvent {
+impl LineWebhookEventMessage {
     pub fn user_id(&self) -> &String {
         &self.source.user_id()
     }
@@ -212,35 +214,35 @@ impl LineWebhookMessageEvent {
 #[derive(Serialize, Deserialize, Debug, Clone, Display)]
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
-pub enum LineWebhookSource {
+pub enum LineWebhookEventSource {
     #[serde(rename(deserialize = "user"))]
-    User(LineWebhookUserSource),
+    User(LineWebhookEventSourceUser),
     #[serde(rename(deserialize = "group"))]
-    Group(LineWebhookGroupSource),
+    Group(LineWebhookEventSourceGroup),
     #[serde(rename(deserialize = "room"))]
-    Room(LineWebhookRoomSource),
+    Room(LineWebhookEventSourceRoom),
 }
 
-impl LineWebhookSource {
+impl LineWebhookEventSource {
     pub fn user_id(&self) -> &String {
         match &self {
-            LineWebhookSource::User(s) => &s.user_id,
-            LineWebhookSource::Group(s) => &s.user_id,
-            LineWebhookSource::Room(s) => &s.user_id,
+            LineWebhookEventSource::User(s) => &s.user_id,
+            LineWebhookEventSource::Group(s) => &s.user_id,
+            LineWebhookEventSource::Room(s) => &s.user_id,
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookUserSource {
+pub struct LineWebhookEventSourceUser {
     #[serde(rename(deserialize = "userId"))]
     user_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookGroupSource {
+pub struct LineWebhookEventSourceGroup {
     #[serde(rename(deserialize = "groupId"))]
     group_id: String,
     #[serde(rename(deserialize = "userId"))]
@@ -249,7 +251,7 @@ pub struct LineWebhookGroupSource {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-pub struct LineWebhookRoomSource {
+pub struct LineWebhookEventSourceRoom {
     #[serde(rename(deserialize = "roomId"))]
     room_id: String,
     #[serde(rename(deserialize = "userId"))]
@@ -258,7 +260,7 @@ pub struct LineWebhookRoomSource {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineDeliveryContext {
+struct LineWebhookEventDeliveryContext {
     #[serde(rename(deserialize = "isRedelivery"))]
     is_redelivery: bool,
 }
@@ -266,35 +268,35 @@ struct LineDeliveryContext {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")] // JSONにtypeというフィールドでタグ名を含む
-enum LineWebhookMessage {
+enum LineWebhookEventMessageContent {
     #[serde(rename(deserialize = "text"))]
-    Text(LineWebhookTextMessage),
+    Text(LineWebhookEventMessageContentText),
     #[serde(rename(deserialize = "image"))]
-    Image(LineWebhookImageMessage),
+    Image(LineWebhookEventMessageContentImage),
     #[serde(rename(deserialize = "video"))]
-    Video(LineWebhookVideoMessage),
+    Video(LineWebhookEventMessageContentVideo),
     #[serde(rename(deserialize = "audio"))]
-    Audio(LineWebhookAudioMessage),
+    Audio(LineWebhookEventMessageContentAudio),
     #[serde(rename(deserialize = "file"))]
-    File(LineWebhookFileMessage),
+    File(LineWebhookEventMessageContentFile),
     #[serde(rename(deserialize = "location"))]
-    Location(LineWebhookLocationMessage),
+    Location(LineWebhookEventMessageContentLocation),
     #[serde(rename(deserialize = "sticker"))]
-    Sticker(LineWebhookStickerMessage),
+    Sticker(LineWebhookEventMessageContentSticker),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookTextMessage {
+struct LineWebhookEventMessageContentText {
     id: String,
     text: String,
-    emojis: Vec<LineWebhookEmoji>,
-    mention: Option<LineWebhookMention>,
+    emojis: Vec<LineWebhookEventEmoji>,
+    mention: Option<LineWebhookEventMention>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookEmoji {
+struct LineWebhookEventEmoji {
     index: i32,
     length: i32,
     #[serde(rename(deserialize = "productId"))]
@@ -305,23 +307,23 @@ struct LineWebhookEmoji {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookMention {
-    mentionees: Vec<LineWebhookMentionee>,
+struct LineWebhookEventMention {
+    mentionees: Vec<LineWebhookEventMentionee>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
-enum LineWebhookMentionee {
+enum LineWebhookEventMentionee {
     #[serde(rename(deserialize = "user"))]
-    LineWebhookUserMentionee,
+    LineWebhookEventMentioneeUser,
     #[serde(rename(deserialize = "all"))]
-    LineWebhookAllMentionee,
+    LineWebhookEventMentioneeAll,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookUserMentionee {
+struct LineWebhookEventMentioneeUser {
     index: i32,
     length: i32,
     #[serde(rename(deserialize = "userId"))]
@@ -330,33 +332,33 @@ struct LineWebhookUserMentionee {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookAllMentionee {
+struct LineWebhookEventMentioneeAll {
     index: i32,
     length: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookImageMessage {
+struct LineWebhookEventMessageContentImage {
     id: String,
     #[serde(rename(deserialize = "contentProvider"))]
-    content_provider: LineWebhookContentProvider,
-    image_set: Option<LineWebhookImageSet>,
+    content_provider: LineWebhookEventContentProvider,
+    image_set: Option<LineWebhookEventImageSet>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
 #[serde(tag = "type")]
-enum LineWebhookContentProvider {
+enum LineWebhookEventContentProvider {
     #[serde(rename(deserialize = "line"))]
     Line,
     #[serde(rename(deserialize = "external"))]
-    External(LineWebhookExternalContentProvider),
+    External(LineWebhookEventContentProviderExternal),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookExternalContentProvider {
+struct LineWebhookEventContentProviderExternal {
     #[serde(rename(deserialize = "originalContentUrl"))]
     original_content_url: String,
     #[serde(rename(deserialize = "previewImageUrl"))]
@@ -365,7 +367,7 @@ struct LineWebhookExternalContentProvider {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookImageSet {
+struct LineWebhookEventImageSet {
     id: String,
     index: i32,
     length: i32,
@@ -373,25 +375,25 @@ struct LineWebhookImageSet {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookVideoMessage {
+struct LineWebhookEventMessageContentVideo {
     id: String,
     duration: i32,
     #[serde(rename(deserialize = "contentProvider"))]
-    content_provider: LineWebhookContentProvider,
+    content_provider: LineWebhookEventContentProvider,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookAudioMessage {
+struct LineWebhookEventMessageContentAudio {
     id: String,
     duration: i32,
     #[serde(rename(deserialize = "contentProvider"))]
-    content_provider: LineWebhookContentProvider,
+    content_provider: LineWebhookEventContentProvider,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookFileMessage {
+struct LineWebhookEventMessageContentFile {
     id: String,
     #[serde(rename(deserialize = "fileName"))]
     file_name: String,
@@ -401,7 +403,7 @@ struct LineWebhookFileMessage {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookLocationMessage {
+struct LineWebhookEventMessageContentLocation {
     id: String,
     title: String,
     address: String,
@@ -411,21 +413,21 @@ struct LineWebhookLocationMessage {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(test, derive(Dummy))]
-struct LineWebhookStickerMessage {
+struct LineWebhookEventMessageContentSticker {
     id: String,
     #[serde(rename(deserialize = "packageId"))]
     package_id: String,
     #[serde(rename(deserialize = "stickerId"))]
     sticker_id: String,
     #[serde(rename(deserialize = "stickerResourceType"))]
-    sticker_resource_type: LineWebhookStickerResourceType,
+    sticker_resource_type: LineWebhookEventStickerResourceType,
     keywords: Option<Vec<String>>,
     text: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, EnumString)]
 #[cfg_attr(test, derive(Dummy))]
-enum LineWebhookStickerResourceType {
+enum LineWebhookEventStickerResourceType {
     #[serde(rename(deserialize = "STATIC"))]
     Static,
     #[serde(rename(deserialize = "ANIMATION"))]
@@ -444,11 +446,11 @@ enum LineWebhookStickerResourceType {
     Message,
 }
 
-impl From<LineWebhookRequests> for Vec<LineWebhookRequest> {
-    fn from(r: LineWebhookRequests) -> Self {
+impl From<LineWebhookEventRequests> for Vec<LineWebhookEventRequest> {
+    fn from(r: LineWebhookEventRequests) -> Self {
         r.events
             .iter()
-            .map(|e: &LineWebhookEvent| LineWebhookRequest {
+            .map(|e: &LineWebhookEvent| LineWebhookEventRequest {
                 destination: r.destination.clone(),
                 event: e.clone(),
             })
@@ -456,8 +458,8 @@ impl From<LineWebhookRequests> for Vec<LineWebhookRequest> {
     }
 }
 
-impl From<LineWebhookRequest> for CreateUserEvent {
-    fn from(r: LineWebhookRequest) -> Self {
+impl From<LineWebhookEventRequest> for CreateUserEvent {
+    fn from(r: LineWebhookEventRequest) -> Self {
         let event = r.event.clone();
         let create_event = match event {
             LineWebhookEvent::Follow(s) => CreateEvent::Follow(s.into()),
@@ -475,11 +477,11 @@ impl From<LineWebhookRequest> for CreateUserEvent {
     }
 }
 
-impl From<LineWebhookFollowEvent> for CreateFollowEvent {
-    fn from(s: LineWebhookFollowEvent) -> Self {
+impl From<LineWebhookEventFollow> for CreateEventFollow {
+    fn from(s: LineWebhookEventFollow) -> Self {
         Self {
             reply_token: s.reply_token,
-            delivery_context: CreateDeliveryContext {
+            delivery_context: CreateEventDeliveryContext {
                 is_redelivery: s.delivery_context.is_redelivery,
             },
             mode: s.mode,
@@ -489,10 +491,10 @@ impl From<LineWebhookFollowEvent> for CreateFollowEvent {
     }
 }
 
-impl From<LineWebhookUnfollowEvent> for CreateUnfollowEvent {
-    fn from(s: LineWebhookUnfollowEvent) -> Self {
+impl From<LineWebhookEventUnfollow> for CreateEventUnfollow {
+    fn from(s: LineWebhookEventUnfollow) -> Self {
         Self {
-            delivery_context: CreateDeliveryContext {
+            delivery_context: CreateEventDeliveryContext {
                 is_redelivery: s.delivery_context.is_redelivery,
             },
             mode: s.mode,
@@ -502,14 +504,14 @@ impl From<LineWebhookUnfollowEvent> for CreateUnfollowEvent {
     }
 }
 
-impl From<LineWebhookPostbackEvent> for CreatePostbackEvent {
-    fn from(s: LineWebhookPostbackEvent) -> Self {
+impl From<LineWebhookEventPostback> for CreateEventPostback {
+    fn from(s: LineWebhookEventPostback) -> Self {
         Self {
             reply_token: s.reply_token,
-            delivery_context: CreateDeliveryContext {
+            delivery_context: CreateEventDeliveryContext {
                 is_redelivery: s.delivery_context.is_redelivery,
             },
-            postback: CreatePostback {
+            postback: CreateEventPostbackContent {
                 data: s.postback.clone().data,
                 params: s.postback.clone().params.unwrap().into(),
             },
@@ -520,33 +522,37 @@ impl From<LineWebhookPostbackEvent> for CreatePostbackEvent {
     }
 }
 
-impl From<LineWebhookPostbackParams> for CreatePostbackParams {
-    fn from(s: LineWebhookPostbackParams) -> Self {
+impl From<LineWebhookEventPostbackParams> for CreateEventPostbackParams {
+    fn from(s: LineWebhookEventPostbackParams) -> Self {
         match s {
-            LineWebhookPostbackParams::Datetime(p) => CreatePostbackParams::Datetime(p.into()),
-            LineWebhookPostbackParams::RichMenu(p) => CreatePostbackParams::RichMenu(p.into()),
-        }
-    }
-}
-
-impl From<LineWebhookPostbackDatetimeParams> for CreatePostbackDatetimeParams {
-    fn from(s: LineWebhookPostbackDatetimeParams) -> Self {
-        match s {
-            LineWebhookPostbackDatetimeParams::DateTime(datetime) => {
-                CreatePostbackDatetimeParams::DateTime(datetime)
+            LineWebhookEventPostbackParams::Datetime(p) => {
+                CreateEventPostbackParams::Datetime(p.into())
             }
-            LineWebhookPostbackDatetimeParams::Date(date) => {
-                CreatePostbackDatetimeParams::Date(date)
-            }
-            LineWebhookPostbackDatetimeParams::Time(time) => {
-                CreatePostbackDatetimeParams::Time(time)
+            LineWebhookEventPostbackParams::RichMenu(p) => {
+                CreateEventPostbackParams::RichMenu(p.into())
             }
         }
     }
 }
 
-impl From<LineWebhookPostbackRichMenuParams> for CreatePostbackRichMenuParams {
-    fn from(s: LineWebhookPostbackRichMenuParams) -> Self {
+impl From<LineWebhookEventPostbackParamsDatetime> for CreateEventPostbackParamsDatetime {
+    fn from(s: LineWebhookEventPostbackParamsDatetime) -> Self {
+        match s {
+            LineWebhookEventPostbackParamsDatetime::DateTime(datetime) => {
+                CreateEventPostbackParamsDatetime::DateTime(datetime)
+            }
+            LineWebhookEventPostbackParamsDatetime::Date(date) => {
+                CreateEventPostbackParamsDatetime::Date(date)
+            }
+            LineWebhookEventPostbackParamsDatetime::Time(time) => {
+                CreateEventPostbackParamsDatetime::Time(time)
+            }
+        }
+    }
+}
+
+impl From<LineWebhookEventPostbackParamsRichMenu> for CreateEventPostbackParamsRichMenu {
+    fn from(s: LineWebhookEventPostbackParamsRichMenu) -> Self {
         Self {
             new_rich_menu_alias_id: s.new_rich_menu_alias_id,
             status: s.status,
@@ -554,14 +560,14 @@ impl From<LineWebhookPostbackRichMenuParams> for CreatePostbackRichMenuParams {
     }
 }
 
-impl From<LineWebhookVideoPlayCompleteEvent> for CreateVideoPlayCompleteEvent {
-    fn from(s: LineWebhookVideoPlayCompleteEvent) -> Self {
+impl From<LineWebhookEventVideoPlayComplete> for CreateEventVideoPlayComplete {
+    fn from(s: LineWebhookEventVideoPlayComplete) -> Self {
         Self {
             reply_token: s.reply_token,
-            delivery_context: CreateDeliveryContext {
+            delivery_context: CreateEventDeliveryContext {
                 is_redelivery: s.delivery_context.is_redelivery,
             },
-            video_play_complete: CreateVideoPlayComplete {
+            video_play_complete: CreateEventVideoPlayCompleteContent {
                 tracking_id: s.video_play_complete.unwrap().tracking_id,
             },
             mode: s.mode,
@@ -571,11 +577,11 @@ impl From<LineWebhookVideoPlayCompleteEvent> for CreateVideoPlayCompleteEvent {
     }
 }
 
-impl From<LineWebhookMessageEvent> for CreateMessageEvent {
-    fn from(s: LineWebhookMessageEvent) -> Self {
+impl From<LineWebhookEventMessage> for CreateEventMessage {
+    fn from(s: LineWebhookEventMessage) -> Self {
         Self {
             reply_token: s.reply_token,
-            delivery_context: CreateDeliveryContext {
+            delivery_context: CreateEventDeliveryContext {
                 is_redelivery: s.delivery_context.is_redelivery,
             },
             message: s.message.into(),
@@ -586,29 +592,33 @@ impl From<LineWebhookMessageEvent> for CreateMessageEvent {
     }
 }
 
-impl From<LineWebhookMessage> for CreateMessage {
-    fn from(s: LineWebhookMessage) -> Self {
+impl From<LineWebhookEventMessageContent> for CreateEventMessageContent {
+    fn from(s: LineWebhookEventMessageContent) -> Self {
         match s {
-            LineWebhookMessage::Text(m) => CreateMessage::Text(m.into()),
-            LineWebhookMessage::Image(m) => CreateMessage::Image(m.into()),
-            LineWebhookMessage::Video(m) => CreateMessage::Video(m.into()),
-            LineWebhookMessage::Audio(m) => CreateMessage::Audio(m.into()),
-            LineWebhookMessage::File(m) => CreateMessage::File(m.into()),
-            LineWebhookMessage::Location(m) => CreateMessage::Location(m.into()),
-            LineWebhookMessage::Sticker(m) => CreateMessage::Sticker(m.into()),
+            LineWebhookEventMessageContent::Text(m) => CreateEventMessageContent::Text(m.into()),
+            LineWebhookEventMessageContent::Image(m) => CreateEventMessageContent::Image(m.into()),
+            LineWebhookEventMessageContent::Video(m) => CreateEventMessageContent::Video(m.into()),
+            LineWebhookEventMessageContent::Audio(m) => CreateEventMessageContent::Audio(m.into()),
+            LineWebhookEventMessageContent::File(m) => CreateEventMessageContent::File(m.into()),
+            LineWebhookEventMessageContent::Location(m) => {
+                CreateEventMessageContent::Location(m.into())
+            }
+            LineWebhookEventMessageContent::Sticker(m) => {
+                CreateEventMessageContent::Sticker(m.into())
+            }
         }
     }
 }
 
-impl From<LineWebhookTextMessage> for CreateTextMessage {
-    fn from(s: LineWebhookTextMessage) -> Self {
+impl From<LineWebhookEventMessageContentText> for CreateEventMessageContentText {
+    fn from(s: LineWebhookEventMessageContentText) -> Self {
         Self {
             id: s.id,
             text: s.text,
             emojis: s
                 .emojis
                 .iter()
-                .map(|e| CreateEmoji {
+                .map(|e| CreateEventEmoji {
                     index: e.index,
                     length: e.length,
                     product_id: e.product_id.clone(),
@@ -619,8 +629,8 @@ impl From<LineWebhookTextMessage> for CreateTextMessage {
     }
 }
 
-impl From<LineWebhookImageMessage> for CreateImageMessage {
-    fn from(s: LineWebhookImageMessage) -> Self {
+impl From<LineWebhookEventMessageContentImage> for CreateEventMessageContentImage {
+    fn from(s: LineWebhookEventMessageContentImage) -> Self {
         Self {
             id: s.id,
             content_provider: s.content_provider.into(),
@@ -629,17 +639,19 @@ impl From<LineWebhookImageMessage> for CreateImageMessage {
     }
 }
 
-impl From<LineWebhookContentProvider> for CreateContentProvider {
-    fn from(value: LineWebhookContentProvider) -> Self {
+impl From<LineWebhookEventContentProvider> for CreateEventContentProvider {
+    fn from(value: LineWebhookEventContentProvider) -> Self {
         match value {
-            LineWebhookContentProvider::Line => CreateContentProvider::Line,
-            LineWebhookContentProvider::External(e) => CreateContentProvider::External(e.into()),
+            LineWebhookEventContentProvider::Line => CreateEventContentProvider::Line,
+            LineWebhookEventContentProvider::External(e) => {
+                CreateEventContentProvider::External(e.into())
+            }
         }
     }
 }
 
-impl From<LineWebhookExternalContentProvider> for CreateExternalContentProvider {
-    fn from(s: LineWebhookExternalContentProvider) -> Self {
+impl From<LineWebhookEventContentProviderExternal> for CreateEventContentProviderExternal {
+    fn from(s: LineWebhookEventContentProviderExternal) -> Self {
         Self {
             original_content_url: s.original_content_url,
             preview_image_url: s.preview_image_url,
@@ -647,8 +659,8 @@ impl From<LineWebhookExternalContentProvider> for CreateExternalContentProvider 
     }
 }
 
-impl From<LineWebhookImageSet> for CreateImageSet {
-    fn from(s: LineWebhookImageSet) -> Self {
+impl From<LineWebhookEventImageSet> for CreateEventImageSet {
+    fn from(s: LineWebhookEventImageSet) -> Self {
         Self {
             id: s.id,
             index: s.index,
@@ -657,8 +669,8 @@ impl From<LineWebhookImageSet> for CreateImageSet {
     }
 }
 
-impl From<LineWebhookVideoMessage> for CreateVideoMessage {
-    fn from(s: LineWebhookVideoMessage) -> Self {
+impl From<LineWebhookEventMessageContentVideo> for CreateEventMessageContentVideo {
+    fn from(s: LineWebhookEventMessageContentVideo) -> Self {
         Self {
             id: s.id,
             duration: s.duration,
@@ -667,8 +679,8 @@ impl From<LineWebhookVideoMessage> for CreateVideoMessage {
     }
 }
 
-impl From<LineWebhookAudioMessage> for CreateAudioMessage {
-    fn from(s: LineWebhookAudioMessage) -> Self {
+impl From<LineWebhookEventMessageContentAudio> for CreateEventMessageContentAudio {
+    fn from(s: LineWebhookEventMessageContentAudio) -> Self {
         Self {
             id: s.id,
             duration: s.duration,
@@ -677,8 +689,8 @@ impl From<LineWebhookAudioMessage> for CreateAudioMessage {
     }
 }
 
-impl From<LineWebhookFileMessage> for CreateFileMessage {
-    fn from(s: LineWebhookFileMessage) -> Self {
+impl From<LineWebhookEventMessageContentFile> for CreateEventMessageContentFile {
+    fn from(s: LineWebhookEventMessageContentFile) -> Self {
         Self {
             id: s.id,
             file_name: s.file_name,
@@ -687,8 +699,8 @@ impl From<LineWebhookFileMessage> for CreateFileMessage {
     }
 }
 
-impl From<LineWebhookLocationMessage> for CreateLocationMessage {
-    fn from(s: LineWebhookLocationMessage) -> Self {
+impl From<LineWebhookEventMessageContentLocation> for CreateEventMessageContentLocation {
+    fn from(s: LineWebhookEventMessageContentLocation) -> Self {
         Self {
             id: s.id,
             title: s.title,
@@ -699,8 +711,8 @@ impl From<LineWebhookLocationMessage> for CreateLocationMessage {
     }
 }
 
-impl From<LineWebhookStickerMessage> for CreateStickerMessage {
-    fn from(s: LineWebhookStickerMessage) -> Self {
+impl From<LineWebhookEventMessageContentSticker> for CreateEventMessageContentSticker {
+    fn from(s: LineWebhookEventMessageContentSticker) -> Self {
         Self {
             id: s.id,
             package_id: s.package_id,
@@ -712,19 +724,23 @@ impl From<LineWebhookStickerMessage> for CreateStickerMessage {
     }
 }
 
-impl From<LineWebhookStickerResourceType> for CreateStickerResourceType {
-    fn from(s: LineWebhookStickerResourceType) -> Self {
+impl From<LineWebhookEventStickerResourceType> for CreateEventStickerResourceType {
+    fn from(s: LineWebhookEventStickerResourceType) -> Self {
         match s {
-            LineWebhookStickerResourceType::Static => CreateStickerResourceType::Static,
-            LineWebhookStickerResourceType::Animation => CreateStickerResourceType::Animation,
-            LineWebhookStickerResourceType::Sound => CreateStickerResourceType::Sound,
-            LineWebhookStickerResourceType::AnimationSound => {
-                CreateStickerResourceType::AnimationSound
+            LineWebhookEventStickerResourceType::Static => CreateEventStickerResourceType::Static,
+            LineWebhookEventStickerResourceType::Animation => {
+                CreateEventStickerResourceType::Animation
             }
-            LineWebhookStickerResourceType::Popup => CreateStickerResourceType::Popup,
-            LineWebhookStickerResourceType::PopupSound => CreateStickerResourceType::PopupSound,
-            LineWebhookStickerResourceType::Custom => CreateStickerResourceType::Custom,
-            LineWebhookStickerResourceType::Message => CreateStickerResourceType::Message,
+            LineWebhookEventStickerResourceType::Sound => CreateEventStickerResourceType::Sound,
+            LineWebhookEventStickerResourceType::AnimationSound => {
+                CreateEventStickerResourceType::AnimationSound
+            }
+            LineWebhookEventStickerResourceType::Popup => CreateEventStickerResourceType::Popup,
+            LineWebhookEventStickerResourceType::PopupSound => {
+                CreateEventStickerResourceType::PopupSound
+            }
+            LineWebhookEventStickerResourceType::Custom => CreateEventStickerResourceType::Custom,
+            LineWebhookEventStickerResourceType::Message => CreateEventStickerResourceType::Message,
         }
     }
 }
@@ -758,7 +774,7 @@ mod test {
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
         println!("line_webhook_event{:?}", line_webhook_event);
-        LineWebhookRequest::new(destination, line_webhook_event);
+        LineWebhookEventRequest::new(destination, line_webhook_event);
     }
     /*
      * unfollow event
@@ -783,7 +799,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination, line_webhook_event);
+        LineWebhookEventRequest::new(destination, line_webhook_event);
     }
     /*
      * unfollow event
@@ -812,7 +828,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination, line_webhook_event);
+        LineWebhookEventRequest::new(destination, line_webhook_event);
     }
     /*
      * message event
@@ -870,7 +886,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
 
         /*
          * image 1
@@ -906,7 +922,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * image 2
          * ドキュメントを元に自作
@@ -944,7 +960,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * video
          */
@@ -977,7 +993,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * audio
          */
@@ -1007,7 +1023,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * file
          */
@@ -1035,7 +1051,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * location
          */
@@ -1065,7 +1081,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * sticker
          * アニメーションスタンプの例
@@ -1112,7 +1128,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * sticker
          * メッセージスタンプの例
@@ -1152,7 +1168,7 @@ mod test {
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
         println!("line_webhook_event{:?}", line_webhook_event);
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * postback
          * 日時選択アクションのポストバックイベントの場合
@@ -1181,7 +1197,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination, line_webhook_event);
+        LineWebhookEventRequest::new(destination, line_webhook_event);
     }
     /*
      * postback event
@@ -1217,7 +1233,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * postback
          * リッチメニュー切替アクションのポストバックイベントの場合
@@ -1247,7 +1263,7 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination.clone(), line_webhook_event);
+        LineWebhookEventRequest::new(destination.clone(), line_webhook_event);
         /*
          * postback
          * ボタンを押されたときのポストバックイベントの場合
@@ -1273,6 +1289,6 @@ mod test {
         "#;
         let line_webhook_event: LineWebhookEvent =
             serde_json::from_str(json).expect("Failed to deserialize");
-        LineWebhookRequest::new(destination, line_webhook_event);
+        LineWebhookEventRequest::new(destination, line_webhook_event);
     }
 }

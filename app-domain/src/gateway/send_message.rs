@@ -1,4 +1,10 @@
-use crate::model::{event::NewEvent, send_message::NewSendMessages, user_auth::UserAuthData};
+use crate::model::{
+    message::{
+        event::NewEvent,
+        send_message::{NewSendMessages, NewSendSender},
+    },
+    user_auth::UserAuthData,
+};
 use async_trait::async_trait;
 
 #[mockall::automock]
@@ -7,6 +13,7 @@ pub trait SendMessageGateway {
     async fn send_messages(
         &self,
         user_auth_data: UserAuthData,
+        sender: Option<NewSendSender>,
         event: NewEvent,
-    ) -> anyhow::Result<NewSendMessages>;
+    ) -> anyhow::Result<Vec<NewSendMessages>>;
 }

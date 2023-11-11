@@ -1,11 +1,10 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
-use domain::model::talk_room::{LatestMessages, NewLatestMessages};
 use std::sync::Arc;
 
-use crate::model::event::EventTable;
-use crate::model::messages::MessagesTable;
-use crate::model::send_message::bot::BotSendMessageTable;
+use crate::model::message::event::EventTable;
+use crate::model::message::send_message::SendMessageTable;
+use crate::model::message::MessagesTable;
 use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
 use crate::repository::{
     DbFirestoreRepositoryImpl, RepositoryError, EVENT_COLLECTION_NAME,
@@ -13,6 +12,7 @@ use crate::repository::{
 };
 use domain::{
     model::{
+        message::{Messages, NewMessages},
         primary_user_id::PrimaryUserId,
         talk_room::{NewTalkRoom, TalkRoom},
     },
@@ -77,28 +77,28 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             ))?;
         println!("talk_room_card_table: {:?}", talk_room_card_table);
 
-        let event_document_id = talk_room_card_table.latest_message.document_id();
-        // todo sendMessagのときは、EventTableではなくBotSendMessageTableを取得する必要がある
+        let message_document_id = talk_room_card_table.latest_message.document_id();
         let messages_table: MessagesTable = firestore
             .fluent()
             .select()
+            // todo EVENT COLLECTIOON NAMEという呼び名を変更する
             .by_id_in(EVENT_COLLECTION_NAME)
             .parent(&firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &document_id)?)
             .obj()
-            .one(&event_document_id)
+            .one(&message_document_id)
             .await?
             .ok_or(RepositoryError::NotFound(
                 EVENT_COLLECTION_NAME.to_string(),
-                event_document_id.to_string(),
+                message_document_id.to_string(),
             ))?;
-        println!("event_table: {:?}", messages_table.clone());
+        println!("messages_table: {:?}", messages_table.clone());
 
-        // todo latest_messageのtypeなどで分岐する形式に変更する
+        // todo latest_messageのtypeなどで分岐する形式に変更する→このままでOK、むしろMessageTableからmessageに変換するコードを記述する
         let latest_messages = match messages_table {
-            MessagesTable::Event(e) => {
-                LatestMessages::Event(e.into_event(event_document_id.to_string()))
+            MessagesTable::Event(e) => Messages::Event(e.into_event(message_document_id)),
+            MessagesTable::SendMessage(m) => {
+                Messages::SendMessages(m.into_messages(message_document_id))
             }
-            MessagesTable::BotSendMessage(m) => LatestMessages::SendMessages(m.into()),
         };
 
         Ok(TalkRoom::new(
@@ -208,33 +208,34 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
 
         // todo bot用とevent用を分ける
         let last_messages = match new_latest_messages {
-            NewLatestMessages::Event(e) => {
-                let event_document_id = e.id().value.to_string();
+            NewMessages::Event(e) => {
+                let document_id = e.id().value.to_string();
                 let event_table = EventTable::from(e.clone());
                 firestore
                     .fluent()
                     .insert()
                     .into(EVENT_COLLECTION_NAME)
-                    .document_id(&event_document_id)
+                    .document_id(&document_id)
                     .parent(&parent_path)
                     .object(&event_table)
                     .execute()
                     .await?;
-                LatestMessages::Event(event_table.into_event(event_document_id))
+                Messages::Event(event_table.into_event(&document_id))
             }
-            NewLatestMessages::SendMessages(m) => {
-                let id = m.id.value.to_string();
-                let send_message_table = BotSendMessageTable::from(m.clone());
+            // todo manualのときの処理
+            NewMessages::SendMessages(m) => {
+                let document_id = m.id.value.to_string();
+                let send_message_table = SendMessageTable::from(m.clone());
                 firestore
                     .fluent()
                     .insert()
                     .into(EVENT_COLLECTION_NAME)
-                    .document_id(&id)
+                    .document_id(&document_id)
                     .parent(&parent_path)
                     .object(&send_message_table)
                     .execute()
                     .await?;
-                LatestMessages::SendMessages(send_message_table.into())
+                Messages::SendMessages(send_message_table.into_messages(&document_id))
             }
         };
 

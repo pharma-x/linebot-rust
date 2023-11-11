@@ -3,10 +3,45 @@ use rust_decimal::Decimal;
 
 use crate::model::Id;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SendMessages {
+    pub id: Id<SendMessage>,
+    pub sending_type: SendSendingType,
+    pub sending_method: SendSendingMethod,
+    pub sender: Option<SendSender>,
+    pub messages: Vec<SendMessage>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SendSendingType {
+    Bot,
+    Manual,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SendSendingMethod {
+    Reply,
+    Push,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SendSender {
+    pub id: i64,
+    pub name: String,
+    pub picture_url: String,
+    pub email: String,
+    pub sender_role: SendSenderRole,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SendSenderRole {
+    Sender,
+}
+
 // TODO Flex Messageの実装
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SendMessage {
-    Text(SendTextMessage),
+    Text(SendMessageText),
     Sticker(SendStickerMessage),
     Image(SendImageMessage),
     Video(SendVideoMessage),
@@ -17,7 +52,7 @@ pub enum SendMessage {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SendTextMessage {
+pub struct SendMessageText {
     pub message_id: String,
     pub text: String,
     pub emojis: Option<Vec<SendEmoji>>,
@@ -308,13 +343,43 @@ pub struct SendTemplateRichmenuswitchAction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NewSendMessages {
     pub id: Id<SendMessage>,
+    pub sending_type: NewSendSendingType,
+    pub sending_method: NewSendSendingMethod,
+    pub sender: Option<NewSendSender>,
     pub messages: Vec<NewSendMessage>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewSendSendingType {
+    Bot,
+    Manual,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewSendSendingMethod {
+    Reply,
+    Push,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NewSendSender {
+    pub id: i64,
+    pub name: String,
+    pub picture_url: String,
+    pub email: String,
+    pub sender_role: NewSendSenderRole,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NewSendSenderRole {
+    Sender,
+}
+
 // TODO Flex Messageの実装
+// todo botかmanaulが分かるような形式に変更する必要があるかも？
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewSendMessage {
-    Text(NewSendTextMessage),
+    Text(NewSendMessageText),
     Sticker(NewSendStickerMessage),
     Image(NewSendImageMessage),
     Video(NewSendVideoMessage),
@@ -340,7 +405,7 @@ impl NewSendMessage {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NewSendTextMessage {
+pub struct NewSendMessageText {
     pub message_id: String,
     pub text: String,
     pub emojis: Option<Vec<NewSendEmoji>>,

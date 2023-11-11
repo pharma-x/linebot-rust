@@ -3,13 +3,15 @@ use chrono::{Local, TimeZone};
 use derive_new::new;
 
 use domain::model::{
-    event::{
-        NewAudioMessage, NewContentProvider, NewDeliveryContext, NewEmoji, NewEvent,
-        NewExternalContentProvider, NewFileMessage, NewFollowEvent, NewImageMessage, NewImageSet,
-        NewLocationMessage, NewMessage, NewMessageEvent, NewPostback, NewPostbackDatetimeParams,
-        NewPostbackEvent, NewPostbackParams, NewPostbackRichMenuParams, NewStickerMessage,
-        NewStickerResourceType, NewTextMessage, NewUnfollowEvent, NewVideoMessage,
-        NewVideoPlayComplete, NewVideoPlayCompleteEvent,
+    message::event::{
+        NewEvent, NewEventContentProvider, NewEventContentProviderExternal,
+        NewEventDeliveryContext, NewEventEmoji, NewEventFollow, NewEventImageSet, NewEventMessage,
+        NewEventMessageContent, NewEventMessageContentAudio, NewEventMessageContentFile,
+        NewEventMessageContentImage, NewEventMessageContentLocation, NewEventMessageContentSticker,
+        NewEventMessageContentText, NewEventMessageContentVideo, NewEventPostback,
+        NewEventPostbackContent, NewEventPostbackParams, NewEventPostbackParamsDatetime,
+        NewEventPostbackParamsRichMenu, NewEventStickerResourceType, NewEventUnfollow,
+        NewEventVideoPlayComplete, NewEventVideoPlayCompleteContent,
     },
     Id,
 };
@@ -23,115 +25,115 @@ pub struct CreateUserEvent {
 
 #[derive(new, Clone)]
 pub enum CreateEvent {
-    Follow(CreateFollowEvent),
-    Unfollow(CreateUnfollowEvent),
-    Postback(CreatePostbackEvent),
-    VideoPlayComplete(CreateVideoPlayCompleteEvent),
-    Message(CreateMessageEvent),
+    Follow(CreateEventFollow),
+    Unfollow(CreateEventUnfollow),
+    Postback(CreateEventPostback),
+    VideoPlayComplete(CreateEventVideoPlayComplete),
+    Message(CreateEventMessage),
 }
 
 #[derive(new, Clone)]
-pub struct CreateFollowEvent {
+pub struct CreateEventFollow {
     pub reply_token: String,
-    pub delivery_context: CreateDeliveryContext,
+    pub delivery_context: CreateEventDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
 }
 
 #[derive(new, Clone)]
-pub struct CreateUnfollowEvent {
-    pub delivery_context: CreateDeliveryContext,
+pub struct CreateEventUnfollow {
+    pub delivery_context: CreateEventDeliveryContext,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
 }
 
 #[derive(new, Clone)]
-pub struct CreatePostbackEvent {
+pub struct CreateEventPostback {
     pub reply_token: String,
-    pub delivery_context: CreateDeliveryContext,
-    pub postback: CreatePostback,
+    pub delivery_context: CreateEventDeliveryContext,
+    pub postback: CreateEventPostbackContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
 }
 
 #[derive(new, Clone)]
-pub struct CreateVideoPlayCompleteEvent {
+pub struct CreateEventVideoPlayComplete {
     pub reply_token: String,
-    pub delivery_context: CreateDeliveryContext,
-    pub video_play_complete: CreateVideoPlayComplete,
+    pub delivery_context: CreateEventDeliveryContext,
+    pub video_play_complete: CreateEventVideoPlayCompleteContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
 }
 
 #[derive(new, Clone)]
-pub struct CreateMessageEvent {
+pub struct CreateEventMessage {
     pub reply_token: String,
-    pub delivery_context: CreateDeliveryContext,
-    pub message: CreateMessage,
+    pub delivery_context: CreateEventDeliveryContext,
+    pub message: CreateEventMessageContent,
     pub mode: String,
     pub webhook_event_id: String,
     pub timestamp: i64,
 }
 
 #[derive(new, Debug, Clone)]
-pub struct CreateDeliveryContext {
+pub struct CreateEventDeliveryContext {
     pub is_redelivery: bool,
 }
 
 #[derive(new, Clone)]
-pub struct CreatePostback {
+pub struct CreateEventPostbackContent {
     pub data: String,
-    pub params: CreatePostbackParams,
+    pub params: CreateEventPostbackParams,
 }
 
 #[derive(new, Clone)]
-pub enum CreatePostbackParams {
-    Datetime(CreatePostbackDatetimeParams),
-    RichMenu(CreatePostbackRichMenuParams),
+pub enum CreateEventPostbackParams {
+    Datetime(CreateEventPostbackParamsDatetime),
+    RichMenu(CreateEventPostbackParamsRichMenu),
 }
 
 #[derive(new, Clone)]
-pub enum CreatePostbackDatetimeParams {
+pub enum CreateEventPostbackParamsDatetime {
     DateTime(String),
     Date(String),
     Time(String),
 }
 
 #[derive(new, Clone)]
-pub struct CreatePostbackRichMenuParams {
+pub struct CreateEventPostbackParamsRichMenu {
     pub new_rich_menu_alias_id: String,
     pub status: String,
 }
 
 #[derive(new, Clone)]
-pub struct CreateVideoPlayComplete {
+pub struct CreateEventVideoPlayCompleteContent {
     pub tracking_id: String,
 }
 
 #[derive(new, Clone)]
-pub enum CreateMessage {
-    Text(CreateTextMessage),
-    Image(CreateImageMessage),
-    Video(CreateVideoMessage),
-    Audio(CreateAudioMessage),
-    File(CreateFileMessage),
-    Location(CreateLocationMessage),
-    Sticker(CreateStickerMessage),
+pub enum CreateEventMessageContent {
+    Text(CreateEventMessageContentText),
+    Image(CreateEventMessageContentImage),
+    Video(CreateEventMessageContentVideo),
+    Audio(CreateEventMessageContentAudio),
+    File(CreateEventMessageContentFile),
+    Location(CreateEventMessageContentLocation),
+    Sticker(CreateEventMessageContentSticker),
 }
 
 #[derive(new, Clone)]
-pub struct CreateTextMessage {
+pub struct CreateEventMessageContentText {
     pub id: String,
     pub text: String,
-    pub emojis: Vec<CreateEmoji>,
+    pub emojis: Vec<CreateEventEmoji>,
 }
 
 #[derive(new, Clone)]
-pub struct CreateEmoji {
+pub struct CreateEventEmoji {
     pub index: i32,
     pub length: i32,
     pub product_id: String,
@@ -139,54 +141,54 @@ pub struct CreateEmoji {
 }
 
 #[derive(new, Clone)]
-pub struct CreateImageMessage {
+pub struct CreateEventMessageContentImage {
     pub id: String,
-    pub content_provider: CreateContentProvider,
-    pub image_set: Option<CreateImageSet>,
+    pub content_provider: CreateEventContentProvider,
+    pub image_set: Option<CreateEventImageSet>,
 }
 
 #[derive(new, Clone)]
-pub enum CreateContentProvider {
+pub enum CreateEventContentProvider {
     Line,
-    External(CreateExternalContentProvider),
+    External(CreateEventContentProviderExternal),
 }
 
 #[derive(new, Clone)]
-pub struct CreateExternalContentProvider {
+pub struct CreateEventContentProviderExternal {
     pub original_content_url: String,
     pub preview_image_url: Option<String>,
 }
 
 #[derive(new, Clone)]
-pub struct CreateImageSet {
+pub struct CreateEventImageSet {
     pub id: String,
     pub index: i32,
     pub length: i32,
 }
 
 #[derive(new, Clone)]
-pub struct CreateVideoMessage {
+pub struct CreateEventMessageContentVideo {
     pub id: String,
     pub duration: i32,
-    pub content_provider: CreateContentProvider,
+    pub content_provider: CreateEventContentProvider,
 }
 
 #[derive(new, Clone)]
-pub struct CreateAudioMessage {
+pub struct CreateEventMessageContentAudio {
     pub id: String,
     pub duration: i32,
-    pub content_provider: CreateContentProvider,
+    pub content_provider: CreateEventContentProvider,
 }
 
 #[derive(new, Clone)]
-pub struct CreateFileMessage {
+pub struct CreateEventMessageContentFile {
     pub id: String,
     pub file_name: String,
     pub file_size: i32,
 }
 
 #[derive(new, Clone)]
-pub struct CreateLocationMessage {
+pub struct CreateEventMessageContentLocation {
     pub id: String,
     pub title: String,
     pub address: String,
@@ -195,17 +197,17 @@ pub struct CreateLocationMessage {
 }
 
 #[derive(new, Clone)]
-pub struct CreateStickerMessage {
+pub struct CreateEventMessageContentSticker {
     pub id: String,
     pub package_id: String,
     pub sticker_id: String,
-    pub sticker_resource_type: CreateStickerResourceType,
+    pub sticker_resource_type: CreateEventStickerResourceType,
     pub keywords: Option<Vec<String>>,
     pub text: Option<String>,
 }
 
 #[derive(new, Clone)]
-pub enum CreateStickerResourceType {
+pub enum CreateEventStickerResourceType {
     Static,
     Animation,
     Sound,
@@ -228,23 +230,23 @@ impl From<CreateEvent> for NewEvent {
     }
 }
 
-impl From<CreateDeliveryContext> for NewDeliveryContext {
-    fn from(s: CreateDeliveryContext) -> Self {
+impl From<CreateEventDeliveryContext> for NewEventDeliveryContext {
+    fn from(s: CreateEventDeliveryContext) -> Self {
         Self {
             is_redelivery: s.is_redelivery,
         }
     }
 }
 
-impl From<CreateFollowEvent> for NewFollowEvent {
-    fn from(s: CreateFollowEvent) -> Self {
+impl From<CreateEventFollow> for NewEventFollow {
+    fn from(s: CreateEventFollow) -> Self {
         let id = Id::gen();
         let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         println!("created_at: {:?}", created_at);
         Self {
             id,
             reply_token: s.reply_token,
-            delivery_context: NewDeliveryContext::from(s.delivery_context),
+            delivery_context: NewEventDeliveryContext::from(s.delivery_context),
             mode: s.mode,
             webhook_event_id: s.webhook_event_id,
             created_at,
@@ -252,13 +254,13 @@ impl From<CreateFollowEvent> for NewFollowEvent {
     }
 }
 
-impl From<CreateUnfollowEvent> for NewUnfollowEvent {
-    fn from(s: CreateUnfollowEvent) -> Self {
+impl From<CreateEventUnfollow> for NewEventUnfollow {
+    fn from(s: CreateEventUnfollow) -> Self {
         let id = Id::gen();
         let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
-            delivery_context: NewDeliveryContext::from(s.delivery_context),
+            delivery_context: NewEventDeliveryContext::from(s.delivery_context),
             mode: s.mode,
             webhook_event_id: s.webhook_event_id,
             created_at,
@@ -266,15 +268,15 @@ impl From<CreateUnfollowEvent> for NewUnfollowEvent {
     }
 }
 
-impl From<CreatePostbackEvent> for NewPostbackEvent {
-    fn from(s: CreatePostbackEvent) -> Self {
+impl From<CreateEventPostback> for NewEventPostback {
+    fn from(s: CreateEventPostback) -> Self {
         let id = Id::gen();
         let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             reply_token: s.reply_token,
-            delivery_context: NewDeliveryContext::from(s.delivery_context),
-            postback: NewPostback::from(s.postback),
+            delivery_context: NewEventDeliveryContext::from(s.delivery_context),
+            postback: NewEventPostbackContent::from(s.postback),
             mode: s.mode,
             webhook_event_id: s.webhook_event_id,
             created_at,
@@ -282,40 +284,42 @@ impl From<CreatePostbackEvent> for NewPostbackEvent {
     }
 }
 
-impl From<CreatePostback> for NewPostback {
-    fn from(s: CreatePostback) -> Self {
+impl From<CreateEventPostbackContent> for NewEventPostbackContent {
+    fn from(s: CreateEventPostbackContent) -> Self {
         Self {
             data: s.data,
-            params: NewPostbackParams::from(s.params),
+            params: NewEventPostbackParams::from(s.params),
         }
     }
 }
 
-impl From<CreatePostbackParams> for NewPostbackParams {
-    fn from(s: CreatePostbackParams) -> Self {
+impl From<CreateEventPostbackParams> for NewEventPostbackParams {
+    fn from(s: CreateEventPostbackParams) -> Self {
         match s {
-            CreatePostbackParams::Datetime(s) => {
-                NewPostbackParams::Datetime(NewPostbackDatetimeParams::from(s))
+            CreateEventPostbackParams::Datetime(s) => {
+                NewEventPostbackParams::Datetime(NewEventPostbackParamsDatetime::from(s))
             }
-            CreatePostbackParams::RichMenu(s) => {
-                NewPostbackParams::RichMenu(NewPostbackRichMenuParams::from(s))
+            CreateEventPostbackParams::RichMenu(s) => {
+                NewEventPostbackParams::RichMenu(NewEventPostbackParamsRichMenu::from(s))
             }
         }
     }
 }
 
-impl From<CreatePostbackDatetimeParams> for NewPostbackDatetimeParams {
-    fn from(s: CreatePostbackDatetimeParams) -> Self {
+impl From<CreateEventPostbackParamsDatetime> for NewEventPostbackParamsDatetime {
+    fn from(s: CreateEventPostbackParamsDatetime) -> Self {
         match s {
-            CreatePostbackDatetimeParams::DateTime(s) => NewPostbackDatetimeParams::DateTime(s),
-            CreatePostbackDatetimeParams::Date(s) => NewPostbackDatetimeParams::Date(s),
-            CreatePostbackDatetimeParams::Time(s) => NewPostbackDatetimeParams::Time(s),
+            CreateEventPostbackParamsDatetime::DateTime(s) => {
+                NewEventPostbackParamsDatetime::DateTime(s)
+            }
+            CreateEventPostbackParamsDatetime::Date(s) => NewEventPostbackParamsDatetime::Date(s),
+            CreateEventPostbackParamsDatetime::Time(s) => NewEventPostbackParamsDatetime::Time(s),
         }
     }
 }
 
-impl From<CreatePostbackRichMenuParams> for NewPostbackRichMenuParams {
-    fn from(s: CreatePostbackRichMenuParams) -> Self {
+impl From<CreateEventPostbackParamsRichMenu> for NewEventPostbackParamsRichMenu {
+    fn from(s: CreateEventPostbackParamsRichMenu) -> Self {
         Self {
             new_rich_menu_alias_id: s.new_rich_menu_alias_id,
             status: s.status,
@@ -323,15 +327,15 @@ impl From<CreatePostbackRichMenuParams> for NewPostbackRichMenuParams {
     }
 }
 
-impl From<CreateVideoPlayCompleteEvent> for NewVideoPlayCompleteEvent {
-    fn from(s: CreateVideoPlayCompleteEvent) -> Self {
+impl From<CreateEventVideoPlayComplete> for NewEventVideoPlayComplete {
+    fn from(s: CreateEventVideoPlayComplete) -> Self {
         let id = Id::gen();
         let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             reply_token: s.reply_token,
-            delivery_context: NewDeliveryContext::from(s.delivery_context),
-            video_play_complete: NewVideoPlayComplete::from(s.video_play_complete),
+            delivery_context: NewEventDeliveryContext::from(s.delivery_context),
+            video_play_complete: NewEventVideoPlayCompleteContent::from(s.video_play_complete),
             mode: s.mode,
             webhook_event_id: s.webhook_event_id,
             created_at,
@@ -339,23 +343,23 @@ impl From<CreateVideoPlayCompleteEvent> for NewVideoPlayCompleteEvent {
     }
 }
 
-impl From<CreateVideoPlayComplete> for NewVideoPlayComplete {
-    fn from(s: CreateVideoPlayComplete) -> Self {
+impl From<CreateEventVideoPlayCompleteContent> for NewEventVideoPlayCompleteContent {
+    fn from(s: CreateEventVideoPlayCompleteContent) -> Self {
         Self {
             tracking_id: s.tracking_id,
         }
     }
 }
 
-impl From<CreateMessageEvent> for NewMessageEvent {
-    fn from(s: CreateMessageEvent) -> Self {
+impl From<CreateEventMessage> for NewEventMessage {
+    fn from(s: CreateEventMessage) -> Self {
         let id = Id::gen();
         let created_at = Local.timestamp_opt(s.timestamp / 1000, 0).unwrap();
         Self {
             id,
             reply_token: s.reply_token,
-            delivery_context: NewDeliveryContext::from(s.delivery_context),
-            message: NewMessage::from(s.message),
+            delivery_context: NewEventDeliveryContext::from(s.delivery_context),
+            message: NewEventMessageContent::from(s.message),
             mode: s.mode,
             webhook_event_id: s.webhook_event_id,
             created_at,
@@ -363,22 +367,22 @@ impl From<CreateMessageEvent> for NewMessageEvent {
     }
 }
 
-impl From<CreateMessage> for NewMessage {
-    fn from(s: CreateMessage) -> Self {
+impl From<CreateEventMessageContent> for NewEventMessageContent {
+    fn from(s: CreateEventMessageContent) -> Self {
         match s {
-            CreateMessage::Text(s) => NewMessage::Text(s.into()),
-            CreateMessage::Image(s) => NewMessage::Image(s.into()),
-            CreateMessage::Video(s) => NewMessage::Video(s.into()),
-            CreateMessage::Audio(s) => NewMessage::Audio(s.into()),
-            CreateMessage::File(s) => NewMessage::File(s.into()),
-            CreateMessage::Location(s) => NewMessage::Location(s.into()),
-            CreateMessage::Sticker(s) => NewMessage::Sticker(s.into()),
+            CreateEventMessageContent::Text(s) => NewEventMessageContent::Text(s.into()),
+            CreateEventMessageContent::Image(s) => NewEventMessageContent::Image(s.into()),
+            CreateEventMessageContent::Video(s) => NewEventMessageContent::Video(s.into()),
+            CreateEventMessageContent::Audio(s) => NewEventMessageContent::Audio(s.into()),
+            CreateEventMessageContent::File(s) => NewEventMessageContent::File(s.into()),
+            CreateEventMessageContent::Location(s) => NewEventMessageContent::Location(s.into()),
+            CreateEventMessageContent::Sticker(s) => NewEventMessageContent::Sticker(s.into()),
         }
     }
 }
 
-impl From<CreateTextMessage> for NewTextMessage {
-    fn from(s: CreateTextMessage) -> Self {
+impl From<CreateEventMessageContentText> for NewEventMessageContentText {
+    fn from(s: CreateEventMessageContentText) -> Self {
         Self {
             id: s.id,
             text: s.text,
@@ -387,8 +391,8 @@ impl From<CreateTextMessage> for NewTextMessage {
     }
 }
 
-impl From<CreateEmoji> for NewEmoji {
-    fn from(s: CreateEmoji) -> Self {
+impl From<CreateEventEmoji> for NewEventEmoji {
+    fn from(s: CreateEventEmoji) -> Self {
         Self {
             index: s.index,
             length: s.length,
@@ -398,27 +402,27 @@ impl From<CreateEmoji> for NewEmoji {
     }
 }
 
-impl From<CreateImageMessage> for NewImageMessage {
-    fn from(s: CreateImageMessage) -> Self {
+impl From<CreateEventMessageContentImage> for NewEventMessageContentImage {
+    fn from(s: CreateEventMessageContentImage) -> Self {
         Self {
             id: s.id,
-            content_provider: NewContentProvider::from(s.content_provider),
-            image_set: s.image_set.map(|i| NewImageSet::from(i)),
+            content_provider: NewEventContentProvider::from(s.content_provider),
+            image_set: s.image_set.map(|i| NewEventImageSet::from(i)),
         }
     }
 }
 
-impl From<CreateContentProvider> for NewContentProvider {
-    fn from(s: CreateContentProvider) -> Self {
+impl From<CreateEventContentProvider> for NewEventContentProvider {
+    fn from(s: CreateEventContentProvider) -> Self {
         match s {
-            CreateContentProvider::Line => NewContentProvider::Line,
-            CreateContentProvider::External(e) => NewContentProvider::External(e.into()),
+            CreateEventContentProvider::Line => NewEventContentProvider::Line,
+            CreateEventContentProvider::External(e) => NewEventContentProvider::External(e.into()),
         }
     }
 }
 
-impl From<CreateExternalContentProvider> for NewExternalContentProvider {
-    fn from(s: CreateExternalContentProvider) -> Self {
+impl From<CreateEventContentProviderExternal> for NewEventContentProviderExternal {
+    fn from(s: CreateEventContentProviderExternal) -> Self {
         Self {
             original_content_url: s.original_content_url,
             preview_image_url: s.preview_image_url,
@@ -426,8 +430,8 @@ impl From<CreateExternalContentProvider> for NewExternalContentProvider {
     }
 }
 
-impl From<CreateImageSet> for NewImageSet {
-    fn from(s: CreateImageSet) -> Self {
+impl From<CreateEventImageSet> for NewEventImageSet {
+    fn from(s: CreateEventImageSet) -> Self {
         Self {
             id: s.id,
             index: s.index,
@@ -436,28 +440,28 @@ impl From<CreateImageSet> for NewImageSet {
     }
 }
 
-impl From<CreateVideoMessage> for NewVideoMessage {
-    fn from(s: CreateVideoMessage) -> Self {
+impl From<CreateEventMessageContentVideo> for NewEventMessageContentVideo {
+    fn from(s: CreateEventMessageContentVideo) -> Self {
         Self {
             id: s.id,
             duration: s.duration,
-            content_provider: NewContentProvider::from(s.content_provider),
+            content_provider: NewEventContentProvider::from(s.content_provider),
         }
     }
 }
 
-impl From<CreateAudioMessage> for NewAudioMessage {
-    fn from(s: CreateAudioMessage) -> Self {
+impl From<CreateEventMessageContentAudio> for NewEventMessageContentAudio {
+    fn from(s: CreateEventMessageContentAudio) -> Self {
         Self {
             id: s.id,
             duration: s.duration,
-            content_provider: NewContentProvider::from(s.content_provider),
+            content_provider: NewEventContentProvider::from(s.content_provider),
         }
     }
 }
 
-impl From<CreateFileMessage> for NewFileMessage {
-    fn from(s: CreateFileMessage) -> Self {
+impl From<CreateEventMessageContentFile> for NewEventMessageContentFile {
+    fn from(s: CreateEventMessageContentFile) -> Self {
         Self {
             id: s.id,
             file_name: s.file_name,
@@ -466,8 +470,8 @@ impl From<CreateFileMessage> for NewFileMessage {
     }
 }
 
-impl From<CreateLocationMessage> for NewLocationMessage {
-    fn from(s: CreateLocationMessage) -> Self {
+impl From<CreateEventMessageContentLocation> for NewEventMessageContentLocation {
+    fn from(s: CreateEventMessageContentLocation) -> Self {
         Self {
             id: s.id,
             title: s.title,
@@ -480,30 +484,32 @@ impl From<CreateLocationMessage> for NewLocationMessage {
     }
 }
 
-impl From<CreateStickerMessage> for NewStickerMessage {
-    fn from(s: CreateStickerMessage) -> Self {
+impl From<CreateEventMessageContentSticker> for NewEventMessageContentSticker {
+    fn from(s: CreateEventMessageContentSticker) -> Self {
         Self {
             id: s.id,
             package_id: s.package_id,
             sticker_id: s.sticker_id,
-            sticker_resource_type: NewStickerResourceType::from(s.sticker_resource_type),
+            sticker_resource_type: NewEventStickerResourceType::from(s.sticker_resource_type),
             keywords: s.keywords,
             text: s.text,
         }
     }
 }
 
-impl From<CreateStickerResourceType> for NewStickerResourceType {
-    fn from(s: CreateStickerResourceType) -> Self {
+impl From<CreateEventStickerResourceType> for NewEventStickerResourceType {
+    fn from(s: CreateEventStickerResourceType) -> Self {
         match s {
-            CreateStickerResourceType::Static => NewStickerResourceType::Static,
-            CreateStickerResourceType::Animation => NewStickerResourceType::Animation,
-            CreateStickerResourceType::Sound => NewStickerResourceType::Sound,
-            CreateStickerResourceType::AnimationSound => NewStickerResourceType::AnimationSound,
-            CreateStickerResourceType::Popup => NewStickerResourceType::Popup,
-            CreateStickerResourceType::PopupSound => NewStickerResourceType::PopupSound,
-            CreateStickerResourceType::Custom => NewStickerResourceType::Custom,
-            CreateStickerResourceType::Message => NewStickerResourceType::Message,
+            CreateEventStickerResourceType::Static => NewEventStickerResourceType::Static,
+            CreateEventStickerResourceType::Animation => NewEventStickerResourceType::Animation,
+            CreateEventStickerResourceType::Sound => NewEventStickerResourceType::Sound,
+            CreateEventStickerResourceType::AnimationSound => {
+                NewEventStickerResourceType::AnimationSound
+            }
+            CreateEventStickerResourceType::Popup => NewEventStickerResourceType::Popup,
+            CreateEventStickerResourceType::PopupSound => NewEventStickerResourceType::PopupSound,
+            CreateEventStickerResourceType::Custom => NewEventStickerResourceType::Custom,
+            CreateEventStickerResourceType::Message => NewEventStickerResourceType::Message,
         }
     }
 }

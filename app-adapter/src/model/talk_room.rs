@@ -4,9 +4,12 @@ use sqlx::FromRow;
 use strum_macros::Display;
 
 use domain::model::{
-    event::{NewEvent, NewMessage, NewMessageEvent},
-    send_message::NewSendMessage,
-    talk_room::{NewLatestMessages, NewTalkRoom},
+    message::{
+        event::{NewEvent, NewEventMessage, NewEventMessageContent},
+        send_message::NewSendMessage,
+        NewMessages,
+    },
+    talk_room::NewTalkRoom,
 };
 
 #[derive(FromRow, Debug)]
@@ -93,7 +96,7 @@ pub struct TalkRoomVideoPlayCompleteTable {
 #[serde(tag = "messageType")] // JSONにmessageTypeというフィールドでタグ名を含む
 #[serde(rename_all = "lowercase")]
 pub enum TalkRoomMessageTable {
-    Text(TalkRoomTextMessageTable),
+    Text(TalkRoomMessageTextTable),
     Image(TalkRoomImageMessageTable),
     Video(TalkRoomVideoMessageTable),
     Audio(TalkRoomAudioMessageTable),
@@ -122,7 +125,7 @@ impl TalkRoomMessageTable {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct TalkRoomTextMessageTable {
+pub struct TalkRoomMessageTextTable {
     document_id: String,
     text: String,
 }
@@ -200,11 +203,11 @@ impl From<NewTalkRoom> for TalkRoomCardTable {
     }
 }
 
-impl From<NewLatestMessages> for LatestMessageTable {
-    fn from(s: NewLatestMessages) -> Self {
+impl From<NewMessages> for LatestMessageTable {
+    fn from(s: NewMessages) -> Self {
         match s {
-            NewLatestMessages::Event(e) => e.into(),
-            NewLatestMessages::SendMessages(m) => {
+            NewMessages::Event(e) => e.into(),
+            NewMessages::SendMessages(m) => {
                 LatestMessageTable::from(m.messages.last().unwrap().clone(), m.id.value.to_string())
             }
         }
@@ -233,31 +236,33 @@ impl From<NewEvent> for LatestMessageTable {
     }
 }
 
-impl From<NewMessageEvent> for TalkRoomMessageTable {
-    fn from(s: NewMessageEvent) -> Self {
+impl From<NewEventMessage> for TalkRoomMessageTable {
+    fn from(s: NewEventMessage) -> Self {
         let document_id = s.id.value.to_string();
         let message = s.message;
         match message {
-            NewMessage::Text(m) => TalkRoomMessageTable::Text(TalkRoomTextMessageTable {
-                document_id,
-                text: m.text,
-            }),
-            NewMessage::Image(_) => {
+            NewEventMessageContent::Text(m) => {
+                TalkRoomMessageTable::Text(TalkRoomMessageTextTable {
+                    document_id,
+                    text: m.text,
+                })
+            }
+            NewEventMessageContent::Image(_) => {
                 TalkRoomMessageTable::Image(TalkRoomImageMessageTable { document_id })
             }
-            NewMessage::Video(_) => {
+            NewEventMessageContent::Video(_) => {
                 TalkRoomMessageTable::Video(TalkRoomVideoMessageTable { document_id })
             }
-            NewMessage::Audio(_) => {
+            NewEventMessageContent::Audio(_) => {
                 TalkRoomMessageTable::Audio(TalkRoomAudioMessageTable { document_id })
             }
-            NewMessage::File(_) => {
+            NewEventMessageContent::File(_) => {
                 TalkRoomMessageTable::File(TalkRoomFileMessageTable { document_id })
             }
-            NewMessage::Location(_) => {
+            NewEventMessageContent::Location(_) => {
                 TalkRoomMessageTable::Location(TalkRoomLocationMessageTable { document_id })
             }
-            NewMessage::Sticker(_) => {
+            NewEventMessageContent::Sticker(_) => {
                 TalkRoomMessageTable::Sticker(TalkRoomStickerMessageTable { document_id })
             }
         }
@@ -273,7 +278,7 @@ impl LatestMessageTable {
 impl TalkRoomMessageTable {
     fn from(message: NewSendMessage, document_id: String) -> Self {
         match message {
-            NewSendMessage::Text(m) => TalkRoomMessageTable::Text(TalkRoomTextMessageTable {
+            NewSendMessage::Text(m) => TalkRoomMessageTable::Text(TalkRoomMessageTextTable {
                 document_id,
                 text: m.text,
             }),

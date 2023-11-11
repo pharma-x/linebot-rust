@@ -1,7 +1,6 @@
-pub mod event;
 pub mod line_user;
+pub mod message;
 pub mod primary_user_id;
-pub mod send_message;
 pub mod talk_room;
 pub mod user;
 pub mod user_auth;

@@ -30,11 +30,11 @@ impl UserAuthGateway for HttpClientRepositoryImpl<UserAuthData> {
             .client
             .get(format!(
                 "https://api.line.me/v2/bot/profile/{}",
-                source.auth_id.value()
+                source.auth_id.0
             ))
             .header(
                 header::AUTHORIZATION,
-                format!("Bearer {}", source.auth_token.value()),
+                format!("Bearer {}", source.auth_token.0),
             )
             .send()
             .await?
@@ -42,7 +42,7 @@ impl UserAuthGateway for HttpClientRepositoryImpl<UserAuthData> {
             .await?;
 
         let res_line_auth: ResponseLineAuth = serde_json::from_str(body)
-            .unwrap_or_else(|_| panic!("cannot convert ResponseLineAuth instance. body: {}", body));
+            .unwrap_or_else(|_| panic!("Failed to convert body {} to ResponseLineAuth", body));
 
         Ok(res_line_auth.try_into()?)
     }

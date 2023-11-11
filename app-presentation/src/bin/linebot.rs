@@ -55,7 +55,7 @@ mod test {
     };
     use base64::{engine::general_purpose, Engine as _};
     use hmac::{Hmac, Mac};
-    use presentation::model::line_webhook::LineWebhookRequests;
+    use presentation::model::line_webhook::LineWebhookEventRequests;
     use sha2::Sha256;
 
     /*
@@ -78,7 +78,7 @@ mod test {
          * signatureを作成する
          */
         let request =
-            LineWebhookRequests::new("U00000000000000000000000000000000".to_string(), vec![]);
+            LineWebhookEventRequests::new("U00000000000000000000000000000000".to_string(), vec![]);
         let channel_secret = env::var("LINE_CHANNEL_SECRET")
             .unwrap_or_else(|_| panic!("LINE_CHANNEL_SECRET must be set!"));
         let http_request_body_vec = serde_json::to_vec(&request).unwrap();

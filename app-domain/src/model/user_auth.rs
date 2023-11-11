@@ -8,21 +8,13 @@ pub enum AuthUserId {
 impl AuthUserId {
     pub fn value(&self) -> &String {
         match self {
-            Self::Line(s) => s.value(),
+            Self::Line(s) => &s.0,
         }
     }
 }
 
 #[derive(new, Debug, Clone, PartialEq, Eq)]
-pub struct LineId {
-    pub value: String,
-}
-
-impl LineId {
-    pub fn value(&self) -> &String {
-        &self.value
-    }
-}
+pub struct LineId(pub String);
 
 #[derive(new, Debug, Clone, PartialEq, Eq)]
 pub enum AuthToken {
@@ -32,21 +24,13 @@ pub enum AuthToken {
 impl AuthToken {
     pub fn value(&self) -> &String {
         match self {
-            Self::Line(s) => s.value(),
+            Self::Line(s) => &s.0,
         }
     }
 }
 
 #[derive(new, Debug, Clone, PartialEq, Eq)]
-pub struct LineAuthToken {
-    pub value: String,
-}
-
-impl LineAuthToken {
-    pub fn value(&self) -> &String {
-        &self.value
-    }
-}
+pub struct LineAuthToken(pub String);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserAuthData {
@@ -55,6 +39,6 @@ pub enum UserAuthData {
 
 #[derive(new, Debug, Clone, PartialEq, Eq)]
 pub struct LineUserAuthData {
-    pub auth_id: AuthUserId,
-    pub auth_token: AuthToken,
+    pub auth_id: LineId,
+    pub auth_token: LineAuthToken,
 }

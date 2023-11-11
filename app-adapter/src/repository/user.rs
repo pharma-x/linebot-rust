@@ -24,7 +24,7 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
 
     async fn get_line_user(&self, source: LineId) -> anyhow::Result<User> {
         let pool = Arc::clone(self.pool.pool());
-        let line_id = source.value().to_string();
+        let line_id = source.0;
         let line_user_row = sqlx::query_as::<_, LineUserTable>(
             r#"
                 select primary_user_id, line_id, display_name, picture_url, created_at, updated_at from line_users
@@ -35,7 +35,7 @@ impl UserRepository for DatabaseRepositoryImpl<User> {
         .fetch_one(&*pool)
         .await
         .map_err(|e| match e {
-            sqlx::Error::RowNotFound => anyhow!(RepositoryError::NotFound("line_users".to_string(),line_id)),
+            sqlx::Error::RowNotFound => anyhow!(RepositoryError::NotFound("line_users".to_string(), line_id)),
             _ => anyhow!(RepositoryError::Unexpected(e.to_string())),
         })?;
 
