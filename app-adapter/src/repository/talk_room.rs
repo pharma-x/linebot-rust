@@ -81,7 +81,6 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
         let messages_table: MessagesTable = firestore
             .fluent()
             .select()
-            // todo EVENT COLLECTIOON NAMEという呼び名を変更する
             .by_id_in(MESSAGE_COLLECTION_NAME)
             .parent(&firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &document_id)?)
             .obj()
@@ -92,14 +91,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
                 message_document_id.to_string(),
             ))?;
         println!("messages_table: {:?}", messages_table.clone());
-
-        // todo latest_messageのtypeなどで分岐する形式に変更する→このままでOK、むしろMessageTableからmessageに変換するコードを記述する
-        let latest_messages = match messages_table {
-            MessagesTable::Event(e) => Messages::Event(e.into_event(message_document_id)),
-            MessagesTable::SendMessage(m) => {
-                Messages::SendMessages(m.into_messages(message_document_id))
-            }
-        };
+        let latest_messages = messages_table.into_messages(message_document_id);
 
         Ok(TalkRoom::new(
             document_id.try_into()?,

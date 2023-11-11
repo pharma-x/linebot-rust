@@ -1,3 +1,4 @@
+use domain::model::message::Messages;
 use serde::{Deserialize, Serialize};
 
 use crate::model::message::{event::EventTable, send_message::SendMessageTable};
@@ -10,4 +11,13 @@ pub mod send_message;
 pub enum MessagesTable {
     Event(EventTable),
     SendMessage(SendMessageTable),
+}
+
+impl MessagesTable {
+    pub fn into_messages(&self, id: &String) -> Messages {
+        match self {
+            MessagesTable::Event(table) => Messages::Event(table.into_event(id)),
+            MessagesTable::SendMessage(table) => Messages::SendMessages(table.into_messages(id)),
+        }
+    }
 }
