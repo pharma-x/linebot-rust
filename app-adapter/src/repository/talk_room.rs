@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
+use firestore::FirestoreDb;
 use std::sync::Arc;
 
 use crate::model::message::event::EventTable;
@@ -168,7 +169,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
         /*
          * イベントを作成する
          */
-        let talk_room = self.create_event(source.clone()).await?;
+        let talk_room = self.create_messages(source.clone()).await?;
 
         Ok(talk_room)
     }
@@ -176,10 +177,9 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
     /// talkRoomをupdateし、イベントを作成する
     ///
     /// # Arguments
-    ///
     /// * `source` - 更新するtalkRoom。latest_messageには最新のイベントを入れる
     ///
-    async fn create_event(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
+    async fn create_messages(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
         let firestore = Arc::clone(&self.firestore.0);
         let talk_room_document_id = source.id.value.to_string();
         let talk_room_card_table = TalkRoomCardTable::from(source.clone());
@@ -195,41 +195,9 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
         /*
          * イベントを作成する
          */
-        let parent_path =
-            firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &talk_room_document_id)?;
-
-        // todo bot用とevent用を分ける
-        let last_messages = match new_latest_messages {
-            NewMessages::Event(e) => {
-                let document_id = e.id().value.to_string();
-                let event_table = EventTable::from(e.clone());
-                firestore
-                    .fluent()
-                    .insert()
-                    .into(MESSAGE_COLLECTION_NAME)
-                    .document_id(&document_id)
-                    .parent(&parent_path)
-                    .object(&event_table)
-                    .execute()
-                    .await?;
-                Messages::Event(event_table.into_event(&document_id))
-            }
-            // todo manualのときの処理
-            NewMessages::SendMessages(m) => {
-                let document_id = m.id.value.to_string();
-                let send_message_table = SendMessageTable::from(m.clone());
-                firestore
-                    .fluent()
-                    .insert()
-                    .into(MESSAGE_COLLECTION_NAME)
-                    .document_id(&document_id)
-                    .parent(&parent_path)
-                    .object(&send_message_table)
-                    .execute()
-                    .await?;
-                Messages::SendMessages(send_message_table.into_messages(&document_id))
-            }
-        };
+        let last_messages = self
+            .insert_messages(&talk_room_document_id, &new_latest_messages)
+            .await?;
 
         Ok(TalkRoom::new(
             talk_room_document_id.try_into()?,
@@ -244,5 +212,59 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
             talk_room_card_table.created_at,
             talk_room_card_table.updated_at,
         ))
+    }
+}
+
+impl DbFirestoreRepositoryImpl<TalkRoom> {
+    async fn insert_messages(
+        &self,
+        talk_room_document_id: &String,
+        new_latest_messages: &NewMessages,
+    ) -> anyhow::Result<Messages> {
+        let last_messages = match new_latest_messages {
+            NewMessages::Event(e) => {
+                let document_id = e.id().value.to_string();
+                let event_table = EventTable::from(e.clone());
+                self.insert_messages_table_to_firestore(
+                    talk_room_document_id,
+                    &document_id,
+                    &MessagesTable::Event(event_table.clone()),
+                )
+                .await?;
+                Messages::Event(event_table.into_event(&document_id))
+            }
+            NewMessages::SendMessages(m) => {
+                let document_id = m.id.value.to_string();
+                let send_message_table = SendMessageTable::from(m.clone());
+                self.insert_messages_table_to_firestore(
+                    talk_room_document_id,
+                    &document_id,
+                    &MessagesTable::SendMessage(send_message_table.clone()),
+                )
+                .await?;
+                Messages::SendMessages(send_message_table.into_messages(&document_id))
+            }
+        };
+        Ok(last_messages)
+    }
+    async fn insert_messages_table_to_firestore(
+        &self,
+        talk_room_document_id: &String,
+        document_id: &String,
+        messges_table: &MessagesTable,
+    ) -> anyhow::Result<()> {
+        let firestore = Arc::clone(&self.firestore.0);
+        let parent_path =
+            firestore.parent_path(TALK_ROOM_COLLECTION_NAME, talk_room_document_id)?;
+        firestore
+            .fluent()
+            .insert()
+            .into(MESSAGE_COLLECTION_NAME)
+            .document_id(document_id)
+            .parent(&parent_path)
+            .object(messges_table)
+            .execute()
+            .await?;
+        Ok(())
     }
 }

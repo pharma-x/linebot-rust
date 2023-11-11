@@ -70,7 +70,7 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
                 // talk_roomをupdateし、talk_roomのサブコレクションにeventを追加する
                 self.adapters
                     .talk_room_repository()
-                    .create_event((talk_room, new_event.clone()).into())
+                    .create_messages((talk_room, new_event.clone()).into())
                     .await?
             }
             Err(anyhow_err) => {
@@ -100,7 +100,7 @@ impl<R: AdaptersModuleExt> LinebotWebhookUseCase<R> {
             .map(|new_sent_messages| {
                 self.adapters
                     .talk_room_repository()
-                    .create_event((updated_talk_room.clone(), new_sent_messages.clone()).into())
+                    .create_messages((updated_talk_room.clone(), new_sent_messages.clone()).into())
             })
             .collect();
 
