@@ -6,6 +6,8 @@ use thiserror::Error;
 pub mod send_message;
 pub mod user_auth;
 
+pub const LINE_MESSAGE_NUMBER_LIMIT: usize = 5;
+
 #[derive(new)]
 pub struct HttpClientRepositoryImpl<T> {
     pub client: Client,

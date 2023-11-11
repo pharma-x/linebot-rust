@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
+use futures::future;
 use reqwest::header;
 
 use crate::{
@@ -53,6 +54,7 @@ impl HttpClientRepositoryImpl<SendMessage> {
         message_requests: Vec<SendMessageRequest>,
     ) -> anyhow::Result<Vec<NewSendMessages>> {
         let mut new_messages_vec = Vec::new();
+        // メッセージのリクエストの順番を保つ必要があるので、同期処理にした
         for message_request in message_requests {
             let new_message = match message_request {
                 SendMessageRequest::Reply(message_request) => {
@@ -101,7 +103,6 @@ impl HttpClientRepositoryImpl<SendMessage> {
         })?;
 
         let new_messages = message_request.into_messages(sender, sent_messages);
-        // todo 素直にresponseを返す
         Ok(new_messages)
     }
     async fn send_line_push_messages(
@@ -130,7 +131,6 @@ impl HttpClientRepositoryImpl<SendMessage> {
         })?;
 
         let new_messages = message_request.into_messages(sender, sent_messages);
-        // todo 素直にresponseを返す
         Ok(new_messages)
     }
 }

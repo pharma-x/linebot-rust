@@ -7,7 +7,7 @@ use crate::model::message::send_message::SendMessageTable;
 use crate::model::message::MessagesTable;
 use crate::model::talk_room::{TalkRoomCardTable, TalkRoomDbTable, TalkRoomTable};
 use crate::repository::{
-    DbFirestoreRepositoryImpl, RepositoryError, EVENT_COLLECTION_NAME,
+    DbFirestoreRepositoryImpl, RepositoryError, MESSAGE_COLLECTION_NAME,
     TALK_ROOM_CARD_COLLECTION_NAME, TALK_ROOM_COLLECTION_NAME,
 };
 use domain::{
@@ -81,25 +81,17 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
         let messages_table: MessagesTable = firestore
             .fluent()
             .select()
-            // todo EVENT COLLECTIOON NAMEという呼び名を変更する
-            .by_id_in(EVENT_COLLECTION_NAME)
+            .by_id_in(MESSAGE_COLLECTION_NAME)
             .parent(&firestore.parent_path(TALK_ROOM_COLLECTION_NAME, &document_id)?)
             .obj()
             .one(&message_document_id)
             .await?
             .ok_or(RepositoryError::NotFound(
-                EVENT_COLLECTION_NAME.to_string(),
+                MESSAGE_COLLECTION_NAME.to_string(),
                 message_document_id.to_string(),
             ))?;
         println!("messages_table: {:?}", messages_table.clone());
-
-        // todo latest_messageのtypeなどで分岐する形式に変更する→このままでOK、むしろMessageTableからmessageに変換するコードを記述する
-        let latest_messages = match messages_table {
-            MessagesTable::Event(e) => Messages::Event(e.into_event(message_document_id)),
-            MessagesTable::SendMessage(m) => {
-                Messages::SendMessages(m.into_messages(message_document_id))
-            }
-        };
+        let latest_messages = messages_table.into_messages(message_document_id);
 
         Ok(TalkRoom::new(
             document_id.try_into()?,
@@ -214,7 +206,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
                 firestore
                     .fluent()
                     .insert()
-                    .into(EVENT_COLLECTION_NAME)
+                    .into(MESSAGE_COLLECTION_NAME)
                     .document_id(&document_id)
                     .parent(&parent_path)
                     .object(&event_table)
@@ -229,7 +221,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
                 firestore
                     .fluent()
                     .insert()
-                    .into(EVENT_COLLECTION_NAME)
+                    .into(MESSAGE_COLLECTION_NAME)
                     .document_id(&document_id)
                     .parent(&parent_path)
                     .object(&send_message_table)
