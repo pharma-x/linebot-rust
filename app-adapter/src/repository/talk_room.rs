@@ -111,7 +111,7 @@ impl TalkRoomRepository for DbFirestoreRepositoryImpl<TalkRoom> {
     async fn create_talk_room(&self, source: NewTalkRoom) -> anyhow::Result<TalkRoom> {
         let db = Arc::clone(self.db.pool());
         let document_id = source.id.value.to_string();
-        // firestoreの書き込みが失敗したときにもDBへの書き込みも
+        // firestoreの書き込みが失敗したときにもDBへの書き込みも失敗するようにする
         let mut tx = db.begin().await.expect("Unable to begin transaction");
         sqlx::query(
             r#"
