@@ -175,7 +175,6 @@ mod test {
         assert!(result.is_err());
     }
 
-    // todo テストを復活させる
     #[tokio::test]
     async fn test_process_fake_follow_event() {
         dotenv().ok();
@@ -232,7 +231,6 @@ mod test {
                 "picture_url".to_string(),
             )),
         );
-        // let cloned_user = user.clone();
         let new_event = NewEvent::from(create_user_event.create_event);
         let new_talk_room = NewTalkRoom::from((user.clone(), new_event.clone()));
         user_repository
@@ -343,7 +341,6 @@ mod test {
         );
         talk_room_repository
             .expect_create_messages()
-            // .with(predicate::eq(new_talk_room))
             .with(predicate::eq(cloned_new_updated_talk_room))
             .once()
             .returning(move |_| Ok(updated_updated_talk_room.clone()));

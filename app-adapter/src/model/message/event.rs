@@ -700,7 +700,6 @@ impl From<NewEventVideoPlayComplete> for EventVideoPlayCompleteTable {
     }
 }
 
-// from NewMessage to MessageTable
 impl From<NewEventMessageContent> for EventMessageContentTable {
     fn from(m: NewEventMessageContent) -> Self {
         match m {
