@@ -8,11 +8,11 @@ use domain::repository::{talk_room::TalkRoomRepository, user::UserRepository};
 use reqwest::Client;
 
 pub trait AdaptersModuleExt {
-    type UserAuthRepo: UserAuthGateway;
+    type UserAuthGate: UserAuthGateway;
     type UserRepo: UserRepository;
     type TalkRoomRepo: TalkRoomRepository;
     type SendMessageGate: SendMessageGateway;
-    fn user_auth_gateway(&self) -> &Self::UserAuthRepo;
+    fn user_auth_gateway(&self) -> &Self::UserAuthGate;
     fn user_repository(&self) -> &Self::UserRepo;
     fn talk_room_repository(&self) -> &Self::TalkRoomRepo;
     fn send_message_gateway(&self) -> &Self::SendMessageGate;
@@ -26,12 +26,12 @@ pub struct AdaptersModule {
 }
 
 impl AdaptersModuleExt for AdaptersModule {
-    type UserAuthRepo = HttpClientRepositoryImpl<UserAuthData>;
+    type UserAuthGate = HttpClientRepositoryImpl<UserAuthData>;
     type UserRepo = DatabaseRepositoryImpl<User>;
     type TalkRoomRepo = DbFirestoreRepositoryImpl<TalkRoom>;
     type SendMessageGate = HttpClientRepositoryImpl<SendMessage>;
 
-    fn user_auth_gateway(&self) -> &Self::UserAuthRepo {
+    fn user_auth_gateway(&self) -> &Self::UserAuthGate {
         &self.user_auth_gateway
     }
     fn user_repository(&self) -> &Self::UserRepo {
@@ -74,12 +74,12 @@ pub mod test {
     }
 
     impl AdaptersModuleExt for TestAdaptersModule {
-        type UserAuthRepo = MockUserAuthGateway;
+        type UserAuthGate = MockUserAuthGateway;
         type UserRepo = MockUserRepository;
         type TalkRoomRepo = MockTalkRoomRepository;
         type SendMessageGate = MockSendMessageGateway;
 
-        fn user_auth_gateway(&self) -> &Self::UserAuthRepo {
+        fn user_auth_gateway(&self) -> &Self::UserAuthGate {
             &self.user_auth_gateway
         }
         fn user_repository(&self) -> &Self::UserRepo {

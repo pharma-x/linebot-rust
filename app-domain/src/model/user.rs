@@ -1,5 +1,6 @@
-use super::{primary_user_id::PrimaryUserId, user_auth::AuthUserId};
-use crate::model::line_user::LineUserProfile;
+use crate::model::{
+    line_user::LineUserProfile, primary_user_id::PrimaryUserId, user_auth::AuthUserId,
+};
 use derive_new::new;
 
 #[derive(new, Debug, Clone, PartialEq, Eq)]
