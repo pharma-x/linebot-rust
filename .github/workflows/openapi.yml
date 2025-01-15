@@ -8,13 +8,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+      - name: Create GitHub App token
+        id: create_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.REPOSITORY_LINKAGE_APP_ID }}
+          private-key: ${{ secrets.REPOSITORY_LINKAGE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: one-openapi
       - name: clone one-openapi
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: pharma-x/one-openapi
           path: one-openapi
-          token: ${{ secrets.YOJO_TEAM_TOKEN }}
+          token: ${{ steps.create_token.outputs.token }}
       - name: copy swagger.yaml
         run: cp one-openapi/swagger.yaml swagger/swagger.yaml
       - name: clean one-openapi
